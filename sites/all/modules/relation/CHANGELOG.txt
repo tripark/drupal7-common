@@ -1,0 +1,11 @@
+// $Id: CHANGELOG.txt,v 1.7 2010/12/08 11:20:07 sun Exp $
+
+Relation 7.x-1.x, xxxx-xx-xx
+----------------------------
+by sun: Removed stale field settings.
+#981364 by sun, naught101, chx: Fixed field schema column and variable names,
+  and hook_field_is_empty() implementation.
+#981364 by naught101, sun, chx: Re-use field storage for relation data.
+#957742 by naught101, sun: Added missing files[] entry for relation.field.inc.
+#977016 by sun: Moved Awesomerelationship into Relation project.
+by sun: Added initial baseline of module files.

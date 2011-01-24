@@ -1,0 +1,46 @@
+<?php
+// $Id: relation.install,v 1.4 2010/12/05 03:09:29 naught101 Exp $
+
+/**
+ * @file
+ * Installation functions for Relation module.
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function relation_field_schema() {
+  $schema = array(
+    'columns' => array(
+      'relation_id' => array(
+        'type' => 'int',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'other_entity_type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'other_entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'other_revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'indexes' => array(
+      'relation_id' => array('relation_id'),
+      'other_entity' => array('other_entity_type', 'other_entity_id'),
+    ),
+  );
+  return $schema;
+}
+

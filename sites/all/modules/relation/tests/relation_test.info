@@ -1,0 +1,15 @@
+; $Id: relation_test.info,v 1.1 2010/11/19 21:10:01 sun Exp $
+name = Relation testing
+description = Tests Relation module functionality. Do not enable.
+core = 7.x
+package = Testing
+hidden = TRUE
+dependencies[] = relation
+files[] = relation_test.module
+
+; Information added by drupal.org packaging script on 2010-12-23
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "relation"
+datestamp = "1293106834"
+

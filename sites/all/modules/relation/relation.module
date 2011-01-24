@@ -1,0 +1,135 @@
+<?php
+// $Id: relation.module,v 1.3 2010/12/04 12:59:42 sun Exp $
+
+/**
+ * @file
+ * Describes relationships between entities.
+ */
+
+// Load field hook implementations.
+// @see http://drupal.org/node/977052
+require_once dirname(__FILE__) . '/relation.field.inc';
+
+/**
+ * Implements hook_entity_info().
+ */
+function relation_entity_info() {
+  return;
+  $entities['relation'] = array(
+    'label' => t('Relation'),
+    'base table' => 'relation',
+    'fieldable' => FALSE,
+    'controller class' => 'RelationEntityController',
+    'entity keys' => array(
+      'id' => 'relation_id',
+      'bundle' => 'predicate',
+    ),
+    'bundle keys' => array(
+      'bundle' => 'predicate',
+    ),
+    'bundles' => array(
+      // Describe Drupal's built-in relationships.
+      'creator' => array(
+        'label' => t('Author'),
+      ),
+    ),
+    'view modes' => array(),
+  );
+  return $entities;
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function relation_entity_info_alter(&$entity_info) {
+  return;
+  $entity_info['node']['static cache'] = FALSE;
+  $entity_info['node']['field cache'] = FALSE;
+  return;
+  $entity_info['node']['relationships']['user'] = array(
+    // a handler -- this can be reusable or specific to the entity type
+    // it will do things like list 'user' entities related to one or more nodes
+    'handler' => 'RelationEntityRelation',
+  );
+}
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function relation_field_info_alter(&$field_info) {
+  $field_info['file']['relationships']['files'] = array(
+    'handler' => 'RelationFieldRelation',
+  );
+}
+
+/**
+ * Controller class for entity relations.
+ *
+ * This extends the DrupalDefaultEntityController class. The buildQuery method
+ * is overriden to add the self join and to exclude rows where the left and
+ * right entities are identical.
+ */
+class RelationEntityController extends DrupalDefaultEntityController {
+  protected function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
+    $query = parent::buildQuery($ids, $conditions, $revision_id);
+    _relation_entity_query_helper($query);
+    return $query;
+  }
+}
+
+function _relation_entity_query_helper($query, $table, $field_name) {
+  $query->innerJoin($table, 'r', "l.{$field_name}_relation_id = r.{$field_name}_relation_id AND NOT (l.etid = r.etid AND l.entity_id = r.entity_id)");
+  $query->addField('l', "{$field_name}_relation_id", 'relation_id');
+  $query->addField('l', 'etid', 'left_etid');
+  $query->addField('l', 'entity_id', 'left_entity_id');
+  $query->addField('r', 'etid', 'right_etid');
+  $query->addField('r', 'entity_id', 'right_entity_id');
+}
+
+/**
+ * Interface for relationship handlers.
+ */
+interface RelationInterface {
+  // bangpound
+  public function getRelated($entity, $type);
+
+  // becw
+  function init($left, $right); // sets types
+  function set_left($entity_ids = array()); // sets left objects
+  function set_right($entity_ids = array()); // sets right objects
+  function get_left(); // returns left
+  function get_right(); // returns right
+}
+
+/**
+ * Handler class for entity relations.
+ */
+class RelationHandler implements RelationInterface {
+
+  function __construct() {
+  }
+
+  /**
+   * Entity is a fully loaded entity (node, user, term, etc.)
+   * Type is the predicate.
+   */
+  public function getRelated($entity, $type) {
+    return NULL;
+  }
+
+  function init($left, $right) {
+  }
+
+  function set_left($entity_ids = array()) {
+  }
+
+  function set_right($entity_ids = array()) {
+  }
+
+  function get_left() {
+  }
+
+  function get_right() {
+  }
+}
+

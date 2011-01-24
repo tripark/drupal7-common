@@ -1,0 +1,15 @@
+; $Id: relation.info,v 1.4 2010/12/04 12:59:42 sun Exp $
+name = Relation
+description = Describes relationships between entities.
+dependencies[] = entity
+core = 7.x
+files[] = relation.module
+files[] = relation.field.inc
+files[] = tests/relation.test
+
+; Information added by drupal.org packaging script on 2010-12-23
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "relation"
+datestamp = "1293106834"
+

@@ -1,0 +1,12 @@
+; $Id: actions_permissions.info,v 1.1.2.1.4.2 2010/12/15 01:47:01 kratib Exp $
+name = Actions permissions
+description = Integrates actions with the permission system.
+package = Administration
+core = 7.x
+
+; Information added by drupal.org packaging script on 2010-12-18
+version = "7.x-3.x-dev"
+core = "7.x"
+project = "views_bulk_operations"
+datestamp = "1292675272"
+

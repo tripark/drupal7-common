@@ -1,0 +1,89 @@
+<?php
+// $Id: views_slideshow_cycle.module,v 1.1.2.11.2.3 2011/01/08 00:37:00 redndahead Exp $
+
+/**
+ * @file
+ * Views Slideshow: cycle is typically used for field views.
+ */
+
+/**
+ * Implements hook_init().
+ */
+function views_slideshow_cycle_init() {
+  // If the jQ module is installed, use that to add the jQuery Cycle plugin.
+  // This allows different versions of the plugin to be used.
+  $js = FALSE;
+  if (module_exists('jq')) {
+    $loaded_plugins = jq_plugins();
+    if (!empty($loaded_plugins['cycle'])) {
+      $js = jq_add('cycle');
+    }
+  }
+  
+  // Set location of the libraries directory.
+  $libraries_path = 'sites/all/libraries';
+
+  // Otherwise, we'll add the version included with this module.
+  if (!$js && file_exists($libraries_path . '/jquery.cycle/jquery.cycle.all.min.js')) {
+    drupal_add_js($libraries_path . '/jquery.cycle/jquery.cycle.all.min.js');
+  }
+  
+  if (file_exists($libraries_path . '/json2/json2.js')) {
+    drupal_add_js($libraries_path . '/json2/json2.js');
+  }
+
+  $module_path = drupal_get_path('module', 'views_slideshow_cycle');
+  drupal_add_js($module_path . '/js/views_slideshow_cycle.js');
+  
+  drupal_add_css($module_path . '/views_slideshow_cycle.css', 'module');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function views_slideshow_cycle_theme($existing, $type, $theme, $path) {
+  return array(
+    'views_slideshow_cycle' => array(
+      'variables' => array('view' => NULL, 'settings' => array(), 'rows' => array(), 'title' => ''),
+      'template' => 'theme/views-slideshow-cycle',
+      'file' => 'theme/views_slideshow_cycle.theme.inc',
+    ),
+    'views_slideshow_cycle_main_frame' => array(
+      'variables' => array('vss_id' => NULL, 'view' => NULL, 'settings' => NULL, 'rows' => NULL),
+      'template' => 'theme/views-slideshow-cycle-main-frame',
+      'file' => 'theme/views_slideshow_cycle.theme.inc',
+    ),    
+    'views_slideshow_cycle_main_frame_row' => array(
+      'variables' => array('vss_id' => NULL, 'items' => NULL, 'count' => NULL),
+      'template' => 'theme/views-slideshow-cycle-main-frame-row',
+      'file' => 'theme/views_slideshow_cycle.theme.inc',
+    ),
+    'views_slideshow_cycle_main_frame_row_item' => array(
+      'variables' => array('item' => NULL, 'item_count' => NULL),
+      'template' => 'theme/views-slideshow-cycle-main-frame-row-item',
+      'file' => 'theme/views_slideshow_cycle.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_help().
+ */
+function views_slideshow_cycle_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#views_slideshow_cycle':
+      if (module_exists('advanced_help')) {
+        $output = '<p>' . l('Click here to view the documentation for Views Slideshow Cycle.',  'admin/advanced_help/views_slideshow_cycle') . '</p>';
+      }
+      else {
+        $output = '<p>' . t('Views Slideshow Cycle help can be found by installing and enabling the !advanced_help',  array('!advanced_help' => l('Advanced Help module', 'http://drupal.org/project/advanced_help'))) . '</p>';
+      }
+      return $output;
+  }
+}
+
+function views_slideshow_cycle_views_slideshow_js_method_register() {
+  return array(
+    'viewsSlideshowCycle',
+  );
+}

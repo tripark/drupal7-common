@@ -1,0 +1,17 @@
+; $Id: views_slideshow_cycle.info,v 1.1.2.1.2.1 2010/12/31 08:41:40 redndahead Exp $
+name = Views Slideshow: Cycle
+description = Adds a Rotating slideshow mode to Views Slideshow.
+dependencies[] = views_slideshow
+package = Views
+core = 7.x
+
+files[] = views_slideshow_cycle.module
+files[] = views_slideshow_cycle.views_slideshow.inc
+files[] = theme/views_slideshow_cycle.theme.inc
+
+; Information added by drupal.org packaging script on 2011-01-11
+version = "7.x-3.x-dev"
+core = "7.x"
+project = "views_slideshow"
+datestamp = "1294749185"
+
