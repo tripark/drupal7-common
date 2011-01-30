@@ -13,7 +13,10 @@
 
 // Auto-rebuild the theme registry during theme development.
 if (theme_get_setting('zen_rebuild_registry')) {
+  // Rebuild .info data.
   system_rebuild_theme_data();
+  // Rebuild theme registry.
+  drupal_theme_rebuild();
 }
 
 
@@ -102,6 +105,40 @@ function zen_preprocess_menu_local_task(&$variables) {
 }
 
 /**
+ * Adds conditional CSS from the .info file.
+ *
+ * Copy of conditional_styles_preprocess_html().
+ */
+function zen_add_conditional_styles() {
+  // Make a list of base themes and the current theme.
+  $themes = $GLOBALS['base_theme_info'];
+  $themes[] = $GLOBALS['theme_info'];
+  foreach (array_keys($themes) as $key) {
+    $theme_path = dirname($themes[$key]->filename) . '/';
+    if (isset($themes[$key]->info['stylesheets-conditional'])) {
+      foreach (array_keys($themes[$key]->info['stylesheets-conditional']) as $condition) {
+        foreach (array_keys($themes[$key]->info['stylesheets-conditional'][$condition]) as $media) {
+          foreach ($themes[$key]->info['stylesheets-conditional'][$condition][$media] as $stylesheet) {
+            // Add each conditional stylesheet.
+            drupal_add_css(
+              $theme_path . $stylesheet,
+              array(
+                'group' => CSS_THEME,
+                'browsers' => array(
+                  'IE' => $condition,
+                  '!IE' => FALSE,
+                ),
+                'every_page' => TRUE,
+              )
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Override or insert variables into the html template.
  *
  * @param $vars
@@ -114,6 +151,9 @@ function zen_preprocess_html(&$vars, $hook) {
   if ($GLOBALS['theme'] == 'zen') {
     include_once './' . drupal_get_path('theme', 'zen') . '/zen-internals/template.zen.inc';
     _zen_preprocess_html($vars, $hook);
+  }
+  elseif (!module_exists('conditional_styles')) {
+    zen_add_conditional_styles();
   }
 
   // Classes for body element. Allows advanced theming based on context
@@ -153,24 +193,6 @@ function zen_preprocess_html(&$vars, $hook) {
 }
 
 /**
- * Override or insert variables into the html template.
- *
- * @param $vars
- *   An array of variables to pass to the theme template.
- * @param $hook
- *   The name of the template being rendered ("html" in this case.)
- */
-function zen_process_html(&$vars, $hook) {
-  // Add conditional stylesheets.
-  if ($GLOBALS['theme'] == 'zen') {
-    _zen_process_html($vars, $hook);
-  }
-  elseif (!module_exists('conditional_styles')) {
-    $vars['styles'] .= $vars['conditional_styles'] = variable_get('conditional_styles_' . $GLOBALS['theme'], '');
-  }
-}
-
-/**
  * Override or insert variables into the maintenance page template.
  *
  * @param $vars
@@ -178,16 +200,14 @@ function zen_process_html(&$vars, $hook) {
  * @param $hook
  *   The name of the template being rendered ("maintenance_page" in this case.)
  */
-function zen_process_maintenance_page(&$vars, $hook) {
+function zen_preprocess_maintenance_page(&$vars, $hook) {
   // If Zen is the maintenance theme, add some styles.
   if ($GLOBALS['theme'] == 'zen') {
     include_once './' . drupal_get_path('theme', 'zen') . '/zen-internals/template.zen.inc';
     _zen_preprocess_html($vars, $hook);
-    _zen_process_html($vars, $hook);
   }
-  // Add conditional stylesheets.
   elseif (!module_exists('conditional_styles')) {
-    $vars['styles'] .= $vars['conditional_styles'] = variable_get('conditional_styles_' . $GLOBALS['theme'], '');
+    zen_add_conditional_styles();
   }
 }
 

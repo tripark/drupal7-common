@@ -15,15 +15,6 @@ function _zen_theme(&$existing, $type, $theme, $path) {
     $exisiting['region']['pattern'] = 'region__';
   }
 
-  // Compute the conditional stylesheets.
-  if (!module_exists('conditional_styles')) {
-    include_once './' . drupal_get_path('theme', 'zen') . '/zen-internals/template.conditional-styles.inc';
-    // _conditional_styles_theme() only needs to be run once.
-    if ($theme == 'zen') {
-      _conditional_styles_theme($existing, $type, $theme, $path);
-    }
-  }
-
   // If we are auto-rebuilding the theme registry, warn about the feature.
   // Always display the warning in the admin section, otherwise limit to three
   // warnings per hour.

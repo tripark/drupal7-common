@@ -1,5 +1,7 @@
 Zen 7.x-3.x-dev, xxxx-xx-xx (development release)
 ------------------------
+- #1044586: Fix "Rebuild theme registry" feature
+- #923382: Conditional stylesheets should use drupal_add_css()
 - #987916: Submitted by text doesn't use $submitted variable introduced in Drupal 7.0-rc1
 - #978810 by bellHead: Region-specific template suggestions for sidebar regions always use region--sidebar.tpl.php
 - #986290: $tabs displaying as string 'Array' due to change in theme_menu_local_tasks()

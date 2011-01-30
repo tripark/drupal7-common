@@ -14,29 +14,18 @@
  * If the user is silly and enables Zen as the theme, manually add some stylesheets.
  */
 function _zen_preprocess_html(&$vars, $hook) {
-  $directory = drupal_get_path('theme', 'zen') . '/zen-internals/css';
+  $directory = drupal_get_path('theme', 'zen') . '/zen-internals/css/';
 
   // Add default styles.
   if (theme_get_setting('zen_layout') == 'zen-columns-fixed') {
-    drupal_add_css($directory . '/zen-fixed.css', array('media' => 'all', 'weight' => 1));
+    drupal_add_css($directory . 'zen-fixed.css', array('media' => 'all', 'weight' => 1));
   }
   else {
-    drupal_add_css($directory . '/zen-liquid.css', array('media' => 'all', 'weight' => 1));
+    drupal_add_css($directory . 'zen-liquid.css', array('media' => 'all', 'weight' => 1));
   }
   // Add print styles.
-  drupal_add_css($directory . '/print.css', array('media' => 'print', 'weight' => 1));
-}
-
-/**
- * If the user is silly and enables Zen as the theme, manually add conditional stylesheets.
- */
-function _zen_process_html(&$vars, $hook) {
-  $directory = drupal_get_path('theme', 'zen') . '/zen-internals/css';
-  $query_string = '?'. substr(variable_get('css_js_query_string', '0'), 0, 1);
-  $base_path = base_path() . $directory;
-  $vars['styles'] .= <<< IE_STYLES
-<!--[if IE]><link type="text/css" rel="stylesheet" media="all" href="$base_path/ie.css$query_string" /><![endif]-->
-<!--[if lte IE 6]><link type="text/css" rel="stylesheet" media="all" href="$base_path/ie6.css$query_string" /><![endif]-->
-
-IE_STYLES;
+  drupal_add_css($directory . 'print.css', array('media' => 'print', 'weight' => 1));
+  // Add conditional stylesheets.
+  drupal_add_css($directory . 'ie.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'IE', '!IE' => FALSE), 'every_page' => TRUE));
+  drupal_add_css($directory . 'ie6.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 6', '!IE' => FALSE), 'every_page' => TRUE));
 }
