@@ -1,5 +1,5 @@
 <?php
-// $Id: views_slideshow.theme.inc,v 1.1.2.5.2.4 2011/01/09 06:41:02 redndahead Exp $
+// $Id: views_slideshow.theme.inc,v 1.1.2.5.2.5 2011/01/30 06:59:06 redndahead Exp $
 
 /**
  * @file
@@ -115,7 +115,7 @@ function theme_views_slideshow_pager_widget_render($vars) {
   $attributes['class'] = 'widget_pager widget_pager_' . $vars['location'];
   $attributes['id'] = 'widget_pager_' . $vars['location'] . '_' . $vars['vss_id'];
   
-  return theme($vars['settings']['type'] . '_render', array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'rows' => $vars['rows'], 'attributes' => $attributes));
+  return theme($vars['settings']['type'] . '_render', array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'attributes' => $attributes));
 }
 
 /**

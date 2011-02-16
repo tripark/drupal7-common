@@ -1,5 +1,5 @@
 <?php
-// $Id: views_slideshow_plugin_style_slideshow.inc,v 1.1.2.1.2.9.2.7.2.1 2010/12/31 08:41:39 redndahead Exp $
+// $Id: views_slideshow_plugin_style_slideshow.inc,v 1.1.2.1.2.9.2.7.2.2 2011/02/07 07:21:36 redndahead Exp $
 
 /**
  * @file
@@ -192,7 +192,7 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
   }
   
   // Run any necessary actions on submit.
-  function options_submit($form, &$form_state) {
+  function options_submit(&$form, &$form_state) {
     module_load_all_includes('views_slideshow.inc');
     
     $arguments = array(

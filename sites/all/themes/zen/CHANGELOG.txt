@@ -1,5 +1,10 @@
 Zen 7.x-3.x-dev, xxxx-xx-xx (development release)
-------------------------
+---------------------------
+- #1046394 by n8tron and JohnAlbin: Add first and last classes to blocks
+- #1060122: Add missing $block_html_id to block.tpl.php
+- #948666 by danillonunes and JohnAlbin: Update block classes in blocks.css
+- #1045116: Add accessible title text to theme_breadcrumbs to match markup in D7
+- #555910: "Append title to breadcrumbs" option shows doubled titles on non-default tabs
 - #1044586: Fix "Rebuild theme registry" feature
 - #923382: Conditional stylesheets should use drupal_add_css()
 - #987916: Submitted by text doesn't use $submitted variable introduced in Drupal 7.0-rc1

@@ -8,22 +8,19 @@
   margin-bottom: 1em;
 }
 
+.block.first /* The first block in the region */ {
+}
+
+.block.last /* The last block in the region */ {
+}
+
 .block.region-odd /* Zebra striping for each block in the region */ {
 }
 
 .block.region-even /* Zebra striping for each block in the region */ {
 }
 
-.block.odd /* Zebra striping independent of each region */ {
-}
-
-.block.even /* Zebra striping independent of each region */ {
-}
-
 .region-count-1 /* Incremental count for each block in the region */ {
-}
-
-.count-1 /* Incremental count independent of each region */ {
 }
 
 h2.block-title /* Block title */ {
@@ -38,53 +35,77 @@ h2.block-title /* Block title */ {
 #block-aggregator-feed-1 /* Block for the latest news items in the first feed */ {
 }
 
-#block-block-1 /* First administrator-defined block */ {
+#block-block-1 /* First block created with "Add block" link */ {
 }
 
-#block-blog-0 /* "Recent blog posts" block */ {
+#block-blog-recent /* "Recent blog posts" block */ {
 }
 
-#block-book-0 /* "Book navigation" block for the current book's table of contents */ {
+#block-book-navigation /* "Book navigation" block for the current book's table of contents */ {
 }
 
-#block-comment-0 /* "Recent comments" block */ {
+#block-comment-recent /* "Recent comments" block */ {
 }
 
-#block-forum-0 /* "Active forum topics" block */ {
+#block-forum-active /* "Active forum topics" block */ {
 }
 
-#block-forum-1 /* "New forum topics" block */ {
+#block-forum-new /* "New forum topics" block */ {
 }
 
-#block-menu-primary-links /* "Primary links" block */ {
+#block-locale-language /* Language switcher block */ {
 }
 
-#block-menu-secondary-links /* "Secondary links" block */ {
+#block-menu-menu-NAME /* Custom menu block  */ {
 }
 
-#block-node-0 /* "Syndicate" block for primary RSS feed */ {
+#block-node-recent /* "Recent content" block */ {
 }
 
-#block-poll-0 /* "Most recent poll" block */ {
+#block-node-syndicate /* "Syndicate" block for primary RSS feed */ {
 }
 
-#block-profile-0 /* "Author information" block for the profile of the page's author */ {
+#block-poll-recent /* "Most recent poll" block */ {
 }
 
-#block-search-0 /* "Search form" block */ {
+#block-profile-author-information /* "Author information" block for the profile of the page's author */ {
 }
 
-#block-statistics-0 /* "Popular content" block */ {
+#block-search-form /* "Search form" block */ {
 }
 
-#block-user-0 /* "User login form" block */ {
+#block-shortcut-shortcuts /* "Shortcuts" block */ {
 }
 
-#block-user-1 /* "Navigation" block for Drupal navigation menu */ {
+#block-statistics-popular /* "Popular content" block */ {
 }
 
-#block-user-2 /* "Who's new" block for a list of the newest users */ {
+#block-system-main-menu /* "Main menu" block */ {
 }
 
-#block-user-3 /* "Who's online" block for a list of the online users */ {
+#block-system-management /* "Management" block for Drupal management menu */ {
+}
+
+#block-system-navigation /* "Navigation" block for Drupal navigation menu */ {
+}
+
+#block-system-user-menu /* "User menu" block for Drupal user menu */ {
+}
+
+#block-system-help /* "System help" block */ {
+}
+
+#block-system-main /* "Main page content" block */ {
+}
+
+#block-system-powered-by /* "Powered by Drupal" block */ {
+}
+
+#block-user-login /* "User login form" block */ {
+}
+
+#block-user-new /* "Who's new" block for a list of the newest users */ {
+}
+
+#block-user-online /* "Who's online" block for a list of the online users */ {
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: pathologic.test,v 1.1.2.11 2011/01/09 07:52:11 garrettalbright Exp $
+// $Id: pathologic.test,v 1.1.2.12 2011/01/18 07:11:31 garrettalbright Exp $
 
 /**
  * @file
@@ -121,6 +121,5 @@ class PathologicTestCase extends DrupalWebTestCase {
       '<a href="' . url('foo', array('absolute' => TRUE)) . '"><img src="' . url('bar.jpeg', array('absolute' => TRUE)) . '" /></a>',
       t('"Also considered local" paths')
     );
-    file_put_contents('/var/tmp/pathologic', _pathologic('<a href="http://example.com/foo"><img src="http://example.org/bar.jpeg" /></a>', $filter) . "\n");
   }
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: googleanalytics.admin.inc,v 1.24.2.19 2011/01/16 18:24:23 hass Exp $
+// $Id: googleanalytics.admin.inc,v 1.24.2.28 2011/02/07 14:41:11 hass Exp $
 
 /**
  * @file
@@ -37,41 +37,56 @@ function googleanalytics_admin_settings_form($form_state) {
     ),
   );
 
-  // Standard tracking configurations.
-  $form['tracking']['user_vis_settings'] = array(
+  $form['tracking']['domain_tracking'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Users'),
+    '#title' => t('Domains'),
   );
-  $t_permission = array('%permission' => t('opt-in or out of tracking'));
-  $form['tracking']['user_vis_settings']['googleanalytics_custom'] = array(
+
+  global $cookie_domain;
+  $multiple_sub_domains = array();
+  foreach (array('www', 'app', 'shop') as $subdomain) {
+    if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
+      $multiple_sub_domains[] = $subdomain . $cookie_domain;
+    }
+    // IP addresses or localhost.
+    else {
+      $multiple_sub_domains[] = $subdomain . '.example.com';
+    }
+  }
+
+  $multiple_toplevel_domains = array();
+  foreach (array('.com', '.net', '.org') as $tldomain) {
+    $host = $_SERVER['HTTP_HOST'];
+    $domain = substr($host, 0, strrpos($host, '.'));
+    if (count(explode('.', $host)) > 2 && !is_numeric(str_replace('.', '', $host))) {
+      $multiple_toplevel_domains[] = $domain . $tldomain;
+    }
+    // IP addresses or localhost
+    else {
+      $multiple_toplevel_domains[] = 'www.example' . $tldomain;
+    }
+  }
+
+  $form['tracking']['domain_tracking']['googleanalytics_domain_mode'] = array(
     '#type' => 'radios',
-    '#title' => t('Allow users to customize tracking on their account page'),
+    '#title' => t('What are you tracking?'),
     '#options' => array(
-      t('No customization allowed'),
-      t('Tracking on by default, users with %permission permission can opt out', $t_permission),
-      t('Tracking off by default, users with %permission permission can opt in', $t_permission),
+      0 => t('A single domain (default)') . '<div class="description">' . t('Domain: @domain', array('@domain' => $_SERVER['HTTP_HOST'])) . '</div>',
+      1 => t('One domain with multiple subdomains') . '<div class="description">' . t('Examples: @domains', array('@domains' => implode(', ', $multiple_sub_domains))) . '</div>',
+      2 => t('Multiple top-level domains') . '<div class="description">' . t('Examples: @domains', array('@domains' => implode(', ', $multiple_toplevel_domains))) . '</div>',
     ),
-    '#default_value' => variable_get('googleanalytics_custom', 0),
+    '#default_value' => variable_get('googleanalytics_domain_mode', 0),
   );
-
-  // Render the role overview.
-  $form['tracking']['role_vis_settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Roles'),
-  );
-
-  $role_options = array_map('check_plain', user_roles());
-  $form['tracking']['role_vis_settings']['googleanalytics_roles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Add tracking for specific roles'),
-    '#default_value' => variable_get('googleanalytics_roles', array()),
-    '#options' => $role_options,
-    '#description' => t('If none are selected, all users will be tracked. If a user has any of the roles checked, that user will be tracked.'),
+  $form['tracking']['domain_tracking']['googleanalytics_cross_domains'] = array(
+    '#title' => t('List of top-level domains'),
+    '#type' => 'textarea',
+    '#default_value' => variable_get('googleanalytics_cross_domains', ''),
+    '#description' => t('If you selected "Multiple top-level domains" above, enter all related top-level domains. Add one domain per line. By default, the data in your reports only includes the path and name of the page, and not the domain name. For more information see section <em>Show separate domain names</em> in <a href="http://www.google.com/support/analytics/bin/answer.py?answer=175538">Tracking multiple domains</a>.'),
   );
 
   // Page specific visibility configurations.
   $php_access = user_access('use PHP for tracking visibility');
-  $visibility = variable_get('googleanalytics_visibility', 0);
+  $visibility = variable_get('googleanalytics_visibility_pages', 0);
   $pages = variable_get('googleanalytics_pages', '');
 
   $form['tracking']['page_vis_settings'] = array(
@@ -101,7 +116,7 @@ function googleanalytics_admin_settings_form($form_state) {
     else {
       $title = t('Pages');
     }
-    $form['tracking']['page_vis_settings']['googleanalytics_visibility'] = array(
+    $form['tracking']['page_vis_settings']['googleanalytics_visibility_pages'] = array(
       '#type' => 'radios',
       '#title' => t('Add tracking to specific pages'),
       '#options' => $options,
@@ -113,18 +128,61 @@ function googleanalytics_admin_settings_form($form_state) {
       '#title_display' => 'invisible',
       '#default_value' => $pages,
       '#description' => $description,
+      '#rows' => 10,
     );
   }
+
+  // Render the role overview.
+  $form['tracking']['role_vis_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Roles'),
+  );
+
+  $form['tracking']['role_vis_settings']['googleanalytics_visibility_roles'] = array(
+    '#type' => 'radios',
+    '#title' => t('Add tracking for specific roles'),
+    '#options' => array(
+      t('Add to the selected roles only'),
+      t('Add to every role except the selected ones'),
+    ),
+    '#default_value' => variable_get('googleanalytics_visibility_roles', 0),
+  );
+
+  $role_options = array_map('check_plain', user_roles());
+  $form['tracking']['role_vis_settings']['googleanalytics_roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#default_value' => variable_get('googleanalytics_roles', array()),
+    '#options' => $role_options,
+    '#description' => t('If none of the roles are selected, all users will be tracked. If a user has any of the roles checked, that user will be tracked (or excluded, depending on the setting above).'),
+  );
+
+  // Standard tracking configurations.
+  $form['tracking']['user_vis_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Users'),
+  );
+  $t_permission = array('%permission' => t('opt-in or out of tracking'));
+  $form['tracking']['user_vis_settings']['googleanalytics_custom'] = array(
+    '#type' => 'radios',
+    '#title' => t('Allow users to customize tracking on their account page'),
+    '#options' => array(
+      t('No customization allowed'),
+      t('Tracking on by default, users with %permission permission can opt out', $t_permission),
+      t('Tracking off by default, users with %permission permission can opt in', $t_permission),
+    ),
+    '#default_value' => variable_get('googleanalytics_custom', 0),
+  );
 
   // Link specific configurations.
   $form['tracking']['linktracking'] = array(
     '#type' => 'fieldset',
     '#title' => t('Links and downloads'),
   );
-  $form['tracking']['linktracking']['googleanalytics_trackoutgoing'] = array(
+  $form['tracking']['linktracking']['googleanalytics_trackoutbound'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Track clicks on outgoing links'),
-    '#default_value' => variable_get('googleanalytics_trackoutgoing', 1),
+    '#title' => t('Track clicks on outbound links'),
+    '#default_value' => variable_get('googleanalytics_trackoutbound', 1),
   );
   $form['tracking']['linktracking']['googleanalytics_trackmailto'] = array(
     '#type' => 'checkbox',
@@ -143,6 +201,12 @@ function googleanalytics_admin_settings_form($form_state) {
     '#default_value' => variable_get('googleanalytics_trackfiles_extensions', GA_TRACKFILES_EXTENSIONS),
     '#description' => t('A file extension list separated by the | character that will be tracked as download when clicked. Regular expressions are supported. For example: !extensions', array('!extensions' => GA_TRACKFILES_EXTENSIONS)),
     '#maxlength' => 255,
+  );
+  $form['tracking']['linktracking']['googleanalytics_trackoutboundaspageview'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Track clicks on outbound links as page views'),
+    '#default_value' => variable_get('googleanalytics_trackoutboundaspageview', 0),
+    '#description' => t('By default outbound links are tracked as <em>Events</em>. In rare situations like tracking of <em>Goals</em> it may be required to track outbound clicks as page views.'),
   );
 
   // Google already have many translations, if not - they display a note to change the language.
@@ -326,12 +390,13 @@ function googleanalytics_admin_settings_form($form_state) {
   $form['advanced']['googleanalytics_js_scope'] = array(
     '#type' => 'select',
     '#title' => t('JavaScript scope'),
-    '#description' => t('Google recommends adding the external JavaScript files to the header for performance reasons.'),
+    '#description' => t('Google recommends adding the external JavaScript files to the header for performance reasons. If <em>Multiple top-level domains</em> has been selected, this setting will be forced to header.'),
     '#options' => array(
       'footer' => t('Footer'),
       'header' => t('Header'),
     ),
     '#default_value' => variable_get('googleanalytics_js_scope', 'header'),
+    '#disabled' => (variable_get('googleanalytics_domain_mode', 0) == 2) ? TRUE : FALSE,
   );
 
   return system_settings_form($form);
@@ -355,6 +420,7 @@ function googleanalytics_admin_settings_form_validate($form, &$form_state) {
   // Trim some text values.
   $form_state['values']['googleanalytics_account'] = trim($form_state['values']['googleanalytics_account']);
   $form_state['values']['googleanalytics_pages'] = trim($form_state['values']['googleanalytics_pages']);
+  $form_state['values']['googleanalytics_cross_domains'] = trim($form_state['values']['googleanalytics_cross_domains']);
   $form_state['values']['googleanalytics_codesnippet_before'] = trim($form_state['values']['googleanalytics_codesnippet_before']);
   $form_state['values']['googleanalytics_codesnippet_after'] = trim($form_state['values']['googleanalytics_codesnippet_after']);
 
@@ -362,6 +428,10 @@ function googleanalytics_admin_settings_form_validate($form, &$form_state) {
     form_set_error('googleanalytics_account', t('A valid Google Analytics Web Property ID is case sensitive and formatted like UA-xxxxxxx-yy.'));
   }
 
+  // If multiple top-level domains has been selected, a domain names list is required.
+  if ($form_state['values']['googleanalytics_domain_mode'] == 2 && empty($form_state['values']['googleanalytics_cross_domains'])) {
+    form_set_error('googleanalytics_cross_domains', t('A list of top-level domains is required if <em>Multiple top-level domains</em> has been selected.'));
+  }
   // Clear obsolete local cache if cache has been disabled.
   if (empty($form_state['values']['googleanalytics_cache']) && $form['advanced']['googleanalytics_cache']['#default_value']) {
     googleanalytics_clear_js_cache();
@@ -379,6 +449,11 @@ function googleanalytics_admin_settings_form_validate($form, &$form_state) {
   }
   if (preg_match('/(.*)<\/?script(.*)>(.*)/i', $form_state['values']['googleanalytics_codesnippet_after'])) {
     form_set_error('googleanalytics_codesnippet_after', t('Do not include the &lt;script&gt; tags in the javascript code snippets.'));
+  }
+
+  // Header section must be forced for multiple top-level domains.
+  if ($form_state['values']['googleanalytics_domain_mode'] == 2) {
+    $form_state['values']['googleanalytics_js_scope'] = 'header';
   }
 }
 

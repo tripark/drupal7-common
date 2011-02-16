@@ -53,14 +53,27 @@ function zen_breadcrumb($variables) {
       $breadcrumb_separator = theme_get_setting('zen_breadcrumb_separator');
       $trailing_separator = $title = '';
       if (theme_get_setting('zen_breadcrumb_title')) {
-        if ($title = drupal_get_title()) {
+        $item = menu_get_item();
+        if (!empty($item['tab_parent'])) {
+          // If we are on a non-default tab, use the tab's title.
+          $title = check_plain($item['title']);
+        }
+        else {
+          $title = drupal_get_title();
+        }
+        if ($title) {
           $trailing_separator = $breadcrumb_separator;
         }
       }
       elseif (theme_get_setting('zen_breadcrumb_trailing')) {
         $trailing_separator = $breadcrumb_separator;
       }
-      return '<div class="breadcrumb">' . implode($breadcrumb_separator, $breadcrumb) . "$trailing_separator$title</div>";
+
+      // Provide a navigational heading to give context for breadcrumb links to
+      // screen-reader users. Make the heading invisible with .element-invisible.
+      $heading = '<h2 class="element-invisible">' . t('You are here') . '</h2>';
+
+      return $heading . '<div class="breadcrumb">' . implode($breadcrumb_separator, $breadcrumb) . $trailing_separator . $title . '</div>';
     }
   }
   // Otherwise, return an empty string.
@@ -309,7 +322,14 @@ function zen_preprocess_region(&$vars, $hook) {
  *   The name of the template being rendered ("block" in this case.)
  */
 function zen_preprocess_block(&$vars, $hook) {
-  // Special classes for blocks.
+  // Classes describing the position of the block within the region.
+  if ($vars['block_id'] == 1) {
+    $vars['classes_array'][] = 'first';
+  }
+  // The last_in_region property is set in zen_page_alter().
+  if (isset($vars['block']->last_in_region)) {
+    $vars['classes_array'][] = 'last';
+  }
   $vars['classes_array'][] = 'region-' . $vars['block_zebra'];
   $vars['classes_array'][] = 'region-count-' . $vars['block_id'];
 
@@ -327,4 +347,29 @@ function zen_preprocess_block(&$vars, $hook) {
 function zen_process_block(&$vars, $hook) {
   // Drupal 7 should use a $title variable instead of $block->subject.
   $vars['title'] = $vars['block']->subject;
+}
+
+/**
+ * Implements hook_page_alter().
+ *
+ * Look for the last block in the region. This is impossible to determine from
+ * within a preprocess_block function.
+ *
+ * @param $page
+ *   Nested array of renderable elements that make up the page.
+ */
+function zen_page_alter(&$page) {
+  // Look in each visible region for blocks.
+  foreach (system_region_list($GLOBALS['theme'], REGIONS_VISIBLE) as $region => $name) {
+    if (!empty($page[$region])) {
+      // Find the last block in the region.
+      $blocks = array_reverse(element_children($page[$region]));
+      while ($blocks && !isset($page[$region][$blocks[0]]['#block'])) {
+        array_shift($blocks);
+      }
+      if ($blocks) {
+        $page[$region][$blocks[0]]['#block']->last_in_region = TRUE;
+      }
+    }
+  }
 }

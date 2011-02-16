@@ -1,5 +1,5 @@
 <?php
-// $Id: views-slideshow.tpl.php,v 1.1.2.1 2010/12/15 20:23:22 redndahead Exp $
+// $Id: views-slideshow.tpl.php,v 1.1.2.1.2.2 2011/02/03 05:04:13 redndahead Exp $
 
 /**
  * @file
@@ -15,16 +15,16 @@
 ?>
 
 <div class="skin-<?php print $skin; ?>">
-  <?php if (isset($top_widget_rendered)): ?>
-    <div class="views-slideshow-controls-top clear-block">
+  <?php if (!empty($top_widget_rendered)): ?>
+    <div class="views-slideshow-controls-top clearfix">
       <?php print $top_widget_rendered; ?>
     </div>
   <?php endif; ?>
   
   <?php print $slideshow; ?>
   
-  <?php if (isset($bottom_widget_rendered)): ?>
-    <div class="views-slideshow-controls-bottom clear-block">
+  <?php if (!empty($bottom_widget_rendered)): ?>
+    <div class="views-slideshow-controls-bottom clearfix">
       <?php print $bottom_widget_rendered; ?>
     </div>
   <?php endif; ?>

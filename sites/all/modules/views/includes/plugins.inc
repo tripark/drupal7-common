@@ -1,5 +1,5 @@
 <?php
-// $Id: plugins.inc,v 1.156.4.14 2010/12/04 07:39:35 dereine Exp $
+// $Id: plugins.inc,v 1.156.4.16 2011/02/05 16:50:37 dereine Exp $
 /**
  * @file plugins.inc
  * Built in plugins for Views output handling.
@@ -61,6 +61,7 @@ function views_views_plugins() {
         'theme' => 'views_view',
         'use ajax' => TRUE,
         'use pager' => FALSE,
+        'use more' => TRUE,
         'accept attachments' => FALSE,
         'help topic' => 'display-attachment',
       ),
@@ -417,6 +418,20 @@ function views_discover_plugins() {
  * Abstract base class to provide interface common to all plugins.
  */
 class views_plugin extends views_object {
+  /**
+   * The top object of a view.
+   * 
+   * @var view
+   */
+  var $view = NULL;
+  
+  /**
+   * The current used display plugin.
+   *
+   * @var views_plugin_display
+   */
+  var $display = NULL;
+
   /**
    * Init will be called after construct, when the plugin is attached to a
    * view and a display.
