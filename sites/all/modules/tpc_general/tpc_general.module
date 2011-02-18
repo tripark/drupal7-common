@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implements hook_init().
+ */
+function tpc_general_init() {
+  drupal_add_js(drupal_get_path('module', 'tpc_general') . '/tpc_general.js');
+}

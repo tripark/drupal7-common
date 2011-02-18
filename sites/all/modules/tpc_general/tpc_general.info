@@ -1,0 +1,4 @@
+name = TPC General
+description = Customizations shared by Triangle Park Creative administered sites.
+core = 7.x
+version = 7.x-TPC
