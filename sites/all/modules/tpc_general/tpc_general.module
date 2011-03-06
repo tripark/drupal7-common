@@ -6,3 +6,11 @@
 function tpc_general_init() {
   drupal_add_js(drupal_get_path('module', 'tpc_general') . '/tpc_general.js');
 }
+
+function tpc_general_menu_breadcrumb_alter(&$active_trail, $item) {
+  if (in_array('admin', $item['original_map'])) {
+    $active_trail[0]['title'] = t('Dashboard');
+    $active_trail[0]['href'] = 'admin/dashboard';
+  }
+}
+
