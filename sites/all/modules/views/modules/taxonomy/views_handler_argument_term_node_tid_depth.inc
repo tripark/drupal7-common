@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_argument_term_node_tid_depth.inc,v 1.3.4.7 2010/11/27 20:53:28 dereine Exp $
 /**
  * Argument handler for taxonomy terms with depth.
  *

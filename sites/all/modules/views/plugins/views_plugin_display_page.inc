@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_display_page.inc,v 1.8.4.15 2011/02/04 14:13:16 dereine Exp $
 /**
  * @file
  * Contains the page display plugin.

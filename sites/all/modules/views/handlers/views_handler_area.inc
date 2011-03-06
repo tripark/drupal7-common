@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_area.inc,v 1.1.4.3 2010/12/17 21:42:19 merlinofchaos Exp $
 /**
  * @file
  * Views area handlers.

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_bulk_operations.views.inc,v 1.1.2.10 2009/07/25 03:19:23 kratib Exp $
 
 function views_bulk_operations_views_plugins() {
   return array(
@@ -15,6 +14,7 @@ function views_bulk_operations_views_plugins() {
         'type' => 'normal',
         'theme' => 'views_view_bulk',
         'even empty' => TRUE,
+        'uses row class' => TRUE,
       ),
     ),
   );

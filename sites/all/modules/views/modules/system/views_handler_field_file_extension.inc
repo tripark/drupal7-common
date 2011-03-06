@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_file_extension.inc,v 1.1.4.2 2010/10/16 09:06:51 dereine Exp $
 /**
  * @file
  * Returns a pure file extension of the file, for example 'module'.

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_pager.test,v 1.1.2.6 2010/10/12 20:59:02 merlinofchaos Exp $
 /**
  * @file
  *   Tests the pluggable pager system

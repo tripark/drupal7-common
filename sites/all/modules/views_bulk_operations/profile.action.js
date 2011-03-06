@@ -1,4 +1,3 @@
-// $Id: profile.action.js,v 1.1.2.1 2009/10/08 21:37:55 kratib Exp $
 (function ($) {
 // START jQuery
 

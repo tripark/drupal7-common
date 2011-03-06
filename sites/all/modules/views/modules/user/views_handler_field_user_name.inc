@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_user_name.inc,v 1.2.6.3 2010/11/05 07:20:54 dereine Exp $
 /**
  * Field handler to provide simple renderer that allows using a themed user link
  */

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_style.inc,v 1.8.4.10 2010/12/10 08:12:31 dereine Exp $
 
 /**
  * @defgroup views_style_plugins Views' style plugins

@@ -1,5 +1,4 @@
 <?php
-// $Id: taxonomy.views.inc,v 1.57.4.19 2011/01/20 22:07:03 merlinofchaos Exp $
 /**
  * @file
  *
@@ -432,7 +431,7 @@ function views_taxonomy_set_breadcrumb(&$breadcrumb, &$argument) {
       continue;
     }
     if ($argument->options['use_taxonomy_term_path']) {
-      $path = taxonomy_term_path($parent);
+      $path = taxonomy_term_uri($parent);
     }
     else {
       $args[$argument->position] = $parent->tid;

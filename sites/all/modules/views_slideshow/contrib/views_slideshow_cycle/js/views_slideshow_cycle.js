@@ -1,4 +1,3 @@
-// $Id: views_slideshow_cycle.js,v 1.1.2.2.2.7 2011/01/30 06:13:16 redndahead Exp $
 
 /**
  *  @file

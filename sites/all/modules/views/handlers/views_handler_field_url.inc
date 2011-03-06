@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_url.inc,v 1.1.6.1 2011/02/04 12:29:01 dereine Exp $
 
 /**
  * Field handler to provide simple renderer that turns a URL into a clickable link.

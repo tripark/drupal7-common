@@ -1,5 +1,4 @@
 <?php
-// $Id: views_user_argument_default.test,v 1.1.4.4 2010/11/13 17:53:07 dereine Exp $
 /**
  * @file
  * Tests views user argument default plugin.

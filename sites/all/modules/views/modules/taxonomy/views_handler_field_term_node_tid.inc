@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_term_node_tid.inc,v 1.4.4.10 2011/01/04 00:11:54 dereine Exp $
 
 /**
  * Field handler for terms.

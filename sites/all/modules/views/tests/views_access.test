@@ -1,5 +1,4 @@
 <?php
-// $Id: views_access.test,v 1.1.4.6 2011/01/04 21:26:47 dereine Exp $
 
 /**
  * Basic test for pluggable access.

@@ -1,4 +1,3 @@
-// $Id: README.txt,v 1.1.2.1 2010/07/24 04:25:46 redndahead Exp $
 
 Views Slideshow: Cycle
 ============================

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_style_table.inc,v 1.7.4.13 2011/02/04 13:51:01 dereine Exp $
 /**
  * @file
  * Contains the table style plugin.

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_sort_random.inc,v 1.1.6.1 2009/11/02 22:01:25 merlinofchaos Exp $
 
 /**
  * Handle a random sort.

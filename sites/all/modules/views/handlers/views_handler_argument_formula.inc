@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_argument_formula.inc,v 1.1.6.3 2011/01/03 17:46:33 dereine Exp $
 /**
  * Abstract argument handler for simple formulae.
  *

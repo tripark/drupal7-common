@@ -1,5 +1,4 @@
 <?php
-// $Id: admin.inc,v 1.161.4.90 2011/02/04 14:13:16 dereine Exp $
 /**
  * @file admin.inc
  * Provides the Views' administrative interface.
@@ -3344,6 +3343,8 @@ function views_ui_config_item_form($form, &$form_state) {
     }
 
     views_ui_standard_form_buttons($form, $form_state, 'views_ui_config_item_form', $name, t('Remove'), 'remove');
+    // Don't execute validations for the remove button.
+    $form['buttons']['remove']['#limit_validation_errors'] = array();
   }
   return $form;
 }
@@ -4021,6 +4022,10 @@ function views_fetch_fields($base, $type, $grouping = FALSE) {
               foreach ((array) $info['skip base'] as $base_name) {
                 $skip_bases[$field][$key][$base_name] = TRUE;
               }
+            }
+            // Don't show old fields. The real field will be added right.
+            if (isset($info[$key]['moved to'])) {
+              continue;
             }
             foreach (array('title', 'group', 'help', 'base') as $string) {
               // First, try the lowest possible level

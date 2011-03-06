@@ -1,5 +1,4 @@
 <?php
-// $Id: views_bulk_operations_plugin_style.inc,v 1.1.2.48.2.2.2.5 2010/12/13 01:13:29 kratib Exp $
 
 class views_bulk_operations_plugin_style extends views_plugin_style_table {
 

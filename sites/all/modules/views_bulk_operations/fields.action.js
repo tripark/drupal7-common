@@ -1,4 +1,3 @@
-// $Id: fields.action.js,v 1.1.2.5 2009/12/08 00:50:39 kratib Exp $
 (function ($) {
 // START jQuery
 

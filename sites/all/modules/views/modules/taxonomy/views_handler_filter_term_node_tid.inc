@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_filter_term_node_tid.inc,v 1.8.6.14 2010/12/24 13:42:01 dereine Exp $
 
 /**
  * Filter by term id

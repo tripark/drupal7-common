@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_filter_node_status.inc,v 1.2.4.7 2011/01/07 18:10:54 dereine Exp $
 /**
  * Filter by published status
  */

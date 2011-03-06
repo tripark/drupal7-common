@@ -1,5 +1,4 @@
 <?php
-// $Id: views-ui-edit-view.tpl.php,v 1.10.6.2 2010/10/16 14:55:13 dereine Exp $
 /**
  * @file views-ui-edit-view.tpl.php
  * Template for the primary view editing window.

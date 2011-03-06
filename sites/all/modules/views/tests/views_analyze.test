@@ -1,5 +1,4 @@
 <?php
-// $Id: views_analyze.test,v 1.1.2.1 2010/11/20 21:40:58 dereine Exp $
 /**
  * @file
  * Tests the views analyse system.

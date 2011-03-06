@@ -1,5 +1,4 @@
 <?php
-// $Id: ruleset.action.inc,v 1.1.2.2.4.3 2010/12/18 01:33:07 kratib Exp $
 
 function views_bulk_operations_ruleset_action_info() {
   if (!module_exists('rules')) return array();

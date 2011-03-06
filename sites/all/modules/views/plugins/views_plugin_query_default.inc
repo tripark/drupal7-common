@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_query_default.inc,v 1.1.4.40 2011/02/05 16:50:37 dereine Exp $
 /**
  * @file views_plugin_query_default.inc
  * Defines the default query object which builds SQL to execute using the
@@ -1274,9 +1273,18 @@ class views_plugin_query_default extends views_plugin_query {
     $items = array();
     if ($query) {
       $additional_arguments = module_invoke_all('views_query_substitutions', $view);
+
+      // Count queries must be run through the preExecute() method.
+      // If not, then hook_query_node_access_alter() may munge the count by
+      // adding a distinct against an empty query string
+      // (e.g. COUNT DISTINCT(1) ...) and no pager will return.
+      // See pager.inc > PagerDefault::execute()
+      // http://api.drupal.org/api/drupal/includes--pager.inc/function/PagerDefault::execute/7
+      // See http://drupal.org/node/1046170.
+      $count_query->preExecute();
+
       // Build the count query.
       $count_query = $count_query->countQuery();
-      //  $count_query->distinct = FALSE;
 
       // Add additional arguments as a fake condition.
       // XXX: this doesn't work... because PDO mandates that all bound arguments

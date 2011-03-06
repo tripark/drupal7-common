@@ -1,5 +1,4 @@
 <?php
-// $Id: fields.action.inc,v 1.1.2.22.4.1 2010/03/11 04:28:31 kratib Exp $
 /**
  * @file Drupal action to set individual field values. 
  * 

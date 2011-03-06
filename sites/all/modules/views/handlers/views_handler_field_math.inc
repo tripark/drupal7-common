@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_math.inc,v 1.1.2.3 2010/11/05 07:20:54 dereine Exp $
 /**
  * Render a mathematical expression as a numeric value
  *

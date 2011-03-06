@@ -1,5 +1,4 @@
 <?php
-// $Id: upload.views.inc,v 1.16.4.5 2010/07/19 09:18:42 dereine Exp $
 /**
  * @file
  *

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_slideshow_cycle.views_slideshow.inc,v 1.1.2.17.2.3 2011/01/08 00:37:00 redndahead Exp $
 
 /**
  * @file

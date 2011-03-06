@@ -1,5 +1,4 @@
 <?php
-// $Id: profile.action.inc,v 1.1.2.3.2.1.2.1 2010/03/11 04:28:31 kratib Exp $
 
 function views_bulk_operations_profile_action_info() {
   if (!module_exists('profile')) return array();

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_custom.inc,v 1.1.6.2 2010/11/05 07:20:54 dereine Exp $
 
 /**
  * A handler to provide a field that is completely custom by the administrator.

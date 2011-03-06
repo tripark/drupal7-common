@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_comment_link_reply.inc,v 1.1.6.1 2010/11/18 07:29:03 dereine Exp $
 
 /**
  * Field handler to present a link to delete a node.

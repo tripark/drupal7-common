@@ -1,5 +1,4 @@
 <?php
-// $Id: views_groupby.test,v 1.1.4.4 2010/05/24 19:58:36 dereine Exp $
 
 class ViewsQueryGroupByTest extends ViewsSqlTest {
   public static function getInfo() {

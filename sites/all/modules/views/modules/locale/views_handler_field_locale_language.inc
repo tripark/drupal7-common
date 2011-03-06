@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_locale_language.inc,v 1.1 2009/02/20 23:02:09 merlinofchaos Exp $
 
 /**
  * Field handler to translate a language into its readable form.

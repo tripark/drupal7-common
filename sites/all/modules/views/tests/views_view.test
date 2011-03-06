@@ -1,5 +1,4 @@
 <?php
-// $Id: views_view.test,v 1.1.4.2 2011/02/05 16:45:32 dereine Exp $
 /**
  * Test the view class.
  */

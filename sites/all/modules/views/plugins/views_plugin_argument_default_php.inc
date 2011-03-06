@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_argument_default_php.inc,v 1.1.6.4 2010/11/05 07:20:54 dereine Exp $
 /**
  * @file
  * Contains the php code argument default plugin.

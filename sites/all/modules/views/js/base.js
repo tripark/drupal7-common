@@ -1,4 +1,3 @@
-// $Id: base.js,v 1.11.4.5 2010/11/20 23:49:29 dereine Exp $
 /**
  * @file base.js
  *

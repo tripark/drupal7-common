@@ -1,5 +1,4 @@
 <?php
-//$Id: user.views.inc,v 1.59.4.15 2011/01/22 23:37:21 dereine Exp $
 /**
  * @file
  * Provide views data and handlers for user.module

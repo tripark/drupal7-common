@@ -1,5 +1,4 @@
 <?php
-// $Id: views_bulk_operations.views_default.inc,v 1.1.2.7.2.1.2.1 2010/10/02 02:12:02 kratib Exp $
 
 /**
  * Implementation of hook_views_default_views().

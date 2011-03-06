@@ -1,5 +1,4 @@
 <?php
-// $Id: script.action.inc,v 1.1.2.4.4.1 2010/03/11 04:28:31 kratib Exp $
 
 function views_bulk_operations_script_action_info() {
   if (!module_exists('actions_permissions') && !user_access('administer site configuration')) return array();

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_comment_node_link.inc,v 1.1.6.4 2010/11/16 17:01:44 dereine Exp $
 /**
 * Handler for showing comment module's node link.
  */

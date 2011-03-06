@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field.inc,v 1.33.4.50 2011/02/04 14:14:11 dereine Exp $
 /**
  * @defgroup views_field_handlers Views' field handlers
  * @{

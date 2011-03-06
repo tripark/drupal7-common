@@ -1,4 +1,3 @@
-// $Id: formoptions.js,v 1.1.2.1 2010/12/31 08:41:40 redndahead Exp $
 
 /**
  *  @file

@@ -1,10 +1,12 @@
 <?php
-// $Id: plugins.inc,v 1.156.4.16 2011/02/05 16:50:37 dereine Exp $
 /**
  * @file plugins.inc
  * Built in plugins for Views output handling.
  *
  */
+
+// @todo: Remove this once update.php can use the registry
+views_include('base');
 
 /**
  * Implements hook_views_plugins

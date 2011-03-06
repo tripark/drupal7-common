@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_node_revision.inc,v 1.1.6.3 2010/08/26 09:41:55 dereine Exp $
 /**
  * @file
  * Contains the basic 'node_revision' field handler.

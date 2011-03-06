@@ -1,5 +1,4 @@
 <?php
-// $Id: theme.inc,v 1.84.4.46 2011/02/05 00:39:32 merlinofchaos Exp $
 
 /**
  * @file theme.inc
@@ -133,7 +132,7 @@ function template_preprocess_views_view(&$vars) {
   }
 
   // If using AJAX, send identifying data about this view.
-  if ($view->use_ajax && empty($view->is_attachment)) {
+  if ($view->use_ajax && empty($view->is_attachment) && empty($view->live_preview)) {
     $settings = array(
       'views' => array(
         'ajax_path' => url('views/ajax'),

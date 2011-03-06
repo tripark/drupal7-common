@@ -1,5 +1,4 @@
 <?php
-// $Id: views_bulk_operations.rules.inc,v 1.1.2.1.4.1 2010/10/05 17:26:36 kratib Exp $
 /*
 function views_bulk_operations_rules_action_info_alter(&$actions) {
   $actions['rules_core_views_bulk_operations_action'] = array(

@@ -1,5 +1,4 @@
 <?php
-// $Id: statistics.views.inc,v 1.9.6.3 2010/07/19 09:18:42 dereine Exp $
 /**
  * @file
  * Provide views data and handlers for statistics.module

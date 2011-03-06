@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_argument.inc,v 1.9.4.12 2010/12/17 21:42:19 merlinofchaos Exp $
 
 /**
  * @defgroup views_argument_handlers Handlers for arguments

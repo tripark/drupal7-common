@@ -1,5 +1,4 @@
 <?php
-// $Id: actions_permissions.module,v 1.1.2.3.4.1 2010/12/10 01:28:33 kratib Exp $
 
 /**
  * Implementation of hook_permission().

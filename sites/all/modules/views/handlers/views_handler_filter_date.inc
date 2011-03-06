@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_filter_date.inc,v 1.3.6.8 2011/01/07 18:10:54 dereine Exp $
 
 /**
  * Filter to handle dates stored as a timestamp.

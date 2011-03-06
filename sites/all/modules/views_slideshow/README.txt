@@ -1,4 +1,3 @@
-$Id: README.txt,v 1.4.4.1.2.1 2010/05/10 18:21:15 redndahead Exp $
 
 Views Slideshow
 ===============

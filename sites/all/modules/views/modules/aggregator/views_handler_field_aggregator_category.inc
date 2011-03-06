@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_aggregator_category.inc,v 1.1.6.1 2009/11/02 22:01:26 merlinofchaos Exp $
 
 /**
  * Field handler to provide simple renderer that allows linking to aggregator

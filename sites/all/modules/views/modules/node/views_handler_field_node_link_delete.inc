@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_node_link_delete.inc,v 1.1.6.2 2010/11/18 07:29:03 dereine Exp $
 /**
  * Field handler to present a link to delete a node.
  */

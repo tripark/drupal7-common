@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_filter_in_operator.inc,v 1.12.4.11 2010/12/16 01:06:06 merlinofchaos Exp $
 /**
  * Simple filter to handle matching of multiple options selectable via checkboxes
  *

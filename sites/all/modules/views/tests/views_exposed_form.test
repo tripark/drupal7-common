@@ -1,5 +1,4 @@
 <?php
-// $Id: views_exposed_form.test,v 1.1.2.6 2010/11/25 20:07:44 dereine Exp $
 /**
  * @file
  * Test exposed forms.

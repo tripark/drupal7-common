@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_comment_username.inc,v 1.2.6.1 2009/11/02 22:01:26 merlinofchaos Exp $
 /**
  * Field handler to allow linking to a user account or homepage
  */

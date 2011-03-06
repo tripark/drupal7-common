@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_file_uri.inc,v 1.1.2.1 2010/10/06 17:47:37 dereine Exp $
 
 /**
  * Field handler to add rendering file paths as file URLs instead of as internal file URIs.

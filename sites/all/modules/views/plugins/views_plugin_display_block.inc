@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_display_block.inc,v 1.5.4.3 2010/08/04 05:54:08 dereine Exp $
 /**
  * @file
  * Contains the block display plugin.

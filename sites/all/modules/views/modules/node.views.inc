@@ -1,5 +1,4 @@
 <?php
-// $Id: node.views.inc,v 1.97.4.25 2010/12/27 08:02:28 dereine Exp $
 /**
  * @file
  * Provide views data and handlers for node.module

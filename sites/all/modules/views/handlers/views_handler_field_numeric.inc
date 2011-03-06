@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_numeric.inc,v 1.6.4.4 2010/11/05 07:20:54 dereine Exp $
 /**
  * Render a field as a numeric value
  *

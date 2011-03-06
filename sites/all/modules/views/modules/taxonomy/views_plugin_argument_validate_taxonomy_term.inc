@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_argument_validate_taxonomy_term.inc,v 1.6.4.9 2011/01/22 14:21:46 dereine Exp $
 /**
  * @file
  * Contains the 'taxonomy term' argument validator plugin.

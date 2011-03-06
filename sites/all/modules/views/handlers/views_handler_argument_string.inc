@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_argument_string.inc,v 1.5.4.11 2011/02/04 23:40:25 merlinofchaos Exp $
 
 /**
  * Basic argument handler to implement string arguments that may have length

@@ -1,4 +1,3 @@
-// $Id: views_bulk_operations.action.js,v 1.1.2.4 2009/11/23 22:15:43 kratib Exp $
 (function ($) {
 // START jQuery
 

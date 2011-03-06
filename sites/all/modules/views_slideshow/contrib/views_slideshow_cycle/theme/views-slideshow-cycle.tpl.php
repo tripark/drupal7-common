@@ -1,5 +1,4 @@
 <?php
-// $Id: views-slideshow-cycle.tpl.php,v 1.1.2.2.2.1 2011/02/03 05:04:13 redndahead Exp $
 
 /**
  * @file

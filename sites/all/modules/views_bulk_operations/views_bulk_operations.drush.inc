@@ -1,5 +1,4 @@
 <?php
-// $Id: views_bulk_operations.drush.inc,v 1.1.2.5.2.1 2010/02/26 23:06:54 kratib Exp $
 
 /**
  * Implementation of hook_drush_help().

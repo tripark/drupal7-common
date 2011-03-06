@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_pager_full.inc,v 1.1.4.14 2010/12/16 20:32:17 dereine Exp $
 
 /**
  * The plugin to handle full pager.

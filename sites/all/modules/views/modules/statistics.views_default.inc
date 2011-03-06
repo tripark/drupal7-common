@@ -1,5 +1,4 @@
 <?php
-// $Id: statistics.views_default.inc,v 1.5.6.5 2011/01/05 23:14:39 dereine Exp $
 /**
  * @file
  * Contains default views on behalf of the statistics module.

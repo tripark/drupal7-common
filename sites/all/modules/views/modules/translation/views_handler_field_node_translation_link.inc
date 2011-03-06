@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_node_translation_link.inc,v 1.1.6.3 2010/12/09 21:45:49 dereine Exp $
 /**
  * Field handler to present a link to the node.
  */

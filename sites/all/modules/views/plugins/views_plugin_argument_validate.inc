@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_argument_validate.inc,v 1.2.4.2 2010/01/28 22:44:37 dereine Exp $
 /**
  * @file
  * Contains the base argument validator plugin.

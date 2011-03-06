@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_exposed_form.inc,v 1.2.2.18 2010/12/01 20:05:06 dereine Exp $
 
 /**
  * The base plugin to handle exposed filter forms.

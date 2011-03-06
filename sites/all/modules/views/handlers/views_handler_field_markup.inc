@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_markup.inc,v 1.3.6.5 2010/12/16 18:23:42 dereine Exp $
 
 /**
  * A handler to run a field through check_markup, using a companion

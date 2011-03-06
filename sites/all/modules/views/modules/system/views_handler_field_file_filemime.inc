@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_file_filemime.inc,v 1.1.2.1 2010/10/06 17:47:37 dereine Exp $
 
 /**
  * Field handler to add rendering MIME type images as an option on the filemime field.

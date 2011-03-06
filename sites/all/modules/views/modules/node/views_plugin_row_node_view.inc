@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_row_node_view.inc,v 1.3.6.3 2010/12/03 11:26:09 dereine Exp $
 /**
  * @file
  * Contains the node view row style plugin.

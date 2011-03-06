@@ -1,5 +1,4 @@
 <?php
-// $Id: views_handler_field_term_link_edit.inc,v 1.1.4.3 2010/12/19 10:33:13 dereine Exp $
 
 /**
  * Field handler to present a term edit link .

@@ -1,5 +1,4 @@
 <?php
-// $Id: views_plugin_argument_default_taxonomy_tid.inc,v 1.1.2.9 2010/12/03 20:17:14 dereine Exp $
 /**
  * @file
  *   Taxonomy tid default argument.
