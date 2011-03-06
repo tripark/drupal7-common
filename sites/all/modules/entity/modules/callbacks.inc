@@ -1,5 +1,5 @@
 <?php
-// $Id: callbacks.inc,v 1.1.2.6 2011/01/04 12:14:05 fago Exp $
+// $Id: callbacks.inc,v 1.1.2.11 2011/02/14 09:05:01 fago Exp $
 
 /**
  * @file
@@ -322,14 +322,16 @@ function entity_metadata_user_set_properties($account, $name, $value) {
   }
 }
 
-
 /**
- * Options list callback for user roles.
+ * Options list callback returning all user roles.
  */
-function entity_metadata_user_roles() {
-  return user_roles(TRUE);
+function entity_metadata_user_roles($property_name = 'roles', $info = array(), $op = 'edit') {
+  $roles = user_roles();
+  if ($op == 'edit') {
+    unset($roles[DRUPAL_AUTHENTICATED_RID], $roles[DRUPAL_ANONYMOUS_RID]);
+  }
+  return $roles;
 }
-
 
 /**
  * Callback defining an options list for language properties.
@@ -374,6 +376,9 @@ function entity_metadata_field_property_set($entity, $name, $value, $langcode, $
     $items[$delta][$columns[0]] = $value;
   }
   $entity->{$name}[$langcode] = $items;
+  // Empty the static field language cache, so the field system picks up any
+  // possible new languages.
+  drupal_static_reset('field_language');
 }
 
 /**
@@ -396,8 +401,7 @@ function entity_metadata_field_options_list($name, $info) {
  */
 function entity_metadata_field_verbatim_get($entity, array $options, $name, $entity_type, &$context) {
   // Set contextual info useful for getters of any child properties.
-  $entity_info = $context['parent']->info();
-  $context['instance'] = field_info_instance($entity_info['type'], $name, $entity_info['bundle']);
+  $context['instance'] = field_info_instance($context['parent']->type(), $name, $context['parent']->getBundle());
   $context['field'] = field_info_field($name);
 
   $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->language : NULL);
@@ -415,6 +419,9 @@ function entity_metadata_field_verbatim_set($entity, $name, $items, $langcode) {
   $field = field_info_field($name);
   $langcode = isset($langcode) ? $langcode : LANGUAGE_NONE;
   $entity->{$name}[$langcode] = $field['cardinality'] == 1 ? array($items) : $items;
+  // Empty the static field language cache, so the field system picks up any
+  // possible new languages.
+  drupal_static_reset('field_language');
 }
 
 /**
@@ -435,10 +442,10 @@ function entity_metadata_field_text_get($item, array $options, $name, $type, $co
 }
 
 /**
- * Defines the list of formats available for the current user.
+ * Defines the list of all available text formats.
  */
 function entity_metadata_field_text_formats() {
-  foreach (filter_formats($GLOBALS['user']) as $key => $format) {
+  foreach (filter_formats() as $key => $format) {
     $formats[$key] = $format->name;
   }
   return $formats;
@@ -511,6 +518,34 @@ function entity_metadata_user_access($op, $entity = NULL, $account = NULL, $enti
   }
   if (user_access('administer users', $account) || user_access('access user profiles', $account) && $op == 'view') {
     return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Access callback for restricted user properties.
+ */
+function entity_metadata_user_properties_access($op, $property, $entity = NULL, $account = NULL) {
+  if (user_access('administer users', $account)) {
+    return TRUE;
+  }
+  $account = isset($account) ? $account : $GLOBALS['user'];
+  // Flag to indicate if this user entity is the own user account.
+  $is_own_account = isset($entity) && $account->uid == $entity->uid;
+  switch ($property) {
+    case 'name':
+      // Allow view access to anyone with access to the entity.
+      if ($op == 'view') {
+        return TRUE;
+      }
+      // Allow edit access for own user name if the permission is satisfied.
+      return $is_own_account && user_access('change own username', $account);
+    case 'mail':
+      // Allow access to own mail address.
+      return $is_own_account;
+    case 'roles':
+      // Allow view access for own roles.
+      return ($op == 'view' && $is_own_account);
   }
   return FALSE;
 }
@@ -650,11 +685,11 @@ function entity_metadata_view_single($entities, $view_mode = 'full', $langcode =
 function entity_metadata_table_query($entity_type, $property, $value, $limit) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', $entity_type, '=')
-        ->entityCondition($property, $value, '=')
+        ->propertyCondition($property, $value, '=')
         ->range(0, $limit);
 
   $result = $query->execute();
-  return array_keys($result[$entity_type]);
+  return !empty($result[$entity_type]) ? array_keys($result[$entity_type]) : array();
 }
 
 /**

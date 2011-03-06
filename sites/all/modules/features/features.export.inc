@@ -1,5 +1,5 @@
 <?php
-// $Id: features.export.inc,v 1.1.2.47.2.10 2010/09/27 15:42:07 yhahn Exp $
+// $Id: features.export.inc,v 1.1.2.47.2.12 2011/02/18 23:21:08 inadarei Exp $
 
 /**
  * @param $items
@@ -224,6 +224,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
     // If the current module file does not reference the features.inc include,
     // set a warning message.
+    // @TODO this way of checking does not account for the possibility of inclusion instruction being commented out.
     if (isset($code['features']) && strpos($code['module'], "{$module_name}.features.inc") === FALSE) {
       features_log(t('@module does not appear to include the @include file.', array('@module' => "{$module_name}.module", '@include' => "{$module_name}.features.inc")), 'warning');
     }
@@ -619,7 +620,7 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
       }
       // All other components
       else {
-        if ($default_hook && function_exists("{$m}_{$default_hook}")) {
+        if ($default_hook && module_hook($m, $default_hook)) {
           $cache[$component][$m] = call_user_func("{$m}_{$default_hook}");
           if ($alter) {
             drupal_alter($default_hook, $cache[$component][$m]);

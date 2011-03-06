@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.api.php,v 1.1.2.4 2011/01/04 12:05:31 fago Exp $
+// $Id: entity.api.php,v 1.1.2.10 2011/02/21 09:27:57 fago Exp $
 
 /**
  * @file
@@ -95,8 +95,14 @@
  *   Features module integration for exportable entities. The given class has to
  *   inherit from the default class being EntityDefaultFeaturesController. Set
  *   it to FALSE to disable this feature.
+ * - views controller class: (optional) A controller class for providing views
+ *   integration. The given class has to inherit from the class
+ *   EntityDefaultViewsController, which is set as default in case the providing
+ *   module has been specified (see 'module') and the module does not provide
+ *   any views integration. Else it defaults to FALSE, which disables this
+ *   feature. See EntityDefaultViewsController.
  * - access callback: (optional) Specify a callback that returns access
- *   permissions for the operations 'create', 'updated', 'delete' and 'view'.
+ *   permissions for the operations 'create', 'update', 'delete' and 'view'.
  *   The callback gets optionally the entity and the user account to check for
  *   passed. See entity_access() for more details on the arguments and
  *   entity_metadata_no_hook_node_access() for an example.
@@ -143,7 +149,7 @@ function entity_crud_hook_entity_info() {
  *
  * Additional keys are:
  * - access callback: (optional) Specify a callback that returns access
- *   permissions for the operations 'create', 'updated', 'delete' and 'view'.
+ *   permissions for the operations 'create', 'update', 'delete' and 'view'.
  *   The callback gets optionally the entity and the user account to check for
  *   passed. See entity_access() for more details on the arguments and
  *   entity_metadata_no_hook_node_access() for an example.
@@ -183,7 +189,7 @@ function entity_metadata_hook_entity_info() {
  * separated from hook_entity_info() for performance reasons only.
  * For making use of the metadata have a look at the provided wrappers returned
  * by entity_metadata_wrapper().
- * For providing entity metadata for fields see entity_metadata_field_info().
+ * For providing property information for fields see entity_field_info().
  *
  * @return
  *   An array whose keys are entity type names and whose values are arrays
@@ -210,6 +216,9 @@ function entity_metadata_hook_entity_info() {
  *        - entities - You may use the type of each entity known by
  *          hook_entity_info(), e.g. 'node' or 'user'. Internally entities are
  *          represented by their identifieres.
+ *        - entity: A special type to be used generically for entities where the
+ *          entity type is not known beforehand. The entity has to be
+ *          represented using an EntityMetadataWrapper.
  *        - struct: This as well as any else not known type may be used for
  *          supporting arbitrary data structures. For that additional metadata
  *          has to be specified with the 'property info' key.
@@ -241,9 +250,12 @@ function entity_metadata_hook_entity_info() {
  *       callback which can be used to retrieve the raw, unprocessed value.
  *     - bundle: If the property is an entity, you may specify the bundle of the
  *       retrieved entity. Optional.
- *     - 'options list': Optionally, a callback that returns a list of key value
- *       pairs for the property. The callback has to return an array as
+ *     - 'options list': Optionally, a callback that returns a list of possible
+ *       values for the property. The callback has to return an array as
  *       used by hook_options_list().
+ *       Note that it is possible to return a different set of options depending
+ *       whether they are used in read or in write context. See
+ *       EntityMetadataWrapper::optionsList() for more details on that.
  *     - 'access callback': An optional access callback to allow for checking
  *       'view' and 'edit' access for the described property. If no callback
  *       is specified, a 'setter permission' may be specified instead.
@@ -269,6 +281,8 @@ function entity_metadata_hook_entity_info() {
  *       if necessary, e.g. as the data structure is not created yet but one of
  *       its properties is set. See entity_metadata_field_file_callback() for
  *       an example.
+ *     - translatable: (optional) Whether the property is translatable, defaults
+ *       to FALSE.
  *   - bundles: An array keyed by bundle name containing further metadata
  *     related to the bundles only. This array may contain the key 'properties'
  *     with an array of info about the bundle specific properties, structured in

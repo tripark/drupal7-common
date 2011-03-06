@@ -1,5 +1,4 @@
 <?php
-// $Id: relation.field.inc,v 1.6 2010/12/23 09:53:25 naught101 Exp $
 
 /**
  * @file

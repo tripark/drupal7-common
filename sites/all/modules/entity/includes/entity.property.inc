@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.property.inc,v 1.1.2.6 2010/12/29 12:03:11 fago Exp $
+// $Id: entity.property.inc,v 1.1.2.11 2011/02/21 09:51:51 fago Exp $
 
 /**
  * @file
@@ -220,6 +220,8 @@ function entity_property_verify_data_type($data, $type) {
       return valid_url($data, TRUE);
     case 'list':
       return (is_array($data) && array_values($data) == $data) || (is_object($data) && $data instanceof EntityMetadataArrayObject);
+    case 'entity':
+      return is_object($data) && $data instanceof EntityDrupalWrapper;
     default:
     case 'struct':
       return is_object($data) || is_array($data);
@@ -243,8 +245,10 @@ function entity_property_verify_data_type($data, $type) {
 function entity_property_values_create_entity($entity_type, $values = array()) {
   if (entity_type_supports($entity_type, 'create')) {
     $info = entity_get_info($entity_type);
-    // Create the initial entity.
-    $entity = entity_create($entity_type, array_intersect_key($values, array_flip($info['entity keys'])));
+    // Create the initial entity by passing the values for all 'entity keys'
+    // to entity_create().
+    $entity_keys = array_filter($info['entity keys']);
+    $entity = entity_create($entity_type, array_intersect_key($values, array_flip($entity_keys)));
     // Now set the remaining values using the wrapper.
     $wrapper = entity_metadata_wrapper($entity_type, $entity);
     foreach ($values as $key => $value) {
@@ -285,6 +289,13 @@ function entity_property_verbatim_get($data, array $options, $name) {
 }
 
 /**
+ * Date values are converted from ISO strings to timestamp, if needed.
+ */
+function entity_property_verbatim_date_get($data, array $options, $name) {
+  return is_numeric($data[$name]) ? $data[$name] : strtotime($data[$name], time());
+}
+
+/**
  * Sets the property to the given value. May be used as 'setter callback'.
  */
 function entity_property_verbatim_set(&$data, $name, $value) {
@@ -300,7 +311,9 @@ function entity_property_verbatim_set(&$data, $name, $value) {
  * Gets the property using the getter method (named just like the property).
  */
 function entity_property_getter_method($object, array $options, $name) {
-  return $object->$name();
+  // Remove any underscores as classes are expected to use CamelCase.
+  $method = strtr($name, array('_' => ''));
+  return $object->$method();
 }
 
 /**
@@ -308,7 +321,8 @@ function entity_property_getter_method($object, array $options, $name) {
  * 'setter callback'.
  */
 function entity_property_setter_method($object, $name, $value) {
-  $method = 'set' . $name;
+  // Remove any underscores as classes are expected to use CamelCase.
+  $method = 'set' . strtr($name, array('_' => ''));
   // Invoke the setProperty() method where 'Property' is the property name.
   $object->$method($value);
 }
@@ -339,6 +353,25 @@ function entity_property_validate_integer_non_negative($value) {
  */
 function entity_property_create_array($property_name, $context) {
   return array();
+}
+
+/**
+ * Flattens the given options in single dimensional array.
+ * We don't depend on options module, so we cannot use options_array_flatten().
+ *
+ * @see options_array_flatten()
+ */
+function entity_property_options_flatten($options) {
+  $result = array();
+  foreach ($options as $key => $value) {
+    if (is_array($value)) {
+      $result += $value;
+    }
+    else {
+      $result[$key] = $value;
+    }
+  }
+  return $result;
 }
 
 /**

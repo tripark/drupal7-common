@@ -1,5 +1,5 @@
 <?php
-// $Id: features.admin.inc,v 1.1.2.45.2.7 2010/09/28 20:40:18 yhahn Exp $
+// $Id: features.admin.inc,v 1.1.2.45.2.15 2011/02/18 23:27:19 inadarei Exp $
 
 /**
  * Form callback for features export form. Acts as a router based on the form_state.
@@ -282,7 +282,7 @@ function features_export_build_form_populate($form, $form_state) {
       $stub[$component] = features_dom_decode_options(array_filter($submitted['sources'][$component]));
     }
     // Only fallback to an existing feature's values if there are no export options for the component.
-    else if (!$form['export']['sources'][$component] && !empty($form['#feature']->info['features'][$component])) {
+    else if (!empty($form['export']['sources'][$component]) && !empty($form['#feature']->info['features'][$component])) {
       $stub[$component] = $form['#feature']->info['features'][$component];
     }
   }
@@ -338,8 +338,16 @@ function features_admin_form($form, $form_state) {
     }
   }
 
+  if ( empty($features) ) {
+    $form['no_features'] = array(
+      '#markup' => t('No Features were found. Please use the !create_link link to create 
+      a new Feature module, or upload an existing Feature to your modules directory.', 
+      array('!create_link' => l(t('Create Feature'), 'admin/structure/features/create'))),
+    );
+    return $form ;
+  }
+
   $form = array('#features' => $features);
-  $form['packages'] = array('#type' => 'vertical_tabs');
 
   // Generate features form.
   foreach ($features as $name => $module) {
@@ -350,7 +358,7 @@ function features_admin_form($form, $form_state) {
     if (!isset($form[$package])) {
       $form[$package] = array(
         '#tree' => FALSE,
-        '#title' => t($package_title),
+        '#title' => $package_title,
         '#theme' => 'features_form_package',
         '#type' => 'fieldset',
         '#group' => 'packages',
@@ -388,7 +396,7 @@ function features_admin_form($form, $form_state) {
     // Detect potential conflicts
     if (!empty($conflicts[$name])) {
       $module_conflicts = array();
-      foreach ($conflicts[$name] as $conflict) {
+      foreach (array_keys($conflicts[$name]) as $conflict) {
         $module_conflicts[] = theme('features_module_status', array('status' => FEATURES_MODULE_MISSING, 'module' => $conflict));
         // Only disable modules with conflicts if they are not already enabled.
         // If they are already enabled, somehow the user got themselves into a
@@ -449,6 +457,11 @@ function features_admin_form($form, $form_state) {
     }
   }
   ksort($form);
+
+  // As of 7.0 beta 2 it matters where the "vertical_tabs" element lives on the
+  // the array. We add it late, but at the beginning of the array because that
+  // keeps us away from trouble.
+  $form = array('packages' => array('#type' => 'vertical_tabs')) + $form;
 
   $form['buttons'] = array(
     '#theme' => 'features_form_buttons',
@@ -726,10 +739,19 @@ function features_feature_diff($feature, $component = NULL) {
       $overrides = array($component => $overrides[$component]);
     }
 
+    module_load_include('inc', 'diff', 'diff.engine');
+    $formatter = new DrupalDiffFormatter(); //- temporarily broken
+    //$formatter = new DiffFormatter();
+    $formatter->leading_context_lines = 2;
+    $formatter->trailing_context_lines = 2;
+    //$formatter->show_header = $show_header
+    
     $rows = array();
     foreach ($overrides as $component => $items) {
-      $rows[] = array(array('data' => $component, 'colspan' => 4, 'header' => TRUE));
-      $rows = array_merge($rows, diff_get_rows($items['default'], $items['normal']));
+      $rows[] = array(array(array('data' => $component, 'colspan' => 4, 'header' => TRUE)));
+      $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
+      //dpm($formatter->format($diff));
+      $rows = array_merge($rows, $formatter->format($diff));
     }
     $header = array(
       array('data' => t('Default'), 'colspan' => 2),

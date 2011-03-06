@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.info.inc,v 1.1.2.1 2010/12/16 11:13:26 fago Exp $
+// $Id: entity.info.inc,v 1.1.2.2 2011/01/17 11:56:45 fago Exp $
 
 /**
  * @file
@@ -74,6 +74,8 @@ class EntityDefaultMetadataController {
 
     // Set better metadata for known entity keys.
     $id_key = $this->info['entity keys']['id'];
+    $info['properties'][$id_key]['validation callback'] = 'entity_metadata_validate_integer_positive';
+
     if (!empty($this->info['entity keys']['name']) && $key = $this->info['entity keys']['name']) {
       $info['properties'][$key]['type'] = 'token';
       $info['properties'][$key]['label'] = t('Machine-readable name');
