@@ -23,6 +23,7 @@ class views_handler_field_comment_link_edit extends views_handler_field_comment_
       '#title' => t('Use destination'),
       '#description' => t('Add destination to the link'),
       '#default_value' => $this->options['destination'],
+      '#fieldset' => 'more',
     );
   }
 
@@ -30,8 +31,8 @@ class views_handler_field_comment_link_edit extends views_handler_field_comment_
     parent::render_link($data, $values);
     // ensure user has access to edit this comment.
     $comment = new stdClass();
-    $comment->cid = $values->{$this->aliases['cid']};
-    $comment->uid = $values->{$this->aliases['uid']};
+    $comment->cid = $this->get_value($values, 'cid');
+    $comment->uid = $this->get_value($values, 'uid');
     if (!comment_access('edit', $comment)) {
       return;
     }

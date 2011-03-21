@@ -1,6 +1,4 @@
 <?php
-// $Id: date_navigation_plugin_style.inc,v 1.2 2011/01/18 00:37:35 karens Exp $
-
 /**
  * @file
  * Views navigation style plugin for Date API.
@@ -43,28 +41,28 @@ class date_navigation_plugin_style extends views_plugin_style {
   }
 
   function query() {
-    module_load_include('inc', 'date_api', 'date_api_sql');
+    //$this->view->query->clear_fields();
 
     // Bring the argument information into the view so our theme can access it.
     $i = 0;    
     foreach ($this->view->argument as $id => $argument) {
-      if ($id == 'date_argument') {
+      // The instanceof function makes this work for any handler that was derived 
+      // from date_views_argument_handler_simple, including date_views_argument_handler.
+      if ($argument instanceof date_views_argument_handler_simple) {
         $this->view->date_info->granularity = $argument->granularity;
-        $this->view->date_info->date_arg = !empty($this->view->args) && count($this->view->args) > $argument->position ? $this->view->args[$argument->position] : '';
+        $this->view->date_info->date_arg = $argument->argument;
         $this->view->date_info->date_arg_pos = $i;
-        $this->view->date_info->year = isset($argument->year) ? $argument->year : NULL;
-        $this->view->date_info->month = isset($argument->month) ? $argument->month: NULL;
-        $this->view->date_info->day = isset($argument->day) ? $argument->day : NULL;
-        $this->view->date_info->week = isset($argument->week) ? $argument->week : NULL;
+        $this->view->date_info->year = date_format($argument->min_date, 'Y');
+        $this->view->date_info->month = date_format($argument->min_date, 'n');;
+        $this->view->date_info->day = date_format($argument->min_date, 'j');
+        $this->view->date_info->week = date_week(date_format($argument->min_date, DATE_FORMAT_DATE));
+        $this->view->date_info->date_range = $argument->date_range;
         $this->view->date_info->min_date = $argument->min_date;
         $this->view->date_info->max_date = $argument->max_date;
+        $this->view->date_info->limit = $argument->limit;
         $this->view->date_info->url = $this->view->get_url();
       }
       $i++;
     }
-
-    // bring the node type into the query so we can use it in the theme
-    $this->view->query->add_field('node', 'type');
-
   }
 }

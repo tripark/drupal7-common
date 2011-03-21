@@ -20,7 +20,7 @@ class views_plugin_argument_validate_user extends views_plugin_argument_validate
   function options_form(&$form, &$form_state) {
     $form['type'] = array(
       '#type' => 'radios',
-      '#title' => t('Type of user argument to allow'),
+      '#title' => t('Type of user filter value to allow'),
       '#options' => array(
         'uid' => t('Only allow numeric UIDs'),
         'name' => t('Only allow string usernames'),
@@ -50,7 +50,7 @@ class views_plugin_argument_validate_user extends views_plugin_argument_validate
     );
   }
 
-  function options_submit(&$form, &$form_state, &$options) {
+  function options_submit(&$form, &$form_state, &$options = array()) {
     // filter trash out of the options so we don't store giant unnecessary arrays
     $options['roles'] = array_filter($options['roles']);
   }

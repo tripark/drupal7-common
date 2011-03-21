@@ -939,6 +939,7 @@ class views_plugin_query_default extends views_plugin_query {
    *
    * @param $table
    *   The table this field is part of. If a formula, enter NULL.
+   *   If you want to orderby random use "rand" as table and 
    * @param $field
    *   The field or formula to sort on. If already a field, enter NULL
    *   and put in the alias.
@@ -952,7 +953,7 @@ class views_plugin_query_default extends views_plugin_query {
    * @param $params
    *   Any params that should be passed through to the add_field.
    */
-  function add_orderby($table, $field, $order, $alias = '', $params = array()) {
+  function add_orderby($table, $field = NULL, $order = 'ASC', $alias = '', $params = array()) {
     if ($table) {
       $this->ensure_table($table);
     }
@@ -1144,18 +1145,21 @@ class views_plugin_query_default extends views_plugin_query {
     }
 
     $options = array();
-    // Detect an external database.
+    $target = 'default';
+    $key = 'default';
+    // Detect an external database and set the 
     if (isset($this->view->base_database)) {
-      $options['target'] = $this->view->base_database;
+      $key = $this->view->base_database;
     }
 
     // Set the slave target if the slave option is set
     if (!empty($this->options['slave'])) {
-      $options['target'] = 'slave';
+      $target = 'slave';
     }
 
     // Go ahead and build the query.
-    $query = db_select($this->base_table, $this->base_table, $options)->addTag('views');
+    // db_select doesn't support to specify the key, so use getConnection directly.
+    $query = Database::getConnection($target, $key)->select($this->base_table, $this->base_table, $options)->addTag('views');
 
     $joins = $where = $having = $orderby = $groupby = '';
     $fields = $distinct = array();
@@ -1189,7 +1193,12 @@ class views_plugin_query_default extends views_plugin_query {
       // we only add the orderby if we're not counting.
       if ($this->orderby) {
         foreach ($this->orderby as $order) {
-          $query->orderBy($order['field'], $order['direction']);
+          if ($order['field'] == 'rand_') {
+            $query->orderRandom();
+          }
+          else {
+            $query->orderBy($order['field'], $order['direction']);
+          }
         }
       }
     }
@@ -1236,6 +1245,9 @@ class views_plugin_query_default extends views_plugin_query {
     if (!empty($this->options['distinct'])) {
       $this->set_distinct();
     }
+
+    // Store the view in the object to be able to use it later.
+    $this->view = $view;
 
     $view->init_pager();
 

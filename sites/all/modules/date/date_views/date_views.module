@@ -89,24 +89,6 @@ function date_views_date_views_fields($field) {
 }
 
 /**
- * Rebuild the theme registry and all the caches.
- * needed to pick up changes created by updated Views API
- * and other changes to Views definitions.
- */
-function date_api_views_clear() {
-  if (db_table_exists('cache_content')) {
-    db_query('DELETE FROM {cache_content}');
-  }
-  if (db_table_exists('cache_views')) {
-    db_query('DELETE FROM {cache_views}');
-  }
-  if (db_table_exists('views_object_cache')) {
-    db_query('DELETE FROM {views_object_cache}');
-  }    
-  db_query("DELETE FROM {cache} where cid LIKE 'theme_registry%'");
-}
-
-/**
  * Figure out the URL of the date view we're currently looking at,
  * adapted to various date types or specific date arguments.
  * 
@@ -186,7 +168,7 @@ function date_block_identifier($view) {
 }
 
 /**
- * Identify all fields in this view that use the CCK Date handler.
+ * Identify all fields in this view that use the Field Date handler.
  */
 function date_handler_fields($view) {
   $field_names = array();
@@ -222,35 +204,72 @@ function date_handler_fields($view) {
 }
 
 /**
+ * Implements hook_field_views_data_alter().
+ *
  * Create a Views field for each date column we care about
  * to supplement the generic 'entity_id' and 'revision_id'
  * fields that are automatically created.
  */
-function date_field_views_data_alter(&$result, $field, $module) {
+function date_views_field_views_data_alter(&$result, $field, $module) {
   if ($module == 'date') {
     foreach ($result as $table => $data) {
       $additional = array();
-      $key = array_key_exists('entity_id', $data) ? 'entity_id' : 'revision_id';
+      $field_name = $field['field_name'];
       foreach ($data as $column => $value) {
         if (array_key_exists('argument', $value)) {
-          $result[$table][$column]['argument']['handler'] = 'date_views_argument_handler';
-          $additional = $result[$table][$column]['argument']['additional fields'];
+          $result[$table][$column]['argument']['handler'] = 'date_views_argument_handler_simple';
+          $result[$table][$column]['argument']['empty field name'] = t('Undated');
         }
         if (array_key_exists('filter', $value)) {  
-          $result[$table][$column]['filter']['handler'] = 'date_views_filter_handler';
+          $result[$table][$column]['filter']['handler'] = 'date_views_filter_handler_simple';
+          $result[$table][$column]['argument']['empty field name'] = t('Undated');
         } 
-        // Not sure yet if we still need this in D7 now that custom formatters are available.
-        // Might still need it to handle grouping of multiple value dates.
-        if (array_key_exists($key, $value)) {
+        // The old 'entity_id' and 'revision_id' values got rewritten in Views.
+        // The old values are still there with a 'moved to' key, so ignore them.
+        if (array_key_exists('field', $value) && !array_key_exists('moved to', $value['field'])) {
+          // Not sure yet if we still need a custom field handler in D7 now that custom formatters are available.
+          // Might still need it to handle grouping of multiple value dates.
           //$result[$table][$column]['field']['handler'] = 'date_handler_field_date';
+          $result[$table][$column]['field']['add fields to query'] = TRUE;
         } 
       } 
-      // Add additional fields to the field as well as the argument and filter.
-      // @TODO Is this the best fix? We only need the fields if we're using arguments or filters.
-      // Do this for now to get date views working again.
-
-      $result[$table][$key]['field']['additional fields'] = array_merge($result[$table][$key]['field']['additional fields'], $additional);
-      $result[$table][$key]['field']['add fields to query'] = TRUE;
     }
   }
+}
+
+/**
+ * Implements hook_views_data_alter().
+ *
+ * Create copies of core date fields that use the Date API handling.
+ */
+function date_views_views_data_alter(&$data) {
+  return;
+  foreach ($data as $table => $result) {
+    foreach ($result as $field => $item) {
+      if (array_key_exists('filter', $item) && $item['filter']['handler'] == 'views_handler_filter_date') {
+        $new_field = date_views_new_name($field);
+        $item['title'] .= ' - ' . t('Date API');
+        $item['help'] .= ' ' . t('Uses Date API widgets and date handling.');
+        if (array_key_exists('filter', $item)) { 
+          $item['filter']['handler'] = 'date_views_filter_handler_simple';
+        }
+        unset($item['field'], $item['sort'], $item['argument']);
+        $data[$table][$new_field] = $item;
+      }
+    }
+  }
+}
+
+/**
+ * Make a pseudo field name from an existing field name.
+ */
+function date_views_new_name($field_name) {
+  return $field_name . '-dateapi';
+}
+
+/**
+ * Return a pseudo field name to the original.
+ */
+function date_views_old_name($field_name) {
+  return str_replace('-dateapi', '', $field_name);
 }

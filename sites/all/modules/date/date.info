@@ -1,6 +1,5 @@
-; $Id: date.info,v 1.11 2011/01/17 02:50:34 karens Exp $
 name = Date
-description = Defines CCK date/time fields and widgets.
+description = Defines date/time fields and widgets.
 dependencies[] = date_api
 package = Date/Time
 core = 7.x
@@ -18,9 +17,9 @@ files[] = tests/date_api.test
 files[] = tests/date.test
 files[] = tests/date_field.test
 files[] = tests/date_validation.test
-; Information added by drupal.org packaging script on January 1, 1970 - 00:00
-version = "7.x-1.0-alpha2"
+; Information added by drupal.org packaging script on 2011-03-09
+version = "7.x-2.0-alpha1"
 core = "7.x"
 project = "date"
-datestamp = "1295529406"
+datestamp = "1299682267"
 

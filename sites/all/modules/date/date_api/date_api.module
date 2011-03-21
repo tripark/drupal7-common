@@ -1,5 +1,4 @@
 <?php
-// $Id: date_api.module,v 1.6 2011/01/18 11:16:51 karens Exp $
 /**
  * @file
  * This module will make the date API available to other modules.
@@ -155,7 +154,15 @@ class DateObject extends DateTime {
       // PHP < 5.3 doesn't like the GMT- notation for parsing timezones.
       $time = str_replace("GMT-", "-", $time);
       $time = str_replace("GMT+", "+", $time);
-      parent::__construct($time, $tz ? $tz : new DateTimeZone("UTC"));
+      // We are going to let the parent dateObject do a best effort attempt to turn this
+      // string into a valid date. It might fail and we want to control the error messages.
+      try {
+        @parent::__construct($time, $tz);
+      }
+      catch (Exception $e) {
+        $this->errors['date'] = $e;
+        return;
+      }
       $this->setGranularityFromTime($time, $tz);
     }
     // This tz was given as just an offset, which causes problems,
@@ -582,10 +589,13 @@ class DateObject extends DateTime {
   public function arrayErrors($arr) {
     $errors = array();
     $now = date_now();
+	$default_month = !empty($arr['month']) ? $arr['month'] : $now->format('n');
+    $default_year = !empty($arr['year']) ? $arr['year'] : $now->format('Y');
+
     foreach ($arr as $part => $value) {
       // Avoid false errors when a numeric value is input as a string by forcing it numeric.
       $value = intval($value);
-      if (!empty($value) && $this->forceValid($part, $value, 'now', $now->format('n'), $now->format('Y')) != $value) {
+	  if (!empty($value) && $this->forceValid($part, $value, 'now', $default_month, $default_year) != $value) {
         // Use a switchcase to make translation easier by providing a different message for each part.
         switch($part) {
           case 'year':

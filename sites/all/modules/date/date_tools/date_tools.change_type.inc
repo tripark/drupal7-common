@@ -1,5 +1,4 @@
 <?php
-// $Id: date_tools.change_type.inc,v 1.5 2011/01/18 00:37:34 karens Exp $
 
 /**
  * A form to change the type of date used in date fields.

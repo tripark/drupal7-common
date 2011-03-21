@@ -1,5 +1,4 @@
 <?php
-// $Id: date_token.inc,v 1.3 2011/01/18 00:37:34 karens Exp $
 /**
  * @file
  * Token module integration.

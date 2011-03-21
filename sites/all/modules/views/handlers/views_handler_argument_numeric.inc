@@ -26,16 +26,18 @@ class views_handler_argument_numeric extends views_handler_argument {
     // allow + for or, , for and
     $form['break_phrase'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow multiple terms per argument.'),
-      '#description' => t('If selected, users can enter multiple arguments in the form of 1+2+3 or 1,2,3.'),
+      '#title' => t('Allow multiple values.'),
+      '#description' => t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
       '#default_value' => !empty($this->options['break_phrase']),
+      '#fieldset' => 'more',
     );
 
     $form['not'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Exclude the argument'),
-      '#description' => t('If selected, the numbers entered in the argument will be excluded rather than limiting the view.'),
+      '#title' => t('Exclude'),
+      '#description' => t('If selected, the numbers entered for the filter will be excluded rather than limiting the view.'),
       '#default_value' => !empty($this->options['not']),
+      '#fieldset' => 'more',
     );
   }
 
@@ -70,7 +72,7 @@ class views_handler_argument_numeric extends views_handler_argument {
     return $this->value;
   }
 
-  function query() {
+  function query($group_by = FALSE) {
     $this->ensure_my_table();
 
     if (!empty($this->options['break_phrase'])) {
@@ -91,5 +93,9 @@ class views_handler_argument_numeric extends views_handler_argument {
       $operator = empty($this->options['not']) ? '=' : '!=';
       $this->query->add_where_expression(0, "$this->table_alias.$this->real_field $operator $placeholder $null_check", array($placeholder => $this->argument));
     }
+  }
+
+  function get_sort_name() {
+    return t('Numerical', array(), array('context' => 'Sort order'));
   }
 }

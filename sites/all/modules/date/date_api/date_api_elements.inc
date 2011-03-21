@@ -1,5 +1,4 @@
 <?php
-// $Id: date_api_elements.inc,v 1.2 2011/01/18 00:37:34 karens Exp $
 /**
  * @file
  * Date API elements themes and validation.
@@ -268,13 +267,16 @@ function date_text_validate($element, &$form_state) {
     $value = $date->format(DATE_FORMAT_DATETIME);
     form_set_value($element, $value, $form_state);
   }
+  else {
+    form_set_value($element, NULL, $form_state);
+  }
 }
 
 /**
  * Helper function for creating a date object out of user input.
  */
 function date_text_input_date($element, $input) {
-  if (empty($input) || !is_array($input) || !array_key_exists('date', $input)) {
+  if (empty($input) || !is_array($input) || !array_key_exists('date', $input) || empty($input['date'])) {
     return NULL;
   }  
   $granularity = date_format_order($element['#date_format']);
@@ -518,7 +520,6 @@ function date_select_validate($element, &$form_state) {
 
   $input_exists = NULL;
   $input = drupal_array_get_nested_value($form_state['input'], $element['#parents'], $input_exists);
-
   // Strip field labels out of the results.
   foreach ($element['#value'] as $field => $field_value) {
     if (substr($field_value, 0, 1) == '-') {
@@ -548,13 +549,16 @@ function date_select_validate($element, &$form_state) {
   elseif (!empty($date)) {
     form_set_value($element, $date->format(DATE_FORMAT_DATETIME), $form_state);
   }
+  else {
+    form_set_value($element, NULL, $form_state);
+  }
 }
 
 /**
  * Helper function for creating a date object out of user input.
  */
 function date_select_input_date($element, $input) {
-  if (empty($input) || !is_array($input) || !array_key_exists('year', $input)) {
+  if (empty($input) || !is_array($input) || !array_key_exists('year', $input) || empty($input['year'])) {
     return NULL;
   }  
   $granularity = date_format_order($element['#date_format']);

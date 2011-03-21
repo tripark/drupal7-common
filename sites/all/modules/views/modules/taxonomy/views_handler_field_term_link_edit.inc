@@ -23,12 +23,12 @@ class views_handler_field_term_link_edit extends views_handler_field {
   }
 
   function options_form(&$form, &$form_state) {
-    parent::options_form($form, $form_state);
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
       '#default_value' => $this->options['text'],
     );
+    parent::options_form($form, $form_state);
   }
 
   function query() {
@@ -45,7 +45,8 @@ class views_handler_field_term_link_edit extends views_handler_field {
     $term->vocabulary_machine_name = $values->{$this->aliases['vocabulary_machine_name']};
     if (taxonomy_term_edit_access($term)) {
       $text = !empty($this->options['text']) ? $this->options['text'] : t('edit');
-      return l($text, 'taxonomy/term/'. $values->{$this->aliases['tid']} .'/edit', array('query' => drupal_get_destination()));
+      $tid = $this->get_value($values, 'tid');
+      return l($text, 'taxonomy/term/'. $tid . '/edit', array('query' => drupal_get_destination()));
     }
   }
 }

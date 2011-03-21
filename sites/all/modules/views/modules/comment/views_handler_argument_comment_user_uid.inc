@@ -33,7 +33,7 @@ class views_handler_argument_comment_user_uid extends views_handler_argument {
     }
   }
 
-  function query() {
+  function query($group_by = FALSE) {
     $this->ensure_my_table();
 
     $nid_alias = $this->query->add_field('node', 'nid');
@@ -51,5 +51,9 @@ class views_handler_argument_comment_user_uid extends views_handler_argument {
       ->where("0 < (" . (string) $subselect . ")");
 
     $this->query->add_where(0, $condition);
+  }
+
+  function get_sort_name() {
+    return t('Numerical', array(), array('context' => 'Sort order'));
   }
 }

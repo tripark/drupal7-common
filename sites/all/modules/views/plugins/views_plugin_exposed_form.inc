@@ -20,20 +20,12 @@ class views_plugin_exposed_form extends views_plugin {
     $this->unpack_options($this->options, $options);
   }
 
-  /**
-   * Return a string to display as the clickable title for the
-   * control.
-   */
-  function summary_title() {
-    return t('Unknown');
-  }
-
   function option_definition() {
     $options = parent::option_definition();
     $options['submit_button'] = array('default' => t('Apply'), 'translatable' => TRUE);
     $options['reset_button'] = array('default' => FALSE, 'bool' => TRUE);
     $options['reset_button_label'] = array('default' => 'Reset', 'translatable' => TRUE);
-    $options['exposed_sorts_label'] = array('default' => 'Sort By', 'translatable' => TRUE);
+    $options['exposed_sorts_label'] = array('default' => 'Sort by', 'translatable' => TRUE);
     $options['sort_asc_label'] = array('default' => 'Asc', 'translatable' => TRUE);
     $options['sort_desc_label'] = array('default' => 'Desc', 'translatable' => TRUE);
     return $options;
@@ -64,7 +56,6 @@ class views_plugin_exposed_form extends views_plugin {
       '#dependency' => array(
         'edit-exposed-form-options-reset-button' => array(1)
       ),
-      '#process' => array('ctools_dependent_process'),
     );
 
     $form['exposed_sorts_label'] = array(
