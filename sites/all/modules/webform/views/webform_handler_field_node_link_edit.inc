@@ -1,5 +1,4 @@
 <?php
-// $Id: webform_handler_field_node_link_edit.inc,v 1.1 2010/09/11 02:18:51 quicksketch Exp $
 /**
  * Field handler to present a link node edit.
  */

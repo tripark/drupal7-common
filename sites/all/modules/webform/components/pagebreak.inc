@@ -1,5 +1,4 @@
 <?php
-// $Id: pagebreak.inc,v 1.11 2010/09/28 22:43:49 quicksketch Exp $
 
 /**
  * @file

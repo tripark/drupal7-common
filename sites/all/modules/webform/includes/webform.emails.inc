@@ -1,5 +1,4 @@
 <?php
-// $Id: webform.emails.inc,v 1.25 2010/12/30 02:57:19 quicksketch Exp $
 
 /**
  * @file
@@ -19,7 +18,7 @@ function webform_emails_form($form, $form_state, $node) {
     '#tree' => TRUE,
     '#node' => $node,
     '#attached' =>  array(
-      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'weight' => CSS_DEFAULT + 1)),
+      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1)),
       'js' => array($path . '/js/webform-admin.js' => array('preprocess' => FALSE)),
     ),
     'components' => array(),
@@ -175,7 +174,7 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
   $form = array(
     '#tree' => TRUE,
     '#attached' =>  array(
-      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'weight' => CSS_DEFAULT + 1)),
+      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1)),
       'js' => array(
         $path . '/js/webform-admin.js' => array('preprocess' => FALSE),
         array('data' => array('webform' => array('revertConfirm' => t('Are you sure you want to revert any changes to your template back to the default?'))), 'type' => 'setting'),
@@ -286,6 +285,7 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
     '#title' => t('Send e-mail as HTML'),
     '#default_value' => $email['html'],
     '#access' => module_exists('mimemail') && !variable_get('webform_format_override', 0),
+    '#description' => t('This feature not yet working in Drupal 7. See <a href="https://drupal.org/node/1043086">Webform-MIME Mail integration issue</a>.'),
   );
 
   $form['template']['attachments'] = array(
@@ -293,6 +293,7 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
     '#title' => t('Include files as attachments'),
     '#default_value' => $email['attachments'],
     '#access' => module_exists('mimemail'),
+    '#description' => t('This feature not yet working in Drupal 7. See <a href="https://drupal.org/node/1043086">Webform-MIME Mail integration issue</a>.'),
   );
 
   $form['template']['tokens'] = array(
@@ -407,6 +408,10 @@ function webform_email_edit_form_validate($form, &$form_state) {
  * Submit handler for webform_email_edit_form().
  */
 function webform_email_edit_form_submit($form, &$form_state) {
+  // Ensure a webform record exists.
+  $node = $form_state['values']['node'];
+  webform_ensure_record($node);
+
   // Merge the e-mail, name, address, and subject options into single values.
   $email = array(
     'eid' => $form_state['values']['eid'],
@@ -489,8 +494,16 @@ function webform_email_delete_form($form, $form_state, $node, $email) {
  * Submit handler for webform_component_delete_form().
  */
 function webform_email_delete_form_submit($form, &$form_state) {
+  // Delete the e-mail settings.
+  $node = $form_state['values']['node'];
+  $email = $form_state['values']['email'];
+  webform_email_delete($node, $email);
   drupal_set_message(t('E-mail settings deleted.'));
-  webform_email_delete($form_state['values']['node'], $form_state['values']['email']);
+
+  // Check if this webform still contains any information.
+  unset($node->webform['emails'][$email['eid']]);
+  webform_check_record($node);
+
   $form_state['redirect'] = 'node/' . $form_state['values']['node']->nid . '/webform/emails';
 }
 

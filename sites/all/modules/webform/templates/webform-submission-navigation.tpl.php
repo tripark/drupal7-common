@@ -1,5 +1,4 @@
 <?php
-// $Id: webform-submission-navigation.tpl.php,v 1.3 2011/01/12 04:21:30 quicksketch Exp $
 
 /**
  * @file

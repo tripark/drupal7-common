@@ -1,5 +1,4 @@
 <?php
-// $Id: markup.inc,v 1.21 2010/10/18 07:21:10 quicksketch Exp $
 
 /**
  * @file
@@ -17,7 +16,7 @@ function _webform_defaults_markup() {
     'weight' => 0,
     'value' => '',
     'extra' => array(
-      'format' => filter_default_format(),
+      'format' => NULL,
     ),
   );
 }
@@ -62,7 +61,7 @@ function _webform_render_markup($component, $value = NULL, $filter = TRUE) {
     '#type' => 'markup',
     '#title' => $filter ? NULL : $component['name'],
     '#weight' => $component['weight'],
-    '#markup' => $filter ? _webform_filter_values(check_markup($component['value'], $component['extra']['format'], FALSE), NULL, NULL, NULL, FALSE) : $component['value'],
+    '#markup' => $filter ? _webform_filter_values(check_markup($component['value'], $component['extra']['format'], '', TRUE), NULL, NULL, NULL, FALSE) : $component['value'],
     '#input_format' => $component['extra']['format'],
     '#theme_wrappers' => array('webform_element'),
     '#webform_component' => $component,

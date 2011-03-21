@@ -1,5 +1,4 @@
 <?php
-// $Id: webform_handler_filter_is_draft.inc,v 1.2 2010/03/03 02:51:37 quicksketch Exp $
 
 /**
 * @file

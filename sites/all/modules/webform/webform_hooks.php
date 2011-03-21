@@ -1,5 +1,4 @@
 <?php
-// $Id: webform_hooks.php,v 1.19 2010/10/17 21:52:41 quicksketch Exp $
 
 /**
  * @file
@@ -126,6 +125,30 @@ function hook_webform_submission_delete($node, $submission) {
     ->condition('nid', $node->nid)
     ->condition('sid', $submission->sid)
     ->execute();
+}
+
+/**
+ * Provide a list of actions that can be executed on a submission.
+ *
+ * Some actions are displayed in the list of submissions such as edit, view, and
+ * delete. All other actions are displayed only when viewing the submission.
+ * These additional actions may be specified in this hook. Examples included
+ * directly in the Webform module include PDF, print, and resend e-mails. Other
+ * modules may extend this list by using this hook.
+ *
+ * @param $node
+ *   The Webform node on which this submission was made.
+ * @param $submission
+ *   The Webform submission on which the actions may be performed.
+ */
+function hook_webform_submission_actions($node, $submission) {
+  if (webform_results_access($node)) {
+    $actions['myaction'] = array(
+      'title' => t('Do my action'),
+      'href' => 'node/' . $node->nid . '/submission/' . $submission->sid . '/myaction',
+      'query' => drupal_get_destination(),
+    );
+  }
 }
 
 /**
@@ -566,21 +589,26 @@ function _webform_theme_component() {
  */
 function _webform_analysis_component($component, $sids = array(), $single = FALSE) {
   // Generate the list of options and questions.
-  $options = _webform_component_options($component['extra']['options']);
-  $questions = array_values(_webform_component_options($component['extra']['questions']));
+  $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
 
   // Generate a lookup table of results.
-  $placeholders = count($sids) ? array_fill(0, count($sids), "'%s'") : array();
-  $sidfilter = count($sids) ? " AND sid in (".implode(",", $placeholders).")" : "";
-  $query = 'SELECT no, data, count(data) as datacount '.
-    ' FROM {webform_submitted_data} '.
-    ' WHERE nid = %d '.
-    ' AND cid = %d '.
-    " AND data != '' ". $sidfilter .
-    ' GROUP BY no, data';
-  $result = db_query($query, array_merge(array($component['nid'], $component['cid']), $sids));
+  $query = db_select('webform_submitted_data', 'wsd')
+    ->fields('wsd', array('no', 'data'))
+    ->condition('nid', $component['nid'])
+    ->condition('cid', $component['cid'])
+    ->condition('data', '', '<>')
+    ->groupBy('no')
+    ->groupBy('data');
+  $query->addExpression('COUNT(sid)', 'datacount');
+
+  if (count($sids)) {
+    $query->condition('sid', $sids, 'IN');
+  }
+
+  $result = $query->execute();
   $counts = array();
-  while ($data = db_fetch_object($result)) {
+  foreach ($result as $data) {
     $counts[$data->no][$data->data] = $data->datacount;
   }
 

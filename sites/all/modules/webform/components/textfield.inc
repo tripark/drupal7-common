@@ -1,5 +1,4 @@
 <?php
-// $Id: textfield.inc,v 1.31 2010/12/29 03:56:34 quicksketch Exp $
 
 /**
  * @file
@@ -53,7 +52,7 @@ function _webform_edit_textfield($component) {
     '#default_value' => $component['value'],
     '#description' => t('The default value of the field.') . theme('webform_token_help'),
     '#size' => 60,
-    '#maxlength' => 127,
+    '#maxlength' => 1024,
     '#weight' => 0,
   );
   $form['display']['width'] = array(

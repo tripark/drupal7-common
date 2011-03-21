@@ -1,5 +1,4 @@
 <?php
-// $Id: webform.report.inc,v 1.28 2011/01/07 20:24:08 quicksketch Exp $
 
 /**
  * @file
@@ -54,20 +53,14 @@ function webform_results_submissions($node, $user_filter, $pager_count) {
     }
     $row[] = l(t('View'), "node/$node->nid/submission/$sid");
     $operation_count = 1;
-    if (module_exists('print_pdf') && user_access('access PDF version')) {
-      $row[] = l(t('PDF'), "printpdf/$node->nid/submission/$sid", array('query' => drupal_get_destination()));
-      $operation_count++;
-    }
-    if (module_exists('print') && user_access('access print')) {
-      $row[] = l(t('Print'), "print/$node->nid/submission/$sid");
-      $operation_count++;
-    }
+    // No need to call this multiple times, just reference this in a variable.
+    $destination = drupal_get_destination();
     if (webform_submission_access($node, $submission, 'edit', $user)) {
-      $row[] = l(t('Edit'), "node/$node->nid/submission/$sid/edit", array('query' => drupal_get_destination()));
+      $row[] = l(t('Edit'), "node/$node->nid/submission/$sid/edit", array('query' => $destination));
       $operation_count++;
     }
     if (webform_submission_access($node, $submission, 'delete', $user)) {
-      $row[] = l(t('Delete'), "node/$node->nid/submission/$sid/delete", array('query' => drupal_get_destination()));
+      $row[] = l(t('Delete'), "node/$node->nid/submission/$sid/delete", array('query' => $destination));
       $operation_count++;
     }
     if ($operation_count < $operation_total) {
@@ -82,7 +75,7 @@ function webform_results_submissions($node, $user_filter, $pager_count) {
   $element['#total_count'] = $count;
   $element['#pager_count'] = $pager_count;
   $element['#attached']['css'] = array(
-    drupal_get_path('module', 'webform') . '/css/webform-admin.css' => array('preprocess' => FALSE, 'weight' => CSS_DEFAULT + 1),
+    drupal_get_path('module', 'webform') . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1),
   );
 
   $element['table']['#theme'] = 'table';
@@ -151,7 +144,7 @@ function theme_webform_results_submissions_header($variables) {
   $node = $variables['node'];
 
   $columns = array(
-    array('data' => t('#'), 'field' => 'sid', 'sort' => 'asc'),
+    array('data' => t('#'), 'field' => 'sid', 'sort' => 'desc'),
     array('data' => t('Submitted'), 'field' => 'submitted'),
   );
   if (webform_results_access($node)) {
@@ -199,7 +192,7 @@ function webform_results_table($node, $pager_count = 0) {
 
 function theme_webform_results_table_header($variables) {
   return array(
-    array('data' => t('#'), 'field' => 'sid', 'sort' => 'asc'),
+    array('data' => t('#'), 'field' => 'sid', 'sort' => 'desc'),
     array('data' => t('Submitted'), 'field' => 'submitted'),
     array('data' => t('User'), 'field' => 'name'),
     array('data' => t('IP Address'), 'field' => 'remote_addr'),
@@ -221,7 +214,7 @@ function theme_webform_results_table_header($variables) {
  *   The number of results to be shown per page.
  */
 function theme_webform_results_table($variables) {
-  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('weight' => CSS_THEME, 'preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('group' => CSS_THEME, 'preprocess' => FALSE));
 
   $node = $variables['node'];
   $components = $variables['components'];
@@ -426,7 +419,7 @@ function webform_results_download_form_submit(&$form, &$form_state) {
  * Theme the output of the export form.
  */
 function theme_webform_results_download_form($variables) {
-  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('weight' => CSS_THEME, 'preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('group' => CSS_THEME, 'preprocess' => FALSE));
 
   $form = $variables['form'];
 
@@ -437,7 +430,7 @@ function theme_webform_results_download_form($variables) {
  * Theme the output of the select list format radio buttons.
  */
 function theme_webform_results_download_select_format($variables) {
-  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('weight' => CSS_THEME, 'preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('group' => CSS_THEME, 'preprocess' => FALSE));
 
   $element = $variables['element'];
   $output = '';
@@ -503,7 +496,7 @@ function theme_webform_results_download_select_format($variables) {
  *   27 Feb 2005       ,1035,56 ,212   ,X         ,        ,        ,..,       ,X          ,X       ,X       ,..,X       ,How is this?
  *
  */
-function webform_results_download($node, $format = 'delimiter', $options = array()) {
+function webform_results_download($node, $format = 'delimited', $options = array()) {
   module_load_include('inc', 'webform', 'includes/webform.export');
   module_load_include('inc', 'webform', 'includes/webform.components');
 
@@ -520,7 +513,7 @@ function webform_results_download($node, $format = 'delimiter', $options = array
   if (empty($options)) {
     $options = array(
       'delimiter' => variable_get('webform_csv_delimiter', '\t'),
-      'components' => array_keys($submission_information) + array_keys(webform_component_list($node, 'csv', TRUE)),
+      'components' => array_merge(array_keys($submission_information), array_keys(webform_component_list($node, 'csv', TRUE))),
       'select_keys' => 0,
       'select_format' => 'separate',
     );
@@ -688,7 +681,7 @@ function theme_webform_results_analysis($variables) {
 
   $header = array(
     $single ? $analysis_component['name'] : t('Q'),
-    array('data' => $single ? '&nbsp' : t('responses'), 'colspan' => '10')
+    array('data' => $single ? '&nbsp;' : t('responses'), 'colspan' => '10')
   );
 
   foreach ($data as $cid => $row_data) {

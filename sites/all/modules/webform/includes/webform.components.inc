@@ -1,5 +1,4 @@
 <?php
-// $Id: webform.components.inc,v 1.56 2011/01/05 06:07:07 quicksketch Exp $
 
 /**
  * @file
@@ -156,7 +155,7 @@ function theme_webform_components_form($variables) {
 
   $path = drupal_get_path('module', 'webform');
   $form['components']['#attached'] =  array(
-    'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'weight' => CSS_DEFAULT + 1)),
+    'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1)),
     'js' => array($path . '/js/webform-admin.js' => array('preprocess' => FALSE)),
   );
 
@@ -341,7 +340,7 @@ function webform_components_form_submit($form, &$form_state) {
 
 function webform_component_edit_form($form, $form_state, $node, $component, $clone = FALSE) {
   drupal_set_title(t('Edit component: @name', array('@name' => $component['name'])), PASS_THROUGH);
-  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('weight' => CSS_THEME, 'preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('group' => CSS_THEME, 'preprocess' => FALSE));
 
   // Print the correct field type specification.
   // We always need: name and description.
@@ -581,7 +580,9 @@ function webform_component_edit_form_validate($form, &$form_state) {
 }
 
 function webform_component_edit_form_submit($form, &$form_state) {
+  // Ensure a webform record exists.
   $node = node_load($form_state['values']['nid']);
+  webform_ensure_record($node);
 
   // Remove empty extra values.
   if (isset($form_state['values']['extra'])) {
@@ -602,16 +603,16 @@ function webform_component_edit_form_submit($form, &$form_state) {
   }
 
   if ($form_state['values']['clone']) {
-    drupal_set_message(t('Component %name cloned.', array('%name' => $form_state['values']['name'])));
     webform_component_clone($node, $form_state['values']);
+    drupal_set_message(t('Component %name cloned.', array('%name' => $form_state['values']['name'])));
   }
   elseif (!empty($form_state['values']['cid'])) {
-    drupal_set_message(t('Component %name updated.', array('%name' => $form_state['values']['name'])));
     webform_component_update($form_state['values']);
+    drupal_set_message(t('Component %name updated.', array('%name' => $form_state['values']['name'])));
   }
   else {
-    drupal_set_message(t('New component %name added.', array('%name' => $form_state['values']['name'])));
     $cid = webform_component_insert($form_state['values']);
+    drupal_set_message(t('New component %name added.', array('%name' => $form_state['values']['name'])));
   }
 
   // Since Webform components have been updated but the node itself has not
@@ -648,8 +649,16 @@ function webform_component_delete_form($form, $form_state, $node, $component) {
 }
 
 function webform_component_delete_form_submit($form, &$form_state) {
-  drupal_set_message(t('Component %name deleted.', array('%name' => $form_state['values']['component']['name'])));
-  webform_component_delete($form_state['values']['node'], $form_state['values']['component']);
+  // Delete the component.
+  $node = $form_state['values']['node'];
+  $component = $form_state['values']['component'];
+  webform_component_delete($node, $component);
+  drupal_set_message(t('Component %name deleted.', array('%name' => $component['name'])));
+
+  // Check if this webform still contains any information.
+  unset($node->webform['components'][$component['cid']]);
+  webform_check_record($node);
+
   $form_state['redirect'] = 'node/' . $form_state['values']['node']->nid . '/webform/components';
 }
 
@@ -938,6 +947,7 @@ function theme_webform_component_select($variables) {
   }
 
   $element['#type'] = 'fieldset';
+  $element['#value'] = NULL;
   $element['#attributes']['class'] = array('webform-component-select-table');
   if (!isset($element['#collapsible']) || $element['#collapsible']) {
     $element['#attributes']['class'][] = 'collapsible';

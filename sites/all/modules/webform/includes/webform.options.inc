@@ -1,5 +1,4 @@
 <?php
-// $Id: webform.options.inc,v 1.1 2010/03/29 03:19:37 quicksketch Exp $
 
 /**
  * @file

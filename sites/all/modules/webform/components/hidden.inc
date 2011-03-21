@@ -1,5 +1,4 @@
 <?php
-// $Id: hidden.inc,v 1.27 2010/10/18 07:21:10 quicksketch Exp $
 
 /**
  * @file

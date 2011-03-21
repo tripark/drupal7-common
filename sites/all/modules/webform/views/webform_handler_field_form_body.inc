@@ -1,5 +1,4 @@
 <?php
-// $Id: webform_handler_field_form_body.inc,v 1.3 2010/03/08 01:04:42 quicksketch Exp $
 
 /**
 * @file

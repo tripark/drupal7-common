@@ -1,5 +1,4 @@
 <?php
-// $Id: select.inc,v 1.65 2011/01/05 04:39:01 quicksketch Exp $
 
 /**
  * @file
@@ -128,7 +127,7 @@ function _webform_edit_select($component) {
       '#type' => 'textarea',
       '#title' => t('Options'),
       '#default_value' => $component['extra']['items'],
-      '#description' => t('<strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Only alphanumeric characters and underscores are allowed as a key. One option per line. Option groups may be specified with &lt;Group Name&gt;. &lt;&gt; can be used to insert items at the root of the menu after specifying a group.') . theme('webform_token_help'),
+      '#description' => t('<strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Use of only alphanumeric characters and underscores is recommended in keys. One option per line. Option groups may be specified with &lt;Group Name&gt;. &lt;&gt; can be used to insert items at the root of the menu after specifying a group.') . theme('webform_token_help'),
       '#cols' => 60,
       '#rows' => 5,
       '#weight' => 0,
@@ -148,7 +147,7 @@ function _webform_edit_select($component) {
       '#default_value' => $component['value'],
       '#description' => t('The default value of the field. For multiple selects use commas to separate multiple defaults.') . theme('webform_token_help'),
       '#size' => 60,
-      '#maxlength' => 256,
+      '#maxlength' => 1024,
       '#weight' => 0,
     );
     $form['extra']['multiple'] = array(
@@ -459,7 +458,7 @@ function _webform_submit_select($component, $value) {
           unset($value[$key]);
         }
         else {
-          $return[] = $key;
+          $return[] = $option_value;
         }
       }
       // Handle options that are added through the "other" field.
@@ -547,7 +546,7 @@ function _webform_analysis_select($component, $sids = array(), $single = FALSE) 
     ->condition('nid', $component['nid'])
     ->condition('cid', $component['cid'])
     ->condition('data', '', '<>')
-    ->condition('data', $options, $option_operator)
+    ->condition('data', array_keys($options), $option_operator)
     ->groupBy('data');
   $query->addExpression('COUNT(data)', 'datacount');
 
@@ -783,7 +782,7 @@ function _webform_select_options_callback($name, $component, $flat = FALSE, $fil
   if (isset($info[$name]['options callback']) && function_exists($info[$name]['options callback'])) {
     $function = $info[$name]['options callback'];
 
-    $options_args = array();
+    $arguments = array();
     if (isset($info[$name]['options arguments'])) {
       $arguments = $info[$name]['options arguments'];
     }

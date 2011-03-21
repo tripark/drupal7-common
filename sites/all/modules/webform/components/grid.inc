@@ -1,5 +1,4 @@
 <?php
-// $Id: grid.inc,v 1.34 2011/01/07 20:24:08 quicksketch Exp $
 
 /**
  * @file
@@ -97,7 +96,7 @@ function _webform_edit_grid($component) {
       '#type' => 'textarea',
       '#title' => t('Options'),
       '#default_value' => $component['extra']['options'],
-      '#description' => t('Options to select across the top. One option per line. <strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Only alphanumeric characters and underscores are allowed as a key.') . theme('webform_token_help'),
+      '#description' => t('Options to select across the top. One option per line. <strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Use of only alphanumeric characters and underscores is recommended in keys.') . theme('webform_token_help'),
       '#cols' => 60,
       '#rows' => 5,
       '#weight' => -3,
@@ -109,7 +108,7 @@ function _webform_edit_grid($component) {
       '#type' => 'textarea',
       '#title' => t('Questions'),
       '#default_value' => $component['extra']['questions'],
-      '#description' => t('Questions list down the side of the grid. One question per line. <strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Only alphanumeric characters and underscores are allowed as a key.') . theme('webform_token_help'),
+      '#description' => t('Questions list down the side of the grid. One question per line. <strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Use of only alphanumeric characters and underscores is recommended in keys.') . theme('webform_token_help'),
       '#cols' => 60,
       '#rows' => 5,
       '#weight' => -2,
@@ -241,7 +240,7 @@ function theme_webform_display_grid($variables) {
           $row[] = array('data' => '<strong>X</strong>', 'class' => array('checkbox', 'webform-grid-option'));
         }
         else {
-          $row[] = array('data' => '&nbsp', 'class' => array('checkbox', 'webform-grid-option'));
+          $row[] = array('data' => '&nbsp;', 'class' => array('checkbox', 'webform-grid-option'));
         }
       }
       $rows[] = $row;
@@ -360,6 +359,7 @@ function _webform_csv_headers_grid($component, $export_options) {
  */
 function _webform_csv_data_grid($component, $export_options, $value) {
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
   $return = array();
   foreach ($questions as $key => $question) {
     if (isset($value[$key]) && isset($options[$value[$key]])) {

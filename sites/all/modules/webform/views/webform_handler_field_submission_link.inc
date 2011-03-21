@@ -1,5 +1,4 @@
 <?php
-// $Id: webform_handler_field_submission_link.inc,v 1.4 2010/03/08 01:04:42 quicksketch Exp $
 
 /**
 * @file
