@@ -31,8 +31,12 @@ function zen_theme(&$existing, $type, $theme, $path) {
 /**
  * Return a themed breadcrumb trail.
  *
- * @param $breadcrumb
- *   An array containing the breadcrumb links.
+ * @param $variables
+ *   - title: An optional string to be used as a navigational heading to give
+ *     context for breadcrumb links to screen-reader users.
+ *   - title_attributes_array: Array of HTML attributes for the title. It is
+ *     flattened into a string within the theme function.
+ *   - breadcrumb: An array containing the breadcrumb links.
  * @return
  *   A string containing the breadcrumb output.
  */
@@ -70,10 +74,17 @@ function zen_breadcrumb($variables) {
       }
 
       // Provide a navigational heading to give context for breadcrumb links to
-      // screen-reader users. Make the heading invisible with .element-invisible.
-      $heading = '<h2 class="element-invisible">' . t('You are here') . '</h2>';
+      // screen-reader users.
+      if (empty($variables['title'])) {
+        $variables['title'] = t('You are here');
+      }
+      // Unless overridden by a preprocess function, make the heading invisible.
+      if (!isset($variables['title_attributes_array']['class'])) {
+        $variables['title_attributes_array']['class'][] = 'element-invisible';
+      }
+      $heading = '<h2' . drupal_attributes($variables['title_attributes_array']) . '>' . $variables['title'] . '</h2>';
 
-      return $heading . '<div class="breadcrumb">' . implode($breadcrumb_separator, $breadcrumb) . $trailing_separator . $title . '</div>';
+      return '<div class="breadcrumb">' . $heading . implode($breadcrumb_separator, $breadcrumb) . $trailing_separator . $title . '</div>';
     }
   }
   // Otherwise, return an empty string.
@@ -86,17 +97,13 @@ function zen_breadcrumb($variables) {
 function zen_menu_local_tasks(&$variables) {
   $output = '';
 
-  if (!empty($variables['primary'])) {
-    $variables['primary']['#prefix'] = '<h2 class="element-invisible">' . t('Primary tabs') . '</h2>';
-    $variables['primary']['#prefix'] .= '<ul class="tabs primary clearfix">';
-    $variables['primary']['#suffix'] = '</ul>';
-    $output .= drupal_render($variables['primary']);
+  if ($primary = drupal_render($variables['primary'])) {
+    $output .= '<h2 class="element-invisible">' . t('Primary tabs') . '</h2>';
+    $output .= '<ul class="tabs primary clearfix">' . $primary . '</ul>';
   }
-  if (!empty($variables['secondary'])) {
-    $variables['secondary']['#prefix'] = '<h2 class="element-invisible">' . t('Secondary tabs') . '</h2>';
-    $variables['secondary']['#prefix'] .= '<ul class="tabs secondary clearfix">';
-    $variables['secondary']['#suffix'] = '</ul>';
-    $output .= drupal_render($variables['secondary']);
+  if ($secondary = drupal_render($variables['secondary'])) {
+    $output .= '<h2 class="element-invisible">' . t('Secondary tabs') . '</h2>';
+    $output .= '<ul class="tabs secondary clearfix">' . $secondary . '</ul>';
   }
 
   return $output;
@@ -154,16 +161,16 @@ function zen_add_conditional_styles() {
 /**
  * Override or insert variables into the html template.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("html" in this case.)
  */
-function zen_preprocess_html(&$vars, $hook) {
+function zen_preprocess_html(&$variables, $hook) {
   // If the user is silly and enables Zen as the theme, add some styles.
   if ($GLOBALS['theme'] == 'zen') {
     include_once './' . drupal_get_path('theme', 'zen') . '/zen-internals/template.zen.inc';
-    _zen_preprocess_html($vars, $hook);
+    _zen_preprocess_html($variables, $hook);
   }
   elseif (!module_exists('conditional_styles')) {
     zen_add_conditional_styles();
@@ -171,7 +178,7 @@ function zen_preprocess_html(&$vars, $hook) {
 
   // Classes for body element. Allows advanced theming based on context
   // (home page, node of certain type, etc.)
-  if (!$vars['is_front']) {
+  if (!$variables['is_front']) {
     // Add unique class for each page.
     $path = drupal_get_path_alias($_GET['q']);
     // Add unique class for each website section.
@@ -184,40 +191,60 @@ function zen_preprocess_html(&$vars, $hook) {
         $section = 'node-' . arg(2);
       }
     }
-    $vars['classes_array'][] = drupal_html_class('section-' . $section);
+    $variables['classes_array'][] = drupal_html_class('section-' . $section);
   }
   if (theme_get_setting('zen_wireframes')) {
-    $vars['classes_array'][] = 'with-wireframes'; // Optionally add the wireframes style.
+    $variables['classes_array'][] = 'with-wireframes'; // Optionally add the wireframes style.
   }
   // Store the menu item since it has some useful information.
-  $vars['menu_item'] = menu_get_item();
-  switch ($vars['menu_item']['page_callback']) {
+  $variables['menu_item'] = menu_get_item();
+  switch ($variables['menu_item']['page_callback']) {
     case 'views_page':
       // Is this a Views page?
-      $vars['classes_array'][] = 'page-views';
+      $variables['classes_array'][] = 'page-views';
       break;
     case 'page_manager_page_execute':
     case 'page_manager_node_view':
     case 'page_manager_contact_site':
       // Is this a Panels page?
-      $vars['classes_array'][] = 'page-panels';
+      $variables['classes_array'][] = 'page-panels';
       break;
+  }
+}
+
+/**
+ * Override or insert variables into the page template.
+ *
+ * @param $variables
+ *   An array of variables to pass to the theme template.
+ * @param $hook
+ *   The name of the template being rendered ("page" in this case.)
+ */
+function zen_preprocess_page(&$variables, $hook) {
+  // Find the title of the menu used by the secondary links.
+  $secondary_links = variable_get('menu_secondary_links_source', 'user-menu');
+  if ($secondary_links) {
+    $menus = function_exists('menu_get_menus') ? menu_get_menus() : menu_list_system_menus();
+    $variables['secondary_menu_heading'] = $menus[$secondary_links];
+  }
+  else {
+    $variables['secondary_menu_heading'] = '';
   }
 }
 
 /**
  * Override or insert variables into the maintenance page template.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("maintenance_page" in this case.)
  */
-function zen_preprocess_maintenance_page(&$vars, $hook) {
+function zen_preprocess_maintenance_page(&$variables, $hook) {
   // If Zen is the maintenance theme, add some styles.
   if ($GLOBALS['theme'] == 'zen') {
     include_once './' . drupal_get_path('theme', 'zen') . '/zen-internals/template.zen.inc';
-    _zen_preprocess_html($vars, $hook);
+    _zen_preprocess_html($variables, $hook);
   }
   elseif (!module_exists('conditional_styles')) {
     zen_add_conditional_styles();
@@ -227,126 +254,105 @@ function zen_preprocess_maintenance_page(&$vars, $hook) {
 /**
  * Override or insert variables into the node templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("node" in this case.)
  */
-function zen_preprocess_node(&$vars, $hook) {
-  if (isset($vars['node_title'])) {
-    // $node_title is idiotic. Fixed in Alpha 4.
-    $vars['title'] = $vars['node_title'];
+function zen_preprocess_node(&$variables, $hook) {
+  // Add $unpublished variable.
+  $variables['unpublished'] = (!$variables['status']) ? TRUE : FALSE;
+
+  // Add a class to show node is authored by current user.
+  if ($variables['uid'] && $variables['uid'] == $GLOBALS['user']->uid) {
+    $variables['classes_array'][] = 'node-by-viewer';
   }
 
-  // Special classes for nodes.
-  // Class for node type: "node-type-page", "node-type-story", "node-type-my-custom-type", etc.
-  $vars['classes_array'][] = drupal_html_class('node-type-' . $vars['type']);
-  if ($vars['promote']) {
-    $vars['classes_array'][] = 'node-promoted';
-  }
-  if ($vars['sticky']) {
-    $vars['classes_array'][] = 'node-sticky';
-  }
-  if (!$vars['status']) {
-    $vars['classes_array'][] = 'node-unpublished';
-    $vars['unpublished'] = TRUE;
-  }
-  else {
-    $vars['unpublished'] = FALSE;
-  }
-  if ($vars['uid'] && $vars['uid'] == $GLOBALS['user']->uid) {
-    $vars['classes_array'][] = 'node-by-viewer'; // Node is authored by current user.
-  }
-  if ($vars['teaser']) {
-    $vars['classes_array'][] = 'node-teaser'; // Node is displayed as teaser.
-  }
-  if (isset($vars['preview'])) {
-    $vars['classes_array'][] = 'node-preview';
-  }
-
-  $vars['title_attributes_array']['class'][] = 'node-title';
+  $variables['title_attributes_array']['class'][] = 'node-title';
 }
 
 /**
  * Override or insert variables into the comment templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("comment" in this case.)
  */
-function zen_preprocess_comment(&$vars, $hook) {
+function zen_preprocess_comment(&$variables, $hook) {
   // If comment subjects are disabled, don't display them.
-  if (variable_get('comment_subject_field_' . $vars['node']->type, 1) == 0) {
-    $vars['title'] = '';
+  if (variable_get('comment_subject_field_' . $variables['node']->type, 1) == 0) {
+    $variables['title'] = '';
   }
 
+  // Anonymous class is broken in core. See #1110650
+  if ($variables['comment']->uid == 0) {
+    $variables['classes_array'][] = 'comment-by-anonymous';
+  }
   // Zebra striping.
-  if ($vars['id'] == 1) {
-    $vars['classes_array'][] = 'first';
+  if ($variables['id'] == 1) {
+    $variables['classes_array'][] = 'first';
   }
-  if ($vars['id'] == $vars['node']->comment_count) {
-    $vars['classes_array'][] = 'last';
+  if ($variables['id'] == $variables['node']->comment_count) {
+    $variables['classes_array'][] = 'last';
   }
-  $vars['classes_array'][] = $vars['zebra'];
+  $variables['classes_array'][] = $variables['zebra'];
 
-  $vars['title_attributes_array']['class'][] = 'comment-title';
+  $variables['title_attributes_array']['class'][] = 'comment-title';
 }
 
 /**
  * Preprocess variables for region.tpl.php
  *
- * Prepare the values passed to the theme_region function to be passed into a
- * pluggable template engine. Uses the region name to generate a template file
- * suggestions. If none are found, the default region.tpl.php is used.
- *
- * @see region.tpl.php
+ * @param $variables
+ *   An array of variables to pass to the theme template.
+ * @param $hook
+ *   The name of the template being rendered ("region" in this case.)
  */
-function zen_preprocess_region(&$vars, $hook) {
+function zen_preprocess_region(&$variables, $hook) {
   // Sidebar regions get some extra classes and a common template suggestion.
-  if (strpos($vars['region'], 'sidebar_') === 0) {
-    $vars['classes_array'][] = 'column';
-    $vars['classes_array'][] = 'sidebar';
-    $vars['theme_hook_suggestions'][] = 'region__sidebar';
+  if (strpos($variables['region'], 'sidebar_') === 0) {
+    $variables['classes_array'][] = 'column';
+    $variables['classes_array'][] = 'sidebar';
+    $variables['theme_hook_suggestions'][] = 'region__sidebar';
     // Allow a region-specific template to override Zen's region--sidebar.
-    $vars['theme_hook_suggestions'][] = 'region__' . $vars['region'];
+    $variables['theme_hook_suggestions'][] = 'region__' . $variables['region'];
   }
 }
 
 /**
  * Override or insert variables into the block templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("block" in this case.)
  */
-function zen_preprocess_block(&$vars, $hook) {
+function zen_preprocess_block(&$variables, $hook) {
   // Classes describing the position of the block within the region.
-  if ($vars['block_id'] == 1) {
-    $vars['classes_array'][] = 'first';
+  if ($variables['block_id'] == 1) {
+    $variables['classes_array'][] = 'first';
   }
   // The last_in_region property is set in zen_page_alter().
-  if (isset($vars['block']->last_in_region)) {
-    $vars['classes_array'][] = 'last';
+  if (isset($variables['block']->last_in_region)) {
+    $variables['classes_array'][] = 'last';
   }
-  $vars['classes_array'][] = 'region-' . $vars['block_zebra'];
-  $vars['classes_array'][] = 'region-count-' . $vars['block_id'];
+  $variables['classes_array'][] = $variables['block_zebra'];
 
-  $vars['title_attributes_array']['class'][] = 'block-title';
+  $variables['title_attributes_array']['class'][] = 'block-title';
 }
 
 /**
  * Override or insert variables into the block templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("block" in this case.)
  */
-function zen_process_block(&$vars, $hook) {
+function zen_process_block(&$variables, $hook) {
   // Drupal 7 should use a $title variable instead of $block->subject.
-  $vars['title'] = $vars['block']->subject;
+  $variables['title'] = $variables['block']->subject;
 }
 
 /**

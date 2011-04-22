@@ -1,5 +1,4 @@
 <?php
-// $Id: entity.test,v 1.1.2.13 2011/02/14 09:05:00 fago Exp $
 
 /**
  * @file
@@ -597,13 +596,16 @@ class EntityMetadataTestCase extends DrupalWebTestCase {
   function testEntityQuery() {
     $title = '<b>Is it bold?<b>';
     $values[LANGUAGE_NONE][0] = array('value' => 'foo');
-    $node = $this->drupalCreateNode(array($this->field_name => $values, 'title' => $title));
+    $node = $this->drupalCreateNode(array($this->field_name => $values, 'title' => $title, 'uid' => $GLOBALS['user']->uid));
 
     $results = entity_property_query('node', 'title', $title);
     $this->assertEqual($results, array($node->nid), 'Queried nodes with a given title.');
 
     $results = entity_property_query('node', $this->field_name, 'foo');
     $this->assertEqual($results, array($node->nid), 'Queried nodes with a given field value.');
+
+    $results = entity_property_query('node', 'author', $GLOBALS['user']);
+    $this->assertEqual($results, array($node->nid), 'Queried nodes with a given auhtor.');
   }
 
   /**
@@ -853,6 +855,11 @@ class EntityMetadataIntegrationTestCase extends DrupalWebTestCase {
     foreach ($wrapper as $key => $value) {
       $this->assertValue($wrapper, $key);
     }
+    // Test page request related properties.
+    foreach ($wrapper->current_page as $key => $value) {
+      $this->assertValue($wrapper->current_page, $key);
+    }
+
     // Test files.
     $file = $this->createFile();
 

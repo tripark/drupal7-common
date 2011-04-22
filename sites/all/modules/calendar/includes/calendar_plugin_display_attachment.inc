@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar_plugin_display_attachment.inc,v 1.18 2011/01/18 00:37:21 karens Exp $
 
 /**
  * @file

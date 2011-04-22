@@ -1,5 +1,4 @@
 <?php
-// $Id: entity.wrapper.inc,v 1.1.2.11 2011/02/15 13:19:40 fago Exp $
 
 /**
  * @file
@@ -129,7 +128,7 @@ abstract class EntityMetadataWrapper {
    * Returns whether $value is a valid value to set.
    */
   public function validate($value) {
-    if (!entity_property_verify_data_type($value, $this->type)) {
+    if (isset($value) && !entity_property_verify_data_type($value, $this->type)) {
       return FALSE;
     }
     return !isset($this->info['validation callback']) || call_user_func($this->info['validation callback'], $value, $this->info);
@@ -650,7 +649,7 @@ class EntityDrupalWrapper extends EntityStructureWrapper {
    * @see entity_id()
    */
   public function getIdentifier() {
-    return $this->dataAvailable() && $this->value() ? $this->id : NULL;
+    return $this->dataAvailable() ? $this->value(array('identifier' => TRUE)) : NULL;
   }
 
   /**
@@ -665,10 +664,17 @@ class EntityDrupalWrapper extends EntityStructureWrapper {
 
   /**
    * Overridden.
+   *
+   * @param $options
+   *   An array of options. Known keys:
+   *   - identifier: If set to TRUE, the entity identifier is returned.
    */
   public function value(array $options = array()) {
     $this->setEntity(parent::value());
-    if (!$this->data && !empty($this->id)) {
+    if (!empty($options['identifier'])) {
+      return $this->id;
+    }
+    elseif (!$this->data && !empty($this->id)) {
       // Lazy load the entity if necessary.
       $return = entity_load($this->type, array($this->id));
       $this->data = reset($return);
@@ -751,7 +757,7 @@ class EntityDrupalWrapper extends EntityStructureWrapper {
    * @return EntityDrupalWrapper
    */
   public function delete() {
-    if ($this->dataAvailable()) {
+    if ($this->dataAvailable() && $this->value()) {
       $return = entity_delete($this->type, $this->id);
       if ($return === FALSE) {
         throw new EntityMetadataWrapperException("There is no information about how to delete entities of type " . check_plain($this->type) . '.');
@@ -879,8 +885,8 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
   /**
    * @param $options
    *   An array of options. Known keys:
-   *   identifier: If set to TRUE for a list of entities, it won't be returned
-   *   as list of fully loaded entity objects, but as a list of entity ids.
+   *   - identifier: If set to TRUE for a list of entities, it won't be returned
+   *     as list of fully loaded entity objects, but as a list of entity ids.
    */
   public function value(array $options = array()) {
     // For lists of entities fetch full entity objects before returning.
@@ -946,7 +952,7 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
    * list items.
    */
   public function validate($value) {
-    return entity_property_verify_data_type($value, $this->type);
+    return !isset($value) || entity_property_verify_data_type($value, $this->type);
   }
 
   /**

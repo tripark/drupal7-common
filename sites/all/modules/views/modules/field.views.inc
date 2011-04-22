@@ -82,11 +82,24 @@ function field_views_field_default_views_data($field) {
   $bundles_names = array();
   $supports_revisions = FALSE;
   $entity_tables = array();
+  $group_name = count($field['bundles']) > 1 ? t('Fields') : NULL;
 
   // Build the relationships between the field table and the entity tables.
   foreach ($field['bundles'] as $entity => $bundles) {
     $entity_info = entity_get_info($entity);
+    if (empty($group_name)) {
+      $group_name = $entity_info['label'];
+
+      // Override Node to Content.
+      if ($group_name == t('Node')) {
+        $group_name = t('Content');
+      }
+    }
+
     $entity_tables[$entity_info['base table']] = $entity;
+    if (isset($entity_info['revision table'])) {
+      $entity_tables[$entity_info['revision table']] = $entity;
+    }
 
     $data[$current_table]['table']['join'][$entity_info['base table']] = array(
       'left_field' => $entity_info['entity keys']['id'],
@@ -133,12 +146,12 @@ function field_views_field_default_views_data($field) {
   $label = field_views_field_label($field_name);
   foreach ($tables as $type => $table) {
     if ($type == FIELD_LOAD_CURRENT) {
-      $group = t('Fields');
+      $group = $group_name;
       $old_column = 'entity_id';
       $column = $field['field_name'];
     }
     else {
-      $group = t('Fields (historical data)');
+      $group = t('@group (historical data)', array('@group' => $group_name));
       $old_column = 'revision_id';
       $column = $field['field_name'] . '-' . $old_column;
     }
@@ -160,7 +173,14 @@ function field_views_field_default_views_data($field) {
       'entity_tables' => $entity_tables,
       // Default the element type to div, let the UI change it if necessary.
       'element type' => 'div',
+      'is revision' => $type == FIELD_LOAD_REVISION,
+      'entity id' => $entity_info['entity keys']['id'],
+      'base table' => $entity_info['base table'],
     );
+    if ($type == FIELD_LOAD_REVISION) {
+      $data[$table][$column]['field']['revision id'] = $entity_info['entity keys']['revision'];
+      $data[$table][$column]['field']['base table'] = $entity_info['revision table'];
+    }
   }
 
   foreach ($field['columns'] as $column => $attributes) {

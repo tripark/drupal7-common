@@ -33,6 +33,7 @@
         Drupal.ajax[id].form = $form;
       });
     }
+    Drupal.viewsUi.resizeModal();
   };
 
   Drupal.ajax.prototype.commands.viewsDismissForm = function (ajax, response, status) {
@@ -126,6 +127,7 @@
   }
 
   Drupal.behaviors.viewsAjax = {
+    collapseReplaced: false,
     attach: function (context, settings) {
       if (!settings.views) {
         return;
@@ -185,6 +187,36 @@
         });
       });
 
+      if (!this.collapseReplaced && Drupal.collapseScrollIntoView) {
+        this.collapseReplaced = true;
+        Drupal.collapseScrollIntoView = function (node) {
+          for (var $parent = $(node); $parent.get(0) != document && $parent.size() != 0; $parent = $parent.parent()) {
+            if ($parent.css('overflow') == 'scroll' || $parent.css('overflow') == 'auto') {
+              if (Drupal.viewsUi.resizeModal) {
+                // If the modal is already at the max height, don't bother with
+                // this since the only reason to do it is to grow the modal.
+                if ($('.views-ui-dialog').height() < parseInt($(window).height() * .8)) {
+                  Drupal.viewsUi.resizeModal('', true);
+                }
+              }
+              return;
+            }
+          }
+
+          var h = document.documentElement.clientHeight || document.body.clientHeight || 0;
+          var offset = document.documentElement.scrollTop || document.body.scrollTop || 0;
+          var posY = $(node).offset().top;
+          var fudge = 55;
+          if (posY + node.offsetHeight + fudge > h + offset) {
+            if (node.offsetHeight > h) {
+              window.scrollTo(0, posY);
+            }
+            else {
+              window.scrollTo(0, posY + node.offsetHeight - h + fudge);
+            }
+          }
+        };
+      }
     }
   };
 

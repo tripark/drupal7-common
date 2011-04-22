@@ -389,6 +389,9 @@ function views_bulk_operations_form_validate($form, &$form_state) {
   switch ($form_state['values']['step']) {
     case VIEWS_BULK_OPS_STEP_VIEW:
       $_SESSION['vbo_values'][$_GET['q']] = $form_state['values'];
+      // There is no need to store the plugin object in the session, and Drupal
+      // fails to deserialize it on bootstrap.
+      unset($_SESSION['vbo_values'][$_GET['q']]['plugin']);
 
       if (!array_filter($form_state['values']['objects']['selection'])) { // If all 0, no row selected
         form_set_error('objects', t('No row selected. Please select one or more rows.'));
@@ -403,6 +406,9 @@ function views_bulk_operations_form_validate($form, &$form_state) {
 
     case VIEWS_BULK_OPS_STEP_SINGLE:
       $_SESSION['vbo_values'][$_GET['q']] = $form_state['values'];
+      // There is no need to store the plugin object in the session, and Drupal
+      // fails to deserialize it on bootstrap.
+      unset($_SESSION['vbo_values'][$_GET['q']]['plugin']);
 
       if (!array_filter($form_state['values']['objects']['selection'])) { // If all 0, no row selected
         form_set_error('objects', t('No row selected. Please select one or more rows.'));

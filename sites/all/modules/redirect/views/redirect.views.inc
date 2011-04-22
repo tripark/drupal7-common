@@ -1,5 +1,4 @@
 <?php
-// $Id: redirect.views.inc,v 1.3 2010/08/26 04:35:36 davereid Exp $
 
 /**
  * @file
@@ -176,10 +175,10 @@ function redirect_views_data() {
     ),
   );
 
-  // {redirect}.last_used
-  $data['redirect']['last_used'] = array(
-    'title' => t('Last used date'),
-    'help' => t('The last date/time the URL redirect was used.'),
+  // {redirect}.access
+  $data['redirect']['access'] = array(
+    'title' => t('Last accessed date'),
+    'help' => t('The date/time the URL redirect was last accessed.'),
     'field' => array(
       'handler' => 'views_handler_field_date',
       'click sortable' => TRUE,
@@ -189,6 +188,14 @@ function redirect_views_data() {
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_date',
+    ),
+  );
+
+  $data['redirect']['operations'] = array(
+    'field' => array(
+      'title' => t('Operations'),
+      'help' => t('Provide links to operations the user can perform for the URL redirect.'),
+      'handler' => 'redirect_handler_field_redirect_operations',
     ),
   );
 

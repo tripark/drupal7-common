@@ -218,8 +218,8 @@ class views_handler_filter extends views_handler {
     $form['expose_button'] = array(
       '#prefix' => '<div class="views-expose clearfix">',
       '#suffix' => '</div>',
-      // Should always come first
-      '#weight' => -1000,
+      // Should always come after the description and the relationship.
+      '#weight' => -200,
     );
 
     // Add a checkbox for JS users, which will have behavior attached to it
@@ -450,7 +450,7 @@ class views_handler_filter extends views_handler {
     }
 
     if ($type == 'value' && empty($this->always_required) && empty($this->options['expose']['required']) && $form['#type'] == 'select' && empty($form['#multiple'])) {
-      $any_label = variable_get('views_exposed_filter_any_label', 'old_any') == 'old_any' ? t('<Any>') : t('- Any -');
+      $any_label = variable_get('views_exposed_filter_any_label', 'new_any') == 'old_any' ? t('<Any>') : t('- Any -');
       $form['#options'] = array('All' => $any_label) + $form['#options'];
       $form['#default_value'] = 'All';
     }

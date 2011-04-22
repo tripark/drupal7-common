@@ -1,5 +1,4 @@
 <?php
-// $Id: redirect_handler_field_redirect_redirect.inc,v 1.2 2010/08/26 05:14:57 davereid Exp $
 
 /**
  * @file

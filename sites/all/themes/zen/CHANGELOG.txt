@@ -1,5 +1,46 @@
-Zen 7.x-3.x-dev, xxxx-xx-xx (development release)
----------------------------
+Zen 7.x-3.0, 2011-04-06
+-----------------------
+- #774836 by hefox: Check if node $title is set before outputting
+- #992616 by JohnAlbin and adrinux: Comments in layout RTL stylesheets are incorrect
+- #822570 by JohnAlbin and AaronCollier: Add focus styling to tabs
+- #1092372 by JohnAlbin and davebv: Simplify pages styling
+- #1115330: Styling in ie.css is only needed for IE7 and earlier
+- #481952 by kdebaas and JohnAlbin: Add vertical rhythm to line heights and margins
+- #370419: Remove messages.css in favor of core's styling
+- #1102770: Installing Zen prevents Appearance page from loading on some systems
+- #835982 by JohnAlbin, mverbaar, marcvangend: Drush support for sub-theme creation
+- #1084504 by Crossfeed, komal.savla, Network and JohnAlbin: PHP Error when secondary menu or menu module is disabled
+- #1085422 by hswong3i: Highlighted region's machine name doesn't match core
+- #1082242 by joeyabbs: Maintenance page is missing span around site name
+- #1074822: Update fields.css to use new classes for fields in core
+- #1110842: Comment preview color is missing due to mis-targeted CSS rule
+- #1110650: Anonymous comment class is broken in core
+- #1079010: The secondary links heading, "Secondary menu", is wrong
+- #1078994: Move secondary menu links from footer to header
+- #1072302: Use element-focusable class for skip link accessibility
+- #1072268: Zen theme doesn't load RTL styles
+- #929630 by juan_g and akalata: URL for overriding stylesheets documentation has changed
+- #1069106: Update theme-settings.php to use Form API states
+- #950206 by n8tron, Mtro and JohnAlbin: Update README in STARTERKIT
+- #1053874 by n8tron and JohnAlbin: Update README in STARTERKIT/templates
+- #1064706: Use $variables instead of $vars to match D7 code snippets
+- #1067062: Remove duplicate classes (like node-type-TYPE) from node.tpl.php
+- #940882: $readmore variable is missing from node.tpl.php
+- #950538 by hswong3i: User pictures should use .user-picture class
+- #1066478: Add missing title prefix/suffix variables to comment-wrapper.tpl
+- #1066472: Render comments and form to see if headings are needed
+- #1066452: Remove STARTERKIT_preprocess() placeholder since it's expensive and rarely needed
+- #1066436: STARTERKIT_theme() no longer needs to call zen_theme()
+- #1066426: No longer need to force the search for region__ suggestions
+- #1066386: Region tpls need to check for $content before printing wrapper
+- #1046030: Tabs div is always rendered
+- #1064390: Allow easier modification of breadcrumb's header
+- #1053036: Update screenshot.psd source image
+- #1061794 by Scott J and JohnAlbin: taxonomy terms no longer get special treatment in node.tpl
+- #936912 by n8tron and JohnAlbin: feed icon has wrong css class
+- #841988 by linclark and JohnAlbin: #navigation .content rule not targeting anything
+- #978640 by marcvangend: Whitespace before comment causes jQuery error
+- #1063814: Remove count-X and region-* classes from block.tpl.php
 - #1046394 by n8tron and JohnAlbin: Add first and last classes to blocks
 - #1060122: Add missing $block_html_id to block.tpl.php
 - #948666 by danillonunes and JohnAlbin: Update block classes in blocks.css
@@ -14,7 +55,34 @@ Zen 7.x-3.x-dev, xxxx-xx-xx (development release)
 - #875528 by linclark: Theme registry rebuilt warning not linked to admin page
 - #780690: Notice: Undefined index: date in _zen_preprocess_comment()
 - #729144 by Frank Ralf: Update STARTERKIT theme-settings.php for Drupal 7
-- #563060 by seutje and JohnAlbin: Port Zen to Drupal 7 (NOT YET COMPLETE)
+- #563060 by seutje and JohnAlbin: Port Zen to Drupal 7
+
+Zen 6.x-2.1, 2011-04-05
+-----------------------
+- #774836 by hefox: Check if node $title is set before outputting
+- #705264 by JohnAlbin, Jehu, mlncn and zenic: Allow Zen (and subthemes) to be used without a database
+- #1046090 by daniels and JohnAlbin: $styles is destroyed by rare bug with APC
+- #1083700: Add $submitted variable back into node.tpl
+- #1086820 by tacituseu: Views classes redundant since Views 6.x-2.9
+- #1017062 by adrinux: Block edit links span entire block on RTL pages
+- #774838 by bangpound, hefox and JohnAlbin: Add default case for build_mode
+- #919838 by saem, rgbivens and JohnAlbin: Theme description links to wrong docs
+- #992616 by JohnAlbin and adrinux: Comments in layout RTL stylesheets are incorrect
+- #822570 by JohnAlbin and AaronCollier: Add focus styling to tabs
+- #1072268: Zen theme doesn't load RTL styles
+- #929630 by juan_g and akalata: URL for overriding stylesheets documentation has changed
+- #742208: Conflict with domain theme module
+- #1063226 by tacituseu, danillonunes and barraponto: Unpublished comment style is not applied
+- #962356: Convert region template suggestions into theme hook suggestions
+- #978640 by marcvangend: Whitespace before comment causes jQuery error
+- #1046394 by n8tron and JohnAlbin: Add first and last classes to blocks
+- #870080 by mverbaar: Correction to README.TXT for STARTERKIT
+- #707410 by AdrianB: improve detection of Panels pages
+- #634552 by JohnAlbin and tim.plunkett: Conflict with context module
+- #941714: Modules setting $classes in preprocess functions breaks expected Zen classes
+- #932826: mytheme_links__system_main_menu() doesn't work as expected
+- Fix PHP warning on maintenance page
+- #690026: Cannot override region.tpl.php
 
 Zen 6.x-2.0, 2010-06-26
 -----------------------
@@ -137,6 +205,10 @@ Zen 6.x-2.0-beta1, 2009-11-10
 - Added notes about mobile stylesheets to STARTERKIT.info
 - #200495 by JohnAlbin, caroltron, and Toe: Split up monolithic zen.css into smaller, logical stylesheets
 - #328221 by kmonty and JohnAlbin: Split up ie.css to remove CSS hacks
+
+Zen 6.x-1.2, 2011-02-26
+-----------------------
+- #593290 by sfyn and JohnAlbin: Chaos Tools/Panels edit tab not working with Zen
 
 Zen 6.x-1.1, 2009-11-10
 -----------------------

@@ -1,5 +1,4 @@
 <?php
-// $Id: entity.features.inc,v 1.1.2.3 2011/02/14 12:51:28 fago Exp $
 
 /**
  * @file

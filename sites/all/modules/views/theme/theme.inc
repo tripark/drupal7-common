@@ -42,7 +42,7 @@ function template_preprocess_views_view(&$vars) {
 
   $view = $vars['view'];
 
-  $vars['rows']       = !empty($view->result) || !empty($view->style_plugin->definition['even empty']) ? $view->style_plugin->render($view->result) : '';
+  $vars['rows']       = !empty($view->result) || $view->style_plugin->even_empty() ? $view->style_plugin->render($view->result) : '';
 
   $vars['css_name']   = drupal_clean_css_identifier($view->name);
   $vars['name']       = $view->name;
@@ -94,6 +94,15 @@ function template_preprocess_views_view(&$vars) {
   // processed by contextual_preprocess() they will appear in the $title_suffix
   // variable (which we will then render in views-view.tpl.php).
   views_add_contextual_links($vars['view_array'], 'view', $view, $view->current_display);
+  // If a display handles where to put the contextual links for themselves let it
+  // does it but by default render the links in the view ouput.
+  $vars['admin_links'] = '';
+  if (!empty($vars['view_array']['#views_contextual_links_info'])) {
+    $location = $vars['view_array']['#views_contextual_links_info']['views_ui'];
+    if ($location == 'view') {
+      $vars['admin_links'] = drupal_render($vars['view_array']['#contextual_links']['views_ui']);
+    }
+  }
 
   // Attachments are always updated with the outer view, never by themselves,
   // so they do not have dom ids.
@@ -190,12 +199,13 @@ function template_preprocess_views_view_fields(&$vars) {
         $object->raw = NULL; // make sure it exists to reduce NOTICE
       }
 
+      $object->inline = !empty($vars['options']['inline'][$id]);
+
       if (!empty($vars['options']['separator']) && $inline && $object->inline && $object->content) {
         $object->separator = filter_xss_admin($vars['options']['separator']);
       }
 
       $object->class = drupal_clean_css_identifier($id);
-      $object->inline = !empty($vars['options']['inline'][$id]);
       $inline = $object->inline;
       $object->inline_html = $object->handler->element_wrapper_type(TRUE, TRUE);
 
@@ -293,14 +303,16 @@ function template_preprocess_views_view_field(&$vars) {
 function template_preprocess_views_view_summary(&$vars) {
   $view     = $vars['view'];
   $argument = $view->argument[$view->build_info['summary_level']];
+  $vars['row_classes'] = array();
 
   $url_options = array();
 
   if (!empty($view->exposed_raw_input)) {
     $url_options['query'] = $view->exposed_raw_input;
   }
-  $vars['classes_array'] = array();
   foreach ($vars['rows'] as $id => $row) {
+    $vars['row_classes'][$id] = '';
+
     $vars['rows'][$id]->link = $argument->summary_name($row);
     $args = $view->args;
     $args[$argument->position] = $argument->summary_argument($row);
@@ -312,7 +324,7 @@ function template_preprocess_views_view_summary(&$vars) {
     $vars['rows'][$id]->url = url($view->get_url($args, $base_path), $url_options);
     $vars['rows'][$id]->count = intval($row->{$argument->count_alias});
     if ($vars['rows'][$id]->url == base_path() . $_GET['q'] || $vars['rows'][$id]->url == base_path() . drupal_get_path_alias($_GET['q'])) {
-      $vars['classes_array'][$id] = 'active';
+      $vars['row_classes'][$id] = 'active';
     }
   }
 }
@@ -464,6 +476,7 @@ function template_preprocess_views_view_table(&$vars) {
 
         $vars['field_classes'][$field][$num] .= $classes;
       }
+      $vars['field_attributes'][$field][$num] = array();
 
       if (!empty($fields[$field]) && empty($fields[$field]->options['exclude'])) {
         $field_output = $renders[$num][$field];
@@ -504,6 +517,13 @@ function template_preprocess_views_view_table(&$vars) {
   $vars['row_classes'][count($vars['row_classes']) - 1][] = 'views-row-last';
 
   $vars['classes_array'] = array('views-table');
+  if (empty($vars['rows']) && !empty($options['empty_table'])) {
+    $vars['rows'][0][0] = $view->display_handler->render_area('empty');
+    // Calculate the amounts of rows with output.
+    $vars['field_attributes'][0][0]['colspan'] = count($vars['header']);
+  }
+
+
   if (!empty($options['sticky'])) {
     drupal_add_js('misc/tableheader.js');
     $vars['classes_array'][] = "sticky-enabled";

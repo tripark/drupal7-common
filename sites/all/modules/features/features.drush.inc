@@ -1,5 +1,4 @@
 <?php
-// $Id: features.drush.inc,v 1.1.2.21.2.3 2011/02/12 19:35:45 inadarei Exp $
 
 /**
  * @file

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Theme implementation to display a single Drupal page.
+ * Zen theme's implementation to display a single Drupal page.
  *
  * Available variables:
  *
@@ -29,6 +29,7 @@
  *   site, if they have been configured.
  * - $secondary_menu (array): An array containing the Secondary menu links for
  *   the site, if they have been configured.
+ * - $secondary_menu_heading: The title of the menu used by the secondary links.
  * - $breadcrumb: The breadcrumb trail for the current page.
  *
  * Page content (in order of occurrence in the default page.tpl.php):
@@ -53,7 +54,7 @@
  *
  * Regions:
  * - $page['help']: Dynamic help text, mostly for admin pages.
- * - $page['highlight']: Items for the highlighted content region.
+ * - $page['highlighted']: Items for the highlighted content region.
  * - $page['content']: The main content of the current page.
  * - $page['sidebar_first']: Items for the first sidebar.
  * - $page['sidebar_second']: Items for the second sidebar.
@@ -93,17 +94,30 @@
         <?php if ($site_slogan): ?>
           <div id="site-slogan"><?php print $site_slogan; ?></div>
         <?php endif; ?>
-      </div> <!-- /#name-and-slogan -->
+      </div><!-- /#name-and-slogan -->
     <?php endif; ?>
+
+    <?php print theme('links__system_secondary_menu', array(
+      'links' => $secondary_menu,
+      'attributes' => array(
+        'id' => 'secondary-menu',
+        'class' => array('links', 'clearfix'),
+      ),
+      'heading' => array(
+        'text' => $secondary_menu_heading,
+        'level' => 'h2',
+        'class' => array('element-invisible'),
+      ),
+    )); ?>
 
     <?php print render($page['header']); ?>
 
-  </div></div> <!-- /.section, /#header -->
+  </div></div><!-- /.section, /#header -->
 
   <div id="main-wrapper"><div id="main" class="clearfix<?php if ($main_menu || $page['navigation']) { print ' with-navigation'; } ?>">
 
     <div id="content" class="column"><div class="section">
-      <?php print render($page['highlight']); ?>
+      <?php print render($page['highlighted']); ?>
       <?php print $breadcrumb; ?>
       <a id="main-content"></a>
       <?php print render($title_prefix); ?>
@@ -112,8 +126,8 @@
       <?php endif; ?>
       <?php print render($title_suffix); ?>
       <?php print $messages; ?>
-      <?php if ($tabs): ?>
-        <div class="tabs"><?php print render($tabs); ?></div>
+      <?php if ($tabs = render($tabs)): ?>
+        <div class="tabs"><?php print $tabs; ?></div>
       <?php endif; ?>
       <?php print render($page['help']); ?>
       <?php if ($action_links): ?>
@@ -121,7 +135,7 @@
       <?php endif; ?>
       <?php print render($page['content']); ?>
       <?php print $feed_icons; ?>
-    </div></div> <!-- /.section, /#content -->
+    </div></div><!-- /.section, /#content -->
 
     <?php if ($page['navigation'] || $main_menu): ?>
       <div id="navigation"><div class="section clearfix">
@@ -141,36 +155,17 @@
 
         <?php print render($page['navigation']); ?>
 
-      </div></div> <!-- /.section, /#navigation -->
+      </div></div><!-- /.section, /#navigation -->
     <?php endif; ?>
 
     <?php print render($page['sidebar_first']); ?>
 
     <?php print render($page['sidebar_second']); ?>
 
-  </div></div> <!-- /#main, /#main-wrapper -->
+  </div></div><!-- /#main, /#main-wrapper -->
 
-  <?php if ($page['footer'] || $secondary_menu): ?>
-    <div id="footer"><div class="section">
+  <?php print render($page['footer']); ?>
 
-      <?php print theme('links__system_secondary_menu', array(
-        'links' => $secondary_menu,
-        'attributes' => array(
-          'id' => 'secondary-menu',
-          'class' => array('links', 'clearfix'),
-        ),
-        'heading' => array(
-          'text' => t('Secondary menu'),
-          'level' => 'h2',
-          'class' => array('element-invisible'),
-        ),
-      )); ?>
-
-      <?php print render($page['footer']); ?>
-
-    </div></div> <!-- /.section, /#footer -->
-  <?php endif; ?>
-
-</div></div> <!-- /#page, /#page-wrapper -->
+</div></div><!-- /#page, /#page-wrapper -->
 
 <?php print render($page['bottom']); ?>

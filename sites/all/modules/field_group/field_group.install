@@ -1,5 +1,4 @@
 <?php
-// $Id: field_group.install,v 1.1.2.4 2011/01/09 18:47:18 stalski Exp $
 
 /**
  * @file
@@ -11,6 +10,24 @@
  */
 function field_group_schema() {
   $schema['field_group'] = array(
+    'description' => t('Table that contains field group entries and settings.'),
+
+    // CTools export definitions.
+    'export' => array(
+      'key' => 'id',
+      'identifier' => 'field_group',
+      'default hook' => 'field_group_info',
+      'save callback' => 'field_group_save',
+      'delete callback' => 'field_group_delete',
+      'can disable' => FALSE,
+      'api' => array(
+        'owner' => 'field_group',
+        'api' => 'field_group',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+
     'fields' => array(
       'id' => array(
         'type' => 'serial',
@@ -71,13 +88,13 @@ function field_group_schema() {
 /**
  * Utility function: fetch all the field_group definitions from the database.
  */
-function _update_7000_field_group_read_groups() {
+function _field_group_install_read_groups() {
   $groups = array();
   if (db_table_exists('content_group')) {
     $query = db_select('content_group', 'cg', array('fetch' => PDO::FETCH_ASSOC))
       ->fields('cg');
     foreach ($query->execute() as $record) {
-        $record['settings'] = unserialize($record['settings']);
+      $record['settings'] = unserialize($record['settings']);
       $groups[$record['group_name']] = $record;
     }
     foreach ($groups as $key => $group) {
@@ -93,15 +110,21 @@ function _update_7000_field_group_read_groups() {
 }
 
 /**
- * Implementation of hook_update_N().
+ * Implements of hook_install().
+ *
+ * Because this is a new module in D7, hook_update_N() doesn't help D6
+ * users who upgrade to run the migration path. So, we try that here as
+ * the module is being installed.
  */
-function field_group_update_7000() {
+function field_group_install() {
 
-  $groups = _update_7000_field_group_read_groups();
+  $groups = _field_group_install_read_groups();
 
   if (!empty($groups)) {
 
     module_load_include('module', 'field_group');
+    module_load_include('module', 'ctools');
+    ctools_include('export');
 
     foreach ($groups as $group) {
 
@@ -127,7 +150,7 @@ function field_group_update_7000() {
         'formatter' => preg_match("/fieldset/", $group->settings['form']['style']) ? 'collapsible' : 'collapsed',
         'instance_settings' => array(),
       );
-      field_group_create_field_group($new);
+      ctools_export_crud_save('field_group', $new);
 
       // The full node.
       $new->id = NULL;
@@ -138,7 +161,7 @@ function field_group_update_7000() {
         'formatter' => 'collapsible',
         'instance_settings' => array(),
       );
-      field_group_create_field_group($new);
+      ctools_export_crud_save('field_group', $new);
 
       // The teaser node.
       $new->id = NULL;
@@ -149,7 +172,7 @@ function field_group_update_7000() {
         'formatter' => 'collapsible',
         'instance_settings' => array(),
       );
-      field_group_create_field_group($new);
+      ctools_export_crud_save('field_group', $new);
 
     }
 

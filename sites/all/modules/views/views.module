@@ -397,20 +397,13 @@ function views_arg_load($value, $name, $display_id, $index) {
  * passes control to the display handler.
  */
 function views_page() {
-  // Determine the name and display ID of the view that will be rendered here,
-  // and save them in a static variable so we can use them in hook_page_alter()
-  // to affect the rest of the page.
-  $name = &drupal_static('views_page:name');
-  $display_id = &drupal_static('views_page:display_id');
   $args = func_get_args();
   $name = array_shift($args);
   $display_id = array_shift($args);
 
-  // Load the view and render it. Destory it before returning, to save memory.
+  // Load the view and render it.
   if ($view = views_get_view($name)) {
-    $output = $view->execute_display($display_id, $args);
-    $view->destroy();
-    return $output;
+    return $view->execute_display($display_id, $args);
   }
 
   // Fallback; if we get here no view was found or handler was not valid.
@@ -421,15 +414,12 @@ function views_page() {
  * Implements hook_page_alter().
  */
 function views_page_alter(&$page) {
-  // Check the static variables that were set in views_page() to see if the
-  // main content of this page contains a view. If so, attach its contextual
+  // If the main content of this page contains a view, attach its contextual
   // links to the overall page array. This allows them to be rendered directly
   // next to the page title.
-  $name = drupal_static('views_page:name');
-  $display_id = drupal_static('views_page:display_id');
-  if (!empty($name) && !empty($display_id) && ($view = views_get_view($name))) {
-    views_add_contextual_links($page, 'page', $view, $display_id);
-    $view->destroy();
+  $view = views_get_page_view();
+  if (!empty($view)) {
+    views_add_contextual_links($page, 'page', $view, $view->current_display);
   }
 }
 
@@ -692,6 +682,10 @@ function views_add_contextual_links(&$render_element, $location, $view, $display
     // contextual links that are intended to be displayed in the requested
     // location.
     $plugin = views_fetch_plugin_data('display', $view->display[$display_id]->display_plugin);
+    // If contextual links locations are empty provide a sane default.
+    if (empty($plugin['contextual links locations'])) {
+      $plugin['contextual links locations'] = array('view');
+    }
     $has_links = !empty($plugin['contextual links']) && !empty($plugin['contextual links locations']);
     if ($has_links && in_array($location, $plugin['contextual links locations'])) {
       foreach ($plugin['contextual links'] as $module => $link) {
@@ -997,12 +991,20 @@ function views_get_handler($table, $field, $key, $override = NULL) {
   $handler = NULL;
 
   // Support old views_data entries conversion.
+
+  // Support conversion on table level.
+  if (isset($data['moved to'])) {
+    $moved = array($data['moved to'], $field);
+  }
+  // Support conversion on datafield level.
   if (isset($data[$field]['moved to'])) {
     $moved = $data[$field]['moved to'];
   }
+  // Support conversion on handler level.
   if (isset($data[$field][$key]['moved to'])) {
     $moved = $data[$field][$key]['moved to'];
   }
+
   if (isset($data[$field][$key]) || !empty($moved)) {
     if (!empty($moved)) {
       list($moved_table, $moved_field) = $moved;
@@ -1010,6 +1012,7 @@ function views_get_handler($table, $field, $key, $override = NULL) {
         // recursion detected!
         return NULL;
       }
+
       $recursion_protection[$moved_table][$moved_field] = TRUE;
       $handler = views_get_handler($moved_table, $moved_field, $key, $override);
       $recursion_protection = array();
@@ -1199,7 +1202,7 @@ function views_get_applicable_views($type) {
         // This view uses hook menu. Clone it so that different handlers
         // don't trip over each other, and add it to the list.
         $v = $view->clone_view();
-        if ($v->set_display($id)) {
+        if ($v->set_display($id) && $v->display_handler->get_option('enabled')) {
           $result[] = array($v, $id);
         }
         // In PHP 4.4.7 and presumably earlier, if we do not unset $v
@@ -1279,6 +1282,12 @@ function views_get_view($name, $reset = FALSE) {
   ctools_include('export');
   $view = ctools_export_crud_load('views_view', $name);
   if ($view) {
+    // When views are converted automatically the base_table should be renamed
+    // to have a working query.
+    $data = views_fetch_data($view->base_table, FALSE);
+    if (isset($data['moved to'])) {
+      $view->base_table = $data['moved to'];
+    }
     return $view->clone_view();
   }
 }
@@ -1332,7 +1341,7 @@ function views_save_view(&$view) {
 }
 
 /**
- * Export CRUD callback to export a view.
+ * Export CRUD callback to delete a view.
  */
 function views_delete_view(&$view) {
   return $view->delete(TRUE);
@@ -1365,6 +1374,9 @@ function views_debug($message) {
     else {
       watchdog('views_logging', '<pre>' . $output . '</pre>');
     }
+  }
+  elseif (isset($GLOBALS['drupal_test_info'])) {
+    debug($message);
   }
 }
 
@@ -1480,6 +1492,18 @@ function views_exposed_form($form, &$form_state) {
   views_exposed_form_cache($view->name, $view->current_display, $form);
 
   return $form;
+}
+
+/**
+ * Implement hook_form_alter for the exposed form.
+ *
+ * Since the exposed form is a GET form, we don't want it to send a wide
+ * variety of information.
+ */
+function views_form_views_exposed_form_alter(&$form, &$form_state) {
+  $form['form_build_id']['#access'] = FALSE;
+  $form['form_token']['#access'] = FALSE;
+  $form['form_id']['#access'] = FALSE;
 }
 
 /**
@@ -1862,36 +1886,70 @@ function views_views_api() {
   );
 }
 
-function aggregator_views_api() { return views_views_api(); }
+if (!function_exists('aggregator_views_api')) {
+  function aggregator_views_api() { return views_views_api(); }
+}
 
-function book_views_api() { return views_views_api(); }
+if (!function_exists('book_views_api')) {
+  function book_views_api() { return views_views_api(); }
+}
 
-function comment_views_api() { return views_views_api(); }
+if (!function_exists('comment_views_api')) {
+  function comment_views_api() { return views_views_api(); }
+}
 
-function locale_views_api() { return views_views_api(); }
+if (!function_exists('locale_views_api')) {
+  function locale_views_api() { return views_views_api(); }
+}
 
-function field_views_api() { return views_views_api(); }
+if (!function_exists('field_views_api')) {
+  function field_views_api() { return views_views_api(); }
+}
 
-function filter_views_api() { return views_views_api(); }
+if (!function_exists('filter_views_api')) {
+  function filter_views_api() { return views_views_api(); }
+}
 
-function node_views_api() { return views_views_api(); }
+if (!function_exists('node_views_api')) {
+  function node_views_api() { return views_views_api(); }
+}
 
-function poll_views_api() { return views_views_api(); }
+if (!function_exists('poll_views_api')) {
+  function poll_views_api() { return views_views_api(); }
+}
 
-function profile_views_api() { return views_views_api(); }
+if (!function_exists('profile_views_api')) {
+  function profile_views_api() { return views_views_api(); }
+}
 
-function search_views_api() { return views_views_api(); }
+if (!function_exists('search_views_api')) {
+  function search_views_api() { return views_views_api(); }
+}
 
-function statistics_views_api() { return views_views_api(); }
+if (!function_exists('statistics_views_api')) {
+  function statistics_views_api() { return views_views_api(); }
+}
 
-function system_views_api() { return views_views_api(); }
+if (!function_exists('system_views_api')) {
+  function system_views_api() { return views_views_api(); }
+}
 
-function taxonomy_views_api() { return views_views_api(); }
+if (!function_exists('taxonomy_views_api')) {
+  function taxonomy_views_api() { return views_views_api(); }
+}
 
-function translation_views_api() { return views_views_api(); }
+if (!function_exists('translation_views_api')) {
+  function translation_views_api() { return views_views_api(); }
+}
 
-function upload_views_api() { return views_views_api(); }
+if (!function_exists('upload_views_api')) {
+  function upload_views_api() { return views_views_api(); }
+}
 
-function user_views_api() { return views_views_api(); }
+if (!function_exists('user_views_api')) {
+  function user_views_api() { return views_views_api(); }
+}
 
-function contact_views_api() { return views_views_api(); }
+if (!function_exists('contact_views_api')) {
+  function contact_views_api() { return views_views_api(); }
+}

@@ -30,6 +30,7 @@ files[] = handlers/views_handler_field_markup.inc
 files[] = handlers/views_handler_field_math.inc
 files[] = handlers/views_handler_field_numeric.inc
 files[] = handlers/views_handler_field_prerender_list.inc
+files[] = handlers/views_handler_field_time_interval.inc
 files[] = handlers/views_handler_field_serialized.inc
 files[] = handlers/views_handler_field_url.inc
 files[] = handlers/views_handler_filter.inc
@@ -53,7 +54,6 @@ files[] = handlers/views_handler_sort_random.inc
 files[] = includes/base.inc
 files[] = includes/handlers.inc
 files[] = includes/plugins.inc
-files[] = includes/tabs.inc
 files[] = includes/view.inc
 ; Modules
 files[] = modules/aggregator/views_handler_argument_aggregator_fid.inc
@@ -172,7 +172,6 @@ files[] = modules/user/views_handler_field_user.inc
 files[] = modules/user/views_handler_field_user_language.inc
 files[] = modules/user/views_handler_field_user_link.inc
 files[] = modules/user/views_handler_field_user_link_cancel.inc
-files[] = modules/user/views_handler_field_user_link_delete.inc
 files[] = modules/user/views_handler_field_user_link_edit.inc
 files[] = modules/user/views_handler_field_user_mail.inc
 files[] = modules/user/views_handler_field_user_name.inc
@@ -265,6 +264,7 @@ files[] = tests/views_pager.test
 files[] = tests/views_plugin_localization_test.inc
 files[] = tests/views_translatable.test
 files[] = tests/views_query.test
+files[] = tests/views_upgrade.test
 files[] = tests/views_test.views_default.inc
 files[] = tests/user/views_user_argument_default.test
 files[] = tests/user/views_user_argument_validate.test
@@ -272,9 +272,9 @@ files[] = tests/views_cache.test
 files[] = tests/views_view.test
 files[] = tests/views_ui.test
 
-; Information added by drupal.org packaging script on 2011-03-21
-version = "7.x-3.x-dev"
+; Information added by drupal.org packaging script on 2011-03-28
+version = "7.x-3.0-beta3"
 core = "7.x"
 project = "views"
-datestamp = "1300667230"
+datestamp = "1301301970"
 

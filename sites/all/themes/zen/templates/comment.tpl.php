@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Default theme implementation for comments.
+ * Zen theme's implementation for comments.
  *
  * Available variables:
  * - $author: Comment author. Can be link or plain text.
@@ -17,6 +17,8 @@
  *   desired parameters on the $comment->changed variable.
  * - $new: New comment marker.
  * - $permalink: Comment permalink.
+ * - $submitted: Submission information created from $author and $created during
+ *   template_preprocess_comment().
  * - $picture: Authors picture.
  * - $signature: Authors signature.
  * - $status: Comment status. Possible values are:
@@ -56,6 +58,7 @@
  * @see template_preprocess_comment()
  * @see zen_preprocess_comment()
  * @see template_process()
+ * @see theme_comment()
  */
 ?>
 <div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
@@ -97,4 +100,4 @@
   </div>
 
   <?php print render($content['links']) ?>
-</div> <!-- /.comment -->
+</div><!-- /.comment -->

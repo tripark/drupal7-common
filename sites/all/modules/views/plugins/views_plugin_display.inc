@@ -285,6 +285,7 @@ class views_plugin_display extends views_plugin {
       'css_class' => array('css_class'),
       'use_ajax' => array('use_ajax'),
       'hide_attachment_summary' => array('hide_attachment_summary'),
+      'group_by' => array('group_by'),
       'query' => array('query'),
       'items_per_page' => array('items_per_page', 'offset', 'use_pager', 'pager_element'),
       'pager' => array('pager'),
@@ -334,7 +335,7 @@ class views_plugin_display extends views_plugin {
           'cache' => TRUE,
           'query' => TRUE,
           'title' => TRUE,
-          'display_comment' => TRUE,
+          'display_comment' => FALSE,
           'enabled' => TRUE,
           'css_class' => TRUE,
 
@@ -740,7 +741,15 @@ class views_plugin_display extends views_plugin {
       $this->handlers[$type] = array();
       $types = views_object_types();
       $plural = $types[$type]['plural'];
+
       foreach ($this->get_option($plural) as $id => $info) {
+        // If this is during form submission and there are temporary options
+        // which can only appear if the view is in the edit cache, use those
+        // options instead. This is used for AJAX multi-step stuff.
+        if (isset($_POST['form_id']) && isset($this->view->temporary_options[$type][$id])) {
+          $info = $this->view->temporary_options[$type][$id];
+        }
+
         if ($info['id'] != $id) {
           $info['id'] = $id;
         }
@@ -1278,7 +1287,6 @@ class views_plugin_display extends views_plugin {
           '#description' => t("This will display the more link even if there are no more items to display."),
           '#default_value' => $this->get_option('use_more_always'),
         );
-        $form['#title'] .= t('Text to use for the more link.');
         $form['use_more_text'] = array(
           '#type' => 'textfield',
           '#title' => t('More link text'),

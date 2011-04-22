@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Default theme implementation to display a region.
+ * Zen theme's implementation to display a region.
  *
  * Available variables:
  * - $content: The content for this region, typically blocks.
@@ -26,6 +26,8 @@
  * @see template_process()
  */
 ?>
-<div class="<?php print $classes; ?>">
-  <?php print $content; ?>
-</div> <!-- /.region -->
+<?php if ($content): ?>
+  <div class="<?php print $classes; ?>">
+    <?php print $content; ?>
+  </div><!-- /.region -->
+<?php endif; ?>

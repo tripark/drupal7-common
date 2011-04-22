@@ -21,7 +21,7 @@ function STARTERKIT_form_system_theme_settings_alter(&$form, &$form_state)  {
   // */
 
   // Remove some of the base theme's settings.
-  unset($form['themedev']['zen_layout']); // We don't need to select the base stylesheet.
+  unset($form['themedev']['zen_layout']); // We don't need to select the layout stylesheet.
 
   // We are editing the $form in place, so we don't need to return anything.
 }

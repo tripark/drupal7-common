@@ -1,5 +1,4 @@
 <?php
-// $Id: redirect.views_default.inc,v 1.2 2010/08/26 05:25:34 davereid Exp $
 
 /**
  * Implements hook_views_default_views().

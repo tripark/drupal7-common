@@ -1,4 +1,3 @@
-; $Id: redirect.info,v 1.4 2010/08/26 04:35:35 davereid Exp $
 name = Redirect
 description = Allows users to redirect from old URLs to new URLs.
 core = 7.x
@@ -11,13 +10,14 @@ files[] = views/redirect.views.inc
 files[] = views/redirect_handler_filter_redirect_type.inc
 files[] = views/redirect_handler_field_redirect_source.inc
 files[] = views/redirect_handler_field_redirect_redirect.inc
+files[] = views/redirect_handler_field_redirect_operations.inc
 files[] = views/redirect_handler_field_redirect_link_edit.inc
 files[] = views/redirect_handler_field_redirect_link_delete.inc
 configure = admin/config/search/redirect/settings
 
-; Information added by drupal.org packaging script on 2010-12-14
-version = "7.x-1.0-beta1"
+; Information added by drupal.org packaging script on 2011-04-13
+version = "7.x-1.0-beta2"
 core = "7.x"
 project = "redirect"
-datestamp = "1292361669"
+datestamp = "1302713216"
 

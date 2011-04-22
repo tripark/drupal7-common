@@ -1,5 +1,4 @@
 <?php
-// $Id: redirect_handler_field_redirect_link_delete.inc,v 1.1 2010/08/25 16:03:57 davereid Exp $
 
 /**
  * @file

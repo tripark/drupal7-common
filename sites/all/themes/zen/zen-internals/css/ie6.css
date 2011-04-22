@@ -1,22 +1,19 @@
 /**
  * @file
- * CSS targeted specifically for Internet Explorer 5 and 6 for Windows.
+ * CSS targeted specifically for Internet Explorer 6 for Windows.
  *
  * Any CSS in this file will override the rules specified in the ie.css file.
+ *
+ * References:
+ * 1. http://www.positioniseverything.net/explorer/doubled-margin.html
+ * 2. http://browservulsel.blogspot.com/2005/04/ie-overflow-auto-scrollbar-overlap.html
+ * 3. http://www.howtocreate.co.uk/wrongWithIE/?chapter=overflow%3Avisible%3B
  */
 
 
 /*
  * Layout CSS
  */
-
-body {
-  text-align: center; /* 1st part of IE5/IE6quirks centering hack */
-}
-
-#page {
-  text-align: left; /* LTR */ /* 2nd part of IE5/IE6quirks centering hack */
-}
 
 #main-wrapper {
   zoom: 1; /* Otherwise with a liquid layout, sidebars disappear when resizing the windows in IE6 */
@@ -27,12 +24,12 @@ body {
 .region-sidebar-first,
 .region-sidebar-second /* Floating divs */ {
   display: inline; /* display inline or double your floated margin! [1] */
-  overflow: hidden; /* in ie6, overflow auto is broken [2] and so is overflow visible [3] */
+  overflow: hidden; /* in IE6, overflow auto is broken [2] and so is overflow visible [3] */
   overflow-y: visible;
 }
 
 /*
- * Tabs - IE 5 and 6 don't support PNGs with alpha transparency.
+ * Tabs - IE6 doesn't support PNGs with alpha transparency.
  */
 
 ul.primary li a,
@@ -69,33 +66,14 @@ ul.primary li.active a:hover .tab {
 }
 
 /*
- * Messages - IE 5 and 6 don't support PNGs with alpha transparency.
+ * Wireframes - IE6 doesn't support the outline property.
  */
-
-div.messages,
-div.status,
-div.warning,
-div.error /* Important messages (status, warning, and error) for the user */ {
-  background-image: url(../images/messages-status-ie6.png);
+.with-wireframes #header .section,
+.with-wireframes #content .section,
+.with-wireframes #navigation .section,
+.with-wireframes .region-sidebar-first .section,
+.with-wireframes .region-sidebar-second .section,
+.with-wireframes .region-footer,
+.with-wireframes .region-bottom {
+  border: 1px solid #ccc;
 }
-
-div.warning /* Medium priority messages */ {
-  background-image: url(../images/messages-warning-ie6.png);
-}
-
-div.error /* High priority messages. See also the .error declaration below. */ {
-  background-image: url(../images/messages-error-ie6.png);
-}
-
-
-/*
- * REFERENCES
- *
-
-1. http://www.positioniseverything.net/explorer/doubled-margin.html
-2. http://browservulsel.blogspot.com/2005/04/ie-overflow-auto-scrollbar-overlap.html
-3. http://www.howtocreate.co.uk/wrongWithIE/?chapter=overflow%3Avisible%3B
-4. http://www.ryanbrill.com/archives/multiple-classes-in-ie
-
- *
- */

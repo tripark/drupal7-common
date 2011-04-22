@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar.views_default.inc,v 1.14 2011/01/18 00:37:21 karens Exp $
 
 /**
  * @file

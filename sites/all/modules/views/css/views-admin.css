@@ -3,6 +3,26 @@
  * For example: display, position, float, clear, and overflow.
  */
 
+/* @group Resets */
+
+.views-admin ul,
+.views-admin menu,
+.views-admin dir {
+  padding-left: 0; /* LTR for IE */
+  /* padding-start is used so that RTL works out of the box */
+  -moz-padding-start: 0;
+  -webkit-padding-start: 0;
+  padding-start: 0;
+}
+
+.views-admin pre {
+  margin-bottom: 0;
+  margin-top: 0;
+  white-space: pre-wrap;
+}
+
+/* @end */
+
 /* @group Inline lists */
 
 .horizontal > * {
@@ -27,7 +47,7 @@
 }
 
 /* @end */
- 
+
 /* @group Columns */
 
 .views-left-25 {
@@ -87,10 +107,6 @@
   float:left; /* LTR */
 }
 
-.views-displays .secondary {
-  overflow: visible;
-}
-
 /* @end */
 
 /* @group Attachment details tabs
@@ -98,9 +114,18 @@
  * The tabs that switch between sections
  */
 
+ .views-displays .secondary {
+   border-bottom: 0 none;
+   margin: 0;
+   overflow: visible;
+   padding: 0;
+ }
+
 .views-displays .secondary > li {
+  border-right: 0 none;
   display: inline-block;
   float: left; /* LTR */
+  padding: 0;
 }
 
 .views-displays .secondary .open > a {
@@ -133,7 +158,7 @@
   left: 0; /* LTR */
   margin: 0;
   position: absolute;
-  top: 22px;
+  top: 23px;
   z-index: 50;
 }
 
@@ -186,12 +211,36 @@
 
 /* @group Modal dialog box */
 
+.views-ui-dialog {
+  /* We need this so the button is visible. */
+  overflow: visible;
+  position: fixed;
+}
+
+.views-ui-dialog .ui-dialog-titlebar-close {
+  border: 1px solid transparent;
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 2px;
+  /* Make sure this is in front of the modal backdrop. */
+  z-index: 1002;
+}
+
 .views-ui-dialog .ui-dialog-titlebar {
+  padding: 0;
+  margin: 0;
+}
+
+.views-ui-dialog .ui-dialog-title {
   display: none;
 }
 
 .views-ui-dialog #views-ajax-popup {
   padding: 0;
+  overflow: hidden;
 }
 
 .views-ui-dialog #views-ajax-title,
@@ -215,6 +264,12 @@
 
 .views-ui-dialog #views-filterable-options-controls {
   display: block;
+}
+
+/* Don't let the messages overwhelm the modal */
+.views-ui-dialog .views-messages {
+  max-height: 200px;
+  overflow: auto;
 }
 
 /* @end */

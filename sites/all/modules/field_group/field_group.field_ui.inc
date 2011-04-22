@@ -1,5 +1,4 @@
 <?php
-// $Id: field_group.field_ui.inc,v 1.1.2.23 2011/01/18 23:07:03 stalski Exp $
 
 /**
  * @file
@@ -49,7 +48,7 @@ function field_group_field_ui_form_params($form, $display_overview) {
 function field_group_field_ui_overview_form_alter(&$form, &$form_state, $display_overview = FALSE) {
 
   // Add extra guidelines for webmaster.
-  $form['#prefix'] = (isset($form['#prefix']) ? $form['#prefix'] : '') . t('Fields can be dragged into groups with unlimited nesting. Each fieldgroup format comes with a configuration form, specific for that format type.<br />Note that some formats come in pair. These types have a html wrapper to nest its fieldgroup children. E.g. Place accordion items into the accordion, vertical tabs in vertical tab group and horizontal tabs in the horizontal tab group. There is one exception to this rule, you can use a vertical tab without a wrapper when the additional settings tabs are available. E.g. node forms.');
+  $form['#prefix'] = (isset($form['#prefix']) ? $form['#prefix'] : '') . t('<p class="fieldgroup-help">Fields can be dragged into groups with unlimited nesting. Each fieldgroup format comes with a configuration form, specific for that format type.<br />Note that some formats come in pair. These types have a html wrapper to nest its fieldgroup children. E.g. Place accordion items into the accordion, vertical tabs in vertical tab group and horizontal tabs in the horizontal tab group. There is one exception to this rule, you can use a vertical tab without a wrapper when the additional settings tabs are available. E.g. node forms.</p>');
 
   // Only start altering the form if we need to.
   if (empty($form['#fields']) && empty($form['#extra'])) {
@@ -424,8 +423,9 @@ function field_group_formatter_settings_update(& $group, $settings) {
     $group->label = $settings['format_settings']['settings']['label'];
     $group->format_settings = $settings['format_settings']['settings'];
     // This is avoided now, cause of the form_state['field_group']
-    //field_group_update_field_group($group);
-    //cache_clear_all('field_groups', 'cache_field');
+    // ctools_include('export');
+    // ctools_export_crud_save('field_group', $group);
+    // cache_clear_all('field_groups', 'cache_field');
   }
 }
 
@@ -436,7 +436,7 @@ function field_group_formatter_settings_update(& $group, $settings) {
  * @return Array ready to be rendered.
  */
 function field_group_format_settings_summary($group_name, $group) {
-  $summary = implode('', module_invoke_all('field_group_format_summary', $group));
+  $summary = implode('<br />', module_invoke_all('field_group_format_summary', $group));
   return array(
     '#markup' => '<div class="field-formatter-summary">' . $summary . '</div>',
     '#cell_attributes' => array('class' => array('field-formatter-summary-cell')),
@@ -510,7 +510,7 @@ function field_group_field_overview_validate($form, &$form_state) {
       $group_name = $group['group_name'];
 
       // Add the 'group_' prefix.
-      if (substr($group_name, 0, 6) != 'group_') {
+      if (drupal_substr($group_name, 0, 6) != 'group_') {
         $group_name = 'group_' . $group_name;
         form_set_value($form['fields']['_add_new_group']['group_name'], $group_name, $form_state);
       }
@@ -519,13 +519,12 @@ function field_group_field_overview_validate($form, &$form_state) {
       if (!preg_match('!^group_[a-z0-9_]+$!', $group_name)) {
         form_set_error('fields][_add_new_group][group_name', t('Add new group: the group name %group_name is invalid. The name must include only lowercase unaccentuated letters, numbers, and underscores.', array('%group_name' => $group_name)));
       }
-      if (strlen($group_name) > 32) {
+      if (drupal_strlen($group_name) > 32) {
         form_set_error('fields][_add_new_group][group_name', t("Add new group: the group name %group_name is too long. The name is limited to 32 characters, including the 'group_' prefix.", array('%group_name' => $group_name)));
       }
 
       // Group name already exists.
-      $groups = field_group_read_groups();
-      if (!empty($groups[$entity_type][$bundle][$mode][$group_name])) {
+      if (field_group_exists($group_name, $entity_type, $bundle, $mode)) {
         form_set_error('fields][_add_new_group][group_name', t('Add new group: the group name %group_name already exists.', array('%group_name' => $group_name)));
       }
     }
@@ -538,6 +537,7 @@ function field_group_field_overview_validate($form, &$form_state) {
  * @param Array $form_state The state of the form.
  */
 function field_group_field_overview_submit($form, &$form_state) {
+
   $form_values = $form_state['values']['fields'];
   $entity_type = $form['#entity_type'];
   $bundle = $form['#bundle'];
@@ -558,6 +558,9 @@ function field_group_field_overview_submit($form, &$form_state) {
       $children[$value['parent']][$name] = $name;
     }
   }
+
+  // Prepare storage with ctools.
+  ctools_include('export');
 
   // Create new group.
   if (!empty($form_values['_add_new_group']['group_name'])) {
@@ -581,11 +584,11 @@ function field_group_field_overview_submit($form, &$form_state) {
     if (isset($formatter['instance_settings'])) {
       $new_group->format_settings['instance_settings'] = $formatter['instance_settings'];
     }
-    field_group_create_field_group($new_group);
+    ctools_export_crud_save('field_group', $new_group);
 
     // Store new group information for any additional submit handlers.
     $form_state['groups_added']['_add_new_group'] = $new_group->group_name;
-    drupal_set_message(t('New group %label succesfully created.', array('%label' => $new_group->label)));
+    drupal_set_message(t('New group %label successfully created.', array('%label' => $new_group->label)));
 
     // Replace the newly created group in the $children array, in case it was
     // dragged directly in an existing field.
@@ -609,7 +612,7 @@ function field_group_field_overview_submit($form, &$form_state) {
     if (isset($form_state['field_group'][$group_name]->format_settings)) {
       $group->format_settings = $form_state['field_group'][$group_name]->format_settings;
     }
-    field_group_update_field_group($group);
+    ctools_export_crud_save('field_group', $group);
   }
 
   cache_clear_all('field_groups', 'cache_field');
@@ -667,15 +670,18 @@ function field_group_delete_form($form, &$form_state, $group, $view_mode = 'form
  * @todo we'll have to reset all view mode settings - that will be fun :)
  */
 function field_group_delete_form_submit($form, &$form_state) {
+
   $group = $form['#group'];
   $bundle = $group->bundle;
   $entity_type = $group->entity_type;
-  $mode = $form_state['build_info']['args'][1];
+  $group->mode = $form_state['build_info']['args'][1];
 
   $bundles = field_info_bundles();
   $bundle_label = $bundles[$entity_type][$bundle]['label'];
 
-  field_group_delete_field_group($group, $mode);
+  ctools_include('export');
+  ctools_export_crud_delete('field_group', $group);
+
   drupal_set_message(t('The group %group has been deleted from the %type content type.', array('%group' => t($group->label), '%type' => $bundle_label)));
 
   // Redirect.

@@ -77,8 +77,7 @@ class views_handler_field_field extends views_handler_field {
    * present in the query itself (such as "sphinx").
    */
   function query($use_groupby = FALSE) {
-    $base_table_alias = $base_table = $this->view->base_table;
-    $base_field = $this->view->base_field;
+    $base_table_alias = $base_table = $this->definition['base table'];
 
     // If the current field is under a relationship you can't be sure that the
     // base table of the view is the base table of the current field.
@@ -105,13 +104,22 @@ class views_handler_field_field extends views_handler_field {
       );
     }
 
-    // We always need the base field (entity_id / revision_id).
-    $this->field_alias = $this->query->add_field($base_table_alias, $base_field, '', $params);
-
     // Get the entity type according to the base table of the field.
     // Then add it to the query as a formula. That way we can avoid joining
     // the field table if all we need is entity_id and entity_type.
-    $this->entity_type = $entity_type = $this->definition['entity_tables'][$base_table];
+    $entity_type = $this->definition['entity_tables'][$base_table];
+    $entity_info = entity_get_info($entity_type);
+
+    // We always need the base field (entity_id / revision_id).
+    if (empty($this->definition['is revision'])) {
+      $this->field_alias = $this->query->add_field($base_table_alias, $entity_info['entity keys']['id'], '', $params);
+    }
+    else {
+      $this->field_alias = $this->query->add_field($base_table_alias, $entity_info['entity keys']['revision'], '', $params);
+      $this->aliases['entity id'] = $this->query->add_field($base_table_alias, $entity_info['entity keys']['id'], '', $params);
+    }
+
+
     // The alias needs to be unique, so we use both the field table and the entity type.
     $entity_type_alias = $this->definition['table'] . '_' . $entity_type . '_entity_type';
     $this->aliases['entity_type'] = $this->query->add_field(NULL, "'$entity_type'", $entity_type_alias);
@@ -140,8 +148,8 @@ class views_handler_field_field extends views_handler_field {
 
       // Filter by language, if field translation is enabled.
       $field = $this->field_info;
-      if (field_is_translatable($entity_type, $field)) {
-        $column = $this->table_alias . ".language";
+      if (field_is_translatable($entity_type, $field) && !empty($this->query->options['field_language_add_to_query'])) {
+        $column = $this->table_alias . '.language';
         $this->query->add_where(0, $column, $this->query->options['field_language']);
       }
     }
@@ -292,6 +300,8 @@ class views_handler_field_field extends views_handler_field {
       '#ajax' => array(
         'path' => views_ui_build_form_url($form_state),
       ),
+      '#submit' => array('views_ui_config_item_form_submit_temporary'),
+      '#executes_submit_callback' => TRUE,
     );
 
     $form['field_api_classes'] = array(
@@ -307,12 +317,8 @@ class views_handler_field_field extends views_handler_field {
     }
 
     // Get the currently selected formatter.
-    if (isset($form_state['values']['options']['type'])) {
-      $format = $form_state['values']['options']['type'];
-    }
-    else {
-      $format = $this->options['type'];
-    }
+    $format = $this->options['type'];
+
     $formatter = field_info_formatter_types($format);
     $settings = $this->options['settings'] + field_info_formatter_settings($format);
 
@@ -475,8 +481,8 @@ class views_handler_field_field extends views_handler_field {
     }
     else {
       // Add settings for "field API" fields.
-      $item['group_column'] = $form_state['values']['group_column'];
-      $item['group_columns'] = array_filter($form_state['values']['group_columns']);
+      $item['group_column'] = $form_state['values']['options']['group_column'];
+      $item['group_columns'] = array_filter($form_state['values']['options']['group_columns']);
     }
   }
 
@@ -487,24 +493,53 @@ class views_handler_field_field extends views_handler_field {
     if (!empty($values)) {
       // Divide the entity ids by entity type, so they can be loaded in bulk.
       $entities_by_type = array();
+      $revisions_by_type = array();
       foreach ($values as $key => $object) {
         if (isset($object->{$this->field_alias}) && !isset($values[$key]->_field_data[$this->field_alias])) {
           $entity_type = $object->{$this->aliases['entity_type']};
-          $entity_id = $object->{$this->field_alias};
-          $entities_by_type[$entity_type][$key] = $entity_id;
+          if (empty($this->definition['revision id'])) {
+            $entity_id = $object->{$this->field_alias};
+            $entities_by_type[$entity_type][$key] = $entity_id;
+          }
+          else {
+            $revision_id = $object->{$this->field_alias};
+            $entity_id = $object->{$this->aliases['entity id']};
+            $entities_by_type[$entity_type][$key] = array($entity_id, $revision_id);
+          }
         }
       }
 
       // Load the entities.
       foreach ($entities_by_type as $entity_type => $entity_ids) {
-        $entities = entity_load($entity_type, $entity_ids);
+        $entity_info = entity_get_info($entity_type);
+        if (empty($this->definition['is revision'])) {
+          $entities = entity_load($entity_type, $entity_ids);
+          $keys = $entity_ids;
+        }
+        else {
+          // Revisions can't be loaded multiple, so we have to load them
+          // one by one.
+          $entities = array();
+          $keys = array();
+          foreach ($entity_ids as $key => $combined) {
+            list($entity_id, $revision_id) = $combined;
+            $entity = entity_load($entity_type, array($entity_id), array($entity_info['entity keys']['revision'] => $revision_id));
+            if ($entity) {
+              $entities[$revision_id] = array_shift($entity);
+              $keys[$key] = $revision_id;
+            }
+          }
+        }
 
-        foreach ($entity_ids as $key => $entity_id) {
+        foreach ($keys as $key => $entity_id) {
+          // If this is a revision, load the revision instead.
           if (isset($entities[$entity_id])) {
             $values[$key]->_field_data[$this->field_alias] = array(
               'entity_type' => $entity_type,
               'entity' => $entities[$entity_id],
             );
+            // Push the field values directly into the results array to make themers the life a bit easier.
+            $values[$key]->{$this->definition['table'] . '_' . $entity_type . '_values'} = field_get_items($entity_type, $entities[$entity_id], $this->definition['field_name']);
           }
         }
       }
@@ -552,11 +587,10 @@ class views_handler_field_field extends views_handler_field {
       return array();
     }
 
-    $langcode = $this->field_language();
-
     // Go ahead and render and store in $this->items.
     $entity = clone $values->_field_data[$this->field_alias]['entity'];
     $entity_type = $values->_field_data[$this->field_alias]['entity_type'];
+    $langcode = $this->field_language($entity_type);
 
     // The field we are trying to display doesn't exist on this entity.
     if (!isset($entity->{$this->definition['field_name']})) {
@@ -599,6 +633,7 @@ class views_handler_field_field extends views_handler_field {
       'label' => 'hidden',
     );
 
+
     $render_array = field_view_field($entity_type, $entity, $this->definition['field_name'], $display, $langcode);
 
     $items = array();
@@ -631,7 +666,7 @@ class views_handler_field_field extends views_handler_field {
     foreach ($field['columns'] as $id => $column) {
       // Use filter_xss_admin because it's user data and we can't be sure it is safe.
       // We know nothing about the data, though, so we can't really do much else.
-      if (isset($item['raw'])) {
+      if (isset($item['raw']) && is_scalar($item['raw'])) {
         $tokens['[' . $this->options['id'] . '-' . $id . ']'] = filter_xss_admin($item['raw'][$id]);
       }
     }
@@ -641,10 +676,10 @@ class views_handler_field_field extends views_handler_field {
    * Return the language code of the language the field should be displayed in,
    * according to the settings.
    */
-  function field_language() {
+  function field_language($entity_type) {
     global $language_content;
 
-    if (field_is_translatable($this->entity_type, $this->field_info)) {
+    if (field_is_translatable($entity_type, $this->field_info)) {
       $default_language = language_default('language');
       $language = str_replace(array('***CURRENT_LANGUAGE***', '***DEFAULT_LANGUAGE***'),
                               array($language_content->language, $default_language),

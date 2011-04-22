@@ -6,11 +6,10 @@
  * ABOUT THE TEMPLATE.PHP FILE
  *
  *   The template.php file is one of the most useful files when creating or
- *   modifying Drupal themes. You can add new regions for block content, modify
- *   or override Drupal's theme functions, intercept or make additional
- *   variables available to your theme, and create custom PHP logic. For more
- *   information, please visit the Theme Developer's Guide on Drupal.org:
- *   http://drupal.org/theme-guide
+ *   modifying Drupal themes. You can modify or override Drupal's theme
+ *   functions, intercept or make additional variables available to your theme,
+ *   and create custom PHP logic. For more information, please visit the Theme
+ *   Developer's Guide on Drupal.org: http://drupal.org/theme-guide
  *
  * OVERRIDING THEME FUNCTIONS
  *
@@ -28,10 +27,9 @@
  *   where STARTERKIT is the name of your sub-theme. For example, the
  *   zen_classic theme would define a zen_classic_breadcrumb() function.
  *
- *   If you would like to override any of the theme functions used in Zen core,
- *   you should first look at how Zen core implements those functions:
+ *   If you would like to override either of the two theme functions used in Zen
+ *   core, you should first look at how Zen core implements those functions:
  *     theme_breadcrumbs()      in zen/template.php
- *     theme_menu_item_link()   in zen/template.php
  *     theme_menu_local_tasks() in zen/template.php
  *
  *   For more information, please visit the Theme Developer's Guide on
@@ -62,66 +60,54 @@
 
 
 /**
- * Implementation of HOOK_theme().
- */
-function STARTERKIT_theme(&$existing, $type, $theme, $path) {
-  $hooks = zen_theme($existing, $type, $theme, $path);
-  // Add your theme hooks like this:
-  /*
-  $hooks['hook_name_here'] = array( // Details go here );
-  */
-  // @TODO: Needs detailed comments. Patches welcome!
-  return $hooks;
-}
-
-/**
- * Override or insert variables into all templates.
+ * Override or insert variables into the html templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
- *   The name of the template being rendered (name of the .tpl.php file.)
+ *   The name of the template being rendered ("html" in this case.)
  */
 /* -- Delete this line if you want to use this function
-function STARTERKIT_preprocess(&$vars, $hook) {
-  $vars['sample_variable'] = t('Lorem ipsum.');
+function STARTERKIT_preprocess_html(&$variables, $hook) {
+  $variables['sample_variable'] = t('Lorem ipsum.');
+
+  // The body tag's classes are controlled by the $classes_array variable. To
+  // remove a class from $classes_array, use array_diff().
+  //$variables['classes_array'] = array_diff($variables['classes_array'], array('class-to-remove'));
 }
 // */
 
 /**
  * Override or insert variables into the page templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("page" in this case.)
  */
 /* -- Delete this line if you want to use this function
-function STARTERKIT_preprocess_page(&$vars, $hook) {
-  $vars['sample_variable'] = t('Lorem ipsum.');
-
-  // To remove a class from $classes_array, use array_diff().
-  //$vars['classes_array'] = array_diff($vars['classes_array'], array('class-to-remove'));
+function STARTERKIT_preprocess_page(&$variables, $hook) {
+  $variables['sample_variable'] = t('Lorem ipsum.');
 }
 // */
 
 /**
  * Override or insert variables into the node templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("node" in this case.)
  */
 /* -- Delete this line if you want to use this function
-function STARTERKIT_preprocess_node(&$vars, $hook) {
-  $vars['sample_variable'] = t('Lorem ipsum.');
+function STARTERKIT_preprocess_node(&$variables, $hook) {
+  $variables['sample_variable'] = t('Lorem ipsum.');
 
   // Optionally, run node-type-specific preprocess functions, like
   // STARTERKIT_preprocess_node_page() or STARTERKIT_preprocess_node_story().
-  $function = __FUNCTION__ . '_' . $vars['node']->type;
+  $function = __FUNCTION__ . '_' . $variables['node']->type;
   if (function_exists($function)) {
-    $function($vars, $hook);
+    $function($variables, $hook);
   }
 }
 // */
@@ -129,27 +115,28 @@ function STARTERKIT_preprocess_node(&$vars, $hook) {
 /**
  * Override or insert variables into the comment templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("comment" in this case.)
  */
 /* -- Delete this line if you want to use this function
-function STARTERKIT_preprocess_comment(&$vars, $hook) {
-  $vars['sample_variable'] = t('Lorem ipsum.');
+function STARTERKIT_preprocess_comment(&$variables, $hook) {
+  $variables['sample_variable'] = t('Lorem ipsum.');
 }
 // */
 
 /**
  * Override or insert variables into the block templates.
  *
- * @param $vars
+ * @param $variables
  *   An array of variables to pass to the theme template.
  * @param $hook
  *   The name of the template being rendered ("block" in this case.)
  */
 /* -- Delete this line if you want to use this function
-function STARTERKIT_preprocess_block(&$vars, $hook) {
-  $vars['sample_variable'] = t('Lorem ipsum.');
+function STARTERKIT_preprocess_block(&$variables, $hook) {
+  // Add a count to all the blocks in the region.
+  $variables['classes_array'][] = 'count-' . $variables['block_id'];
 }
 // */

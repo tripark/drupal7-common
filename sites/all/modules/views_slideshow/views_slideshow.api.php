@@ -14,11 +14,29 @@
  * Define the type of the slideshow (eg.: cycle, imageflow, ddblock).
  *
  * @return
- *  Associative array of slideshow type and its user friendly name.
+ *  Associative array of slideshow type and its information.
  */
-function hook_views_slideshow_slideshow_types() {
+function hook_views_slideshow_slideshow_info() {
   $options = array(
-    'views_slideshow_cycle' => t('Cycle'),
+    'views_slideshow_cycle' => array(
+      'name' => t('Cycle'),
+      'accepts' => array(
+        'goToSlide',
+        'nextSlide',
+        'pause',
+        'play',
+        'previousSlide',
+      ),
+      'calls' => array(
+        'transitionBegin',
+        'transitionEnd',
+        'goToSlide',
+        'pause',
+        'play',
+        'nextSlide',
+        'previousSlide',
+      ),
+    ),
   );
   return $options;
 }
@@ -84,10 +102,10 @@ function hook_views_slideshow_options_form_submit($form, &$form_state) {
 /**
  * Define slideshow skins to be available to the end user.
  */
-function hook_views_slideshow_skins() {
+function hook_views_slideshow_skin_info() {
   return array(
     'default' => array(
-      'title' => t('Default'),
+      'name' => t('Default'),
     ),
   );
 }
@@ -95,14 +113,57 @@ function hook_views_slideshow_skins() {
 /**
  * Define new widgets (pagers, controls, counters).
  *
+ * Available events for accepts and calls
+ *  - pause
+ *  - play
+ *  - nextSlide
+ *  - previousSlide
+ *  - goToSlide
+ *  - transitionBegin
+ *  - transitionEnd
+ *
  * @return
  *  Array keyed by the widget names.
  */
 function hook_views_slideshow_widget_info() {
   return array(
-    'views_slideshow_pager' => 'Pager',
-    'views_slideshow_controls' => 'Controls',
-    'views_slideshow_slide_counter' => 'Slide Counter',
+    'views_slideshow_pager' => array(
+      'name' => t('Pager'),
+      'accepts' => array(
+        'transitionBegin' => array('required' => TRUE),
+        'goToSlide',
+        'previousSlide',
+        'nextSlide',
+      ),
+      'calls' => array(
+        'goToSlide',
+        'pause',
+        'play',
+      ),
+    ),
+    'views_slideshow_controls' => array(
+      'name' => t('Controls'),
+      'accepts' => array(
+        'pause' => array('required' => TRUE),
+        'play' => array('required' => TRUE),
+      ),
+      'calls' => array(
+        'nextSlide',
+        'pause',
+        'play',
+        'previousSlide',
+      ),
+    ),
+    'views_slideshow_slide_counter' => array(
+      'name' => t('Slide Counter'),
+      'accepts' => array(
+        'transitionBegin' => array('required' => TRUE),
+        'goToSlide',
+        'previousSlide',
+        'nextSlide',
+      ),
+      'calls' => array(),
+    ),
   );
 }
 
@@ -113,35 +174,27 @@ function [widget-type]_views_slideshow_widget_form_options(&$form, $form_state, 
 }
 
 /**
- * Define JS methods to be run when a certain slideshow action is fired.
- *
- * Available events:
- *  - pause
- *  - play
- *  - nextSlide
- *  - previousSlide
- *  - goToSlide
- *  - transitionBegin
- *  - transitionEnd
- * @return
- *   array of methods.
- */
-function hook_views_slideshow_js_method_register() {
-  return array(
-    'views_slideshow_cycle',
-  );
-}
-
-/**
  * Hook called by the pager widget to configure it, the fields that should be shown.
  */
-function hook_views_slideshow_widget_pager_settings($view) {
+function hook_views_slideshow_widget_pager_info($view) {
 }
 
 /**
  * Hook called by the pager widget to add form items.
  */
-function [widget-type]_views_slideshow_widget_pager_form_options(&$form, &$form_state, &$view, $defaults, $dependency) {  
+function [widget-type]_views_slideshow_widget_pager_form_options(&$form, &$form_state, &$view, $defaults, $dependency) {
+}
+
+/**
+ * Hook called by the controls widget to configure it, the fields that should be shown.
+ */
+function hook_views_slideshow_widget_controls_info($view) {
+}
+
+/**
+ * Hook called by the controls widget to add form items.
+ */
+function [widget-type]_views_slideshow_widget_controls_form_options(&$form, &$form_state, &$view, $defaults, $dependency) {
 }
 
 /**

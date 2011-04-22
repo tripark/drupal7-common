@@ -17,6 +17,8 @@
 
 function comment_views_data() {
   $data['comments']['moved to'] = 'comment';
+  $data['comments']['comment']['moved to'] = array('field_data_comment_body', 'comment_body');
+  $data['comments']['comment']['field']['moved to'] = array('field_data_comment_body', 'comment_body');
   // Define the base group of this table. Fields that don't
   // have a group defined will go into this field by default.
   $data['comment']['table']['group']  = t('Comment');
@@ -550,7 +552,18 @@ function template_preprocess_views_view_row_comment(&$vars) {
   // Put the view on the node so we can retrieve it in the preprocess.
   $node->view = &$view;
 
-  $vars['comment'] = drupal_render(comment_view_multiple(array($comment->cid => $comment), $node));
+  $build = comment_view_multiple(array($comment->cid => $comment), $node);
+  // If we're displaying the comments without links, remove them from the
+  // renderable array. There is no way to avoid building them in the first
+  // place (see comment_build_content()).
+  if (empty($options['links'])) {
+    foreach ($build as $cid => &$comment_build) {
+      if (isset($comment_build['links'])) {
+        unset($comment_build['links']);
+      }
+    }
+  }
+  $vars['comment'] = drupal_render($build);
 }
 
 /**

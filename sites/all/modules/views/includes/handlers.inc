@@ -99,6 +99,7 @@ function views_get_table_join($table, $base_table) {
 
     return $handler;
   }
+
   // DEBUG -- identify missing handlers
   vpr("Missing join: $table $base_table");
 }
@@ -158,6 +159,16 @@ class views_handler extends views_object {
     // Check to see if this handler type is defaulted. Note that
     // we have to do a lookup because the type is singular but the
     // option is stored as the plural.
+
+    // If the 'moved to' keyword moved our handler, let's fix that now.
+    if (isset($this->actual_table)) {
+      $options['table'] = $this->actual_table;
+    }
+
+    if (isset($this->actual_field)) {
+      $options['field'] = $this->actual_field;
+    }
+
     $types = views_object_types();
     $plural = $this->handler_type;
     if (isset($types[$this->handler_type]['plural'])) {
@@ -320,7 +331,7 @@ class views_handler extends views_object {
       '#title' => t('More'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#weight' => 50,
+      '#weight' => 150,
     );
   }
 
@@ -366,7 +377,7 @@ class views_handler extends views_object {
   function groupby_form_submit(&$form, &$form_state) {
     $item =& $form_state['handler']->options;
 
-    $item['group_type'] = $form_state['values']['group_type'];
+    $item['group_type'] = $form_state['values']['options']['group_type'];
   }
 
   /**
@@ -921,7 +932,7 @@ class views_many_to_one_helper {
       $field = $this->handler->real_field;
       $clause = $operator == 'or' ? db_or() : db_and();
       foreach ($this->handler->table_aliases as $value => $alias) {
-        $clause->condition("$alias.$field", $this->handler->value);
+        $clause->condition("$alias.$field", $value);
       }
 
       // implode on either AND or OR.

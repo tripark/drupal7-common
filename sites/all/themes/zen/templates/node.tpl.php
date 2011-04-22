@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Theme implementation to display a node.
+ * Zen theme's implementation to display a node.
  *
  * Available variables:
  * - $title: the (sanitized) title of the node.
@@ -14,8 +14,9 @@
  *   calling format_date() with the desired parameters on the $created variable.
  * - $name: Themed username of node author output from theme_username().
  * - $node_url: Direct url of the current node.
- * - $terms: the themed list of taxonomy term links output from theme_links().
- * - $display_submitted: whether submission information should be displayed.
+ * - $display_submitted: Whether submission information should be displayed.
+ * - $submitted: Submission information created from $name and $date during
+ *   template_preprocess_node().
  * - $classes: String of classes that can be used to style contextually through
  *   CSS. It can be manipulated through the variable $classes_array from
  *   preprocess functions. The default values can be one or more of the
@@ -61,7 +62,7 @@
  * - $status: Flag for published status.
  * - $comment: State of comment settings for the node.
  * - $readmore: Flags true if the teaser content of the node cannot hold the
- *   main body content.
+ *   main body content. Currently broken; see http://drupal.org/node/823380
  * - $is_front: Flags true when presented in the front page.
  * - $logged_in: Flags true when the current user is a logged-in member.
  * - $is_admin: Flags true when the current user is an administrator.
@@ -84,7 +85,7 @@
   <?php print $user_picture; ?>
 
   <?php print render($title_prefix); ?>
-  <?php if (!$page): ?>
+  <?php if (!$page && $title): ?>
     <h2<?php print $title_attributes; ?>><a href="<?php print $node_url; ?>"><?php print $title; ?></a></h2>
   <?php endif; ?>
   <?php print render($title_suffix); ?>
@@ -93,17 +94,9 @@
     <div class="unpublished"><?php print t('Unpublished'); ?></div>
   <?php endif; ?>
 
-  <?php if ($display_submitted || !empty($content['links']['terms'])): ?>
-    <div class="meta">
-      <?php if ($display_submitted): ?>
-        <span class="submitted">
-          <?php print $submitted; ?>
-        </span>
-      <?php endif; ?>
-
-      <?php if (!empty($content['links']['terms'])): ?>
-        <div class="terms terms-inline"><?php print render($content['links']['terms']); ?></div>
-      <?php endif; ?>
+  <?php if ($display_submitted): ?>
+    <div class="submitted">
+      <?php print $submitted; ?>
     </div>
   <?php endif; ?>
 
@@ -120,4 +113,4 @@
 
   <?php print render($content['comments']); ?>
 
-</div> <!-- /.node -->
+</div><!-- /.node -->

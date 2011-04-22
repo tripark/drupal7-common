@@ -91,6 +91,7 @@ function node_views_data() {
       'group' => t('Content'), // The group it appears in on the UI. Could be left out.
       'handler' => 'views_handler_field_node',
       'click sortable' => TRUE,
+      'link_to_node default' => TRUE,
      ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -386,6 +387,18 @@ function node_views_data() {
     ),
   );
 
+  $data['node']['uid_revision'] = array(
+    'title' => t('User has a revision'),
+    'help' => t('All nodes where a certain user has a revision'),
+    'real field' => 'nid',
+    'filter' => array(
+      'handler' => 'views_handler_filter_node_uid_revision',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_node_uid_revision',
+    ),
+  );
+
   // ----------------------------------------------------------------------
   // Content revision table
 
@@ -393,6 +406,8 @@ function node_views_data() {
   // have a group defined will go into this field by default.
   $data['node_revisions']['moved to'] = 'node_revision';
   $data['node_revision']['table']['group']  = t('Content revision');
+  // Support the conversion of the field body
+  $data['node_revisions']['body']['moved to'] = array('field_revision_data', 'body-revision_id');
 
   // Advertise this table as a possible base table
   $data['node_revision']['table']['base'] = array(
@@ -585,7 +600,7 @@ function node_views_data() {
 }
 
 /**
- * Implements hook_views_plugins
+ * Implements hook_views_plugins().
  */
 function node_views_plugins() {
   return array(
