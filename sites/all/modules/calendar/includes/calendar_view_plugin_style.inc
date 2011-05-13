@@ -127,12 +127,11 @@ class calendar_view_plugin_style extends calendar_plugin_style {
     $fields = $this->display->handler->get_option('fields');
     $date_fields = array_keys($this->date_fields());
     foreach ($fields as $field_name => $field) {
-      $handler = views_get_handler($field['table'], $field['field'], 'field');
       if (!in_array($field['table'] . '.' . $field['field'], $date_fields)) {
-        $field_options[$field['table'] . '_' . $field['field']] = $handler->ui_name();
+        $field_options[$field['table'] . '_' . $field['field']] = $field['field'];
       }
       else {
-        $date_field_options[$field['table'] . '_' . $field['field']] = $handler->ui_name();
+        $date_field_options[$field['table'] . '_' . $field['field']] = $field['field'];
       }
     }
     $form['groupby_field'] = array(

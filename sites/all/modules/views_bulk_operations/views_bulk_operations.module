@@ -635,7 +635,7 @@ function _views_bulk_operations_queue_process($oid, $row, $operation, $params, $
 
   $object_info = _views_bulk_operations_object_info_for_type($operation['type']);
   if (!$object_info) return;
-  $object = call_user_func($object_info['load'], $oid);
+  $object = call_user_func($object_info['load'], $object_info['type'], $oid);
   $account = user_load(array('uid' => $uid));
   if (!_views_bulk_operations_object_permission($operation, $object, $account)) {
     watchdog('views bulk operations', 'Skipped %action on @type %title due to insufficient permissions.', array(
@@ -673,7 +673,7 @@ function _views_bulk_operations_batch_process($oid, $row, &$context) {
 
   $object_info = _views_bulk_operations_object_info_for_type($operation['type']);
   if (!$object_info) return;
-  $object = call_user_func($object_info['load'], $oid);
+  $object = call_user_func($object_info['load'], $object_info['type'], $oid);
   if (!_views_bulk_operations_object_permission($operation, $object)) {
     $context['results']['log'][] = t('Skipped %action on @type %title due to insufficient permissions.', array(
       '%action' => $operation['label'], 
@@ -738,7 +738,7 @@ function _views_bulk_operations_direct_process($operation, $objects, $params, &$
   if ($operation['aggregate'] != VBO_AGGREGATE_FORBIDDEN) {
     if (isset($object_info['access'])) {
       foreach ($objects as $oid => $row) {
-        $object = call_user_func($object_info['load'], $oid);
+        $object = call_user_func($object_info['load'], $object_info['type'], $oid);
         if (!_views_bulk_operations_object_permission($operation, $object)) {
           unset($objects[$oid]);
           $context['results']['log'][] = t('Skipped %action on @type %title due to insufficient permissions.', array(
@@ -762,7 +762,7 @@ function _views_bulk_operations_direct_process($operation, $objects, $params, &$
     }
   }
   else foreach ($objects as $oid => $row) {
-    $object = call_user_func($object_info['load'], $oid);
+    $object = call_user_func($object_info['load'], $object_info['type'], $oid);
     if (!_views_bulk_operations_object_permission($operation, $object)) {
       $context['results']['log'][] = t('Skipped %action on @type %title due to insufficient permissions.', array(
         '%action' => $operation['label'], 
@@ -872,7 +872,7 @@ function _views_bulk_operations_object_permission($operation, $object, $account 
   );
   foreach ($access_ops as $bit => $op) {
     if ($operation['access op'] & $bit) {
-      if (!call_user_func($object_info['access'], $op, $object, $account)) {
+      if (!call_user_func($object_info['access'], $op, $object_info['type'], $object, $account)) {
         return FALSE;
       }
     }
@@ -920,7 +920,7 @@ function theme_views_bulk_operations_confirmation($variables) {
       $items[] = t('...and <strong>!count</strong> more.', array('!count' => count($objects) - count($items)));
       break;
     }
-    if ($object = call_user_func($object_info['load'], $oid)) {
+    if ($object = call_user_func($object_info['load'], $object_info['type'], $oid)) {
       $items[] = check_plain((string)$object->{$object_info['title']});
     }
   }
@@ -955,46 +955,53 @@ function views_bulk_operations_forms() {
  * The array returned for each object type contains:
  *  'type' => the object type name, should be the same as 'type' field in actions. 
  *  'base_table' => the Views 2 table name corresponding to that object type, should be the same as the $view->base_table attribute.
- *  'load' => a function($id) that returns the corresponding object.
+ *  'load' => a function($entity_type, $id) that returns a single element.
  *  'title' => an attribute on the object that returns a human-friendly identifier of the object.
- *  'access' (optional) => a function($op, $node, $account = NULL) that behaves like node_access().
+ *  'access' (optional) => a function($op, $entity_type, $entity, $account = NULL) that behaves like entity_access().
  *
  */
 function views_bulk_operations_views_bulk_operations_object_info() {
-  return array(
-    'node' => array(
-      'type' => 'node',
-      'base_table' => 'node',
-      'load' => '_views_bulk_operations_node_load',
-      'title' => 'title',
-      'access' => 'node_access',
-    ),
-    'user' => array(
-      'type' => 'user',
-      'base_table' => 'users',
-      'load' => 'user_load',
-      'title' => 'name',
-    ),
-    'comment' => array(
-      'type' => 'comment',
-      'base_table' => 'comments',
-      'load' => '_comment_load',
-      'title' => 'subject',
-    ),
-    'term' => array(
-      'type' => 'term',
-      'base_table' => 'term_data',
-      'load' => 'taxonomy_get_term',
-      'title' => 'name',
-    ),
-  );
+  // Automatically expose objects for entities.
+  foreach (entity_get_info() as $entity_type => $entity_info) {
+    $object_info[$entity_type] = array(
+      'type' => $entity_type,
+      'base_table' => $entity_info['base table'],
+      'load' => '_views_bulk_operations_entity_load',
+      'title' => isset($entity_info['entity keys']['label']) ? $entity_info['entity keys']['label'] : $entity_info['entity keys']['id'],
+    );
+
+    if (module_exists('entity')) {
+      // The Entity API module extends support for other entity types.
+      if (entity_type_supports($entity_type, 'access')) {
+        $object_info[$entity_type]['access'] = 'entity_access';
+      }
+    }
+    else {
+      // Else, add some sane defaults.
+      if ($entity_type == 'node') {
+        $object_info[$entity_type]['access'] = '_views_bulk_operations_node_access';
+      }
+    }
+  }
+
+  return $object_info;
 }
 
 /**
- * Load function for objects of type 'node'.
+ * Load function for entities.
  */
-function _views_bulk_operations_node_load($nid) {
-  return node_load($nid, NULL, TRUE);
+function _views_bulk_operations_entity_load($entity_type, $id) {
+  $entities = entity_load($entity_type, array($id));
+  if ($entities) {
+    return reset($entities);
+  }
+}
+
+/**
+ * Dummy access callback for nodes.
+ */
+function _views_bulk_operations_node_access($op, $entity_type, $entity, $account = NULL) {
+  return node_access($op, $entity, $account);
 }
 
 /**

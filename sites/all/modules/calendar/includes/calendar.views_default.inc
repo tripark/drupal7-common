@@ -213,7 +213,7 @@ $handler->display->display_options['arguments']['date_argument']['default_action
 $handler->display->display_options['arguments']['date_argument']['default_argument_type'] = 'date';
 $handler->display->display_options['arguments']['date_argument']['style_plugin'] = 'default_summary';
 $handler->display->display_options['arguments']['date_argument']['granularity'] = 'month';
-$handler->display->display_options['arguments']['date_argument']['wildcard'] = 'All';
+$handler->display->display_options['arguments']['date_argument']['exception']['value'] = 'All';
 $handler->display->display_options['arguments']['date_argument']['date_fields'] =  $fields;
 /* Filter: Node: Published */
 $handler->display->display_options['filters']['status']['id'] = 'status';
