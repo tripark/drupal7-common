@@ -10,13 +10,7 @@
  * Main configuration form for editing a webform node.
  */
 function webform_configure_form($form, &$form_state, $node) {
-  $path = drupal_get_path('module', 'webform');
-  $form = array(
-    '#attached' =>  array(
-      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'weight' => CSS_DEFAULT + 1)),
-      'js' => array($path . '/js/webform-admin.js' => array('preprocess' => FALSE)),
-    ),
-  );
+  $form['#attached']['library'][] = array('webform', 'admin');
 
   $form['nid'] = array(
     '#type' => 'value',
@@ -63,7 +57,7 @@ function webform_configure_form($form, &$form_state, $node) {
     '#type' => 'item',
     '#title' => t('Redirection location'),
     '#theme' => 'webform_advanced_redirection_form',
-    '#description' => t('Choose where to redirect the user upon successful submission.'),
+    '#description' => t('Choose where to redirect the user upon successful submission.') . ' ' . t('The <em>Custom URL</em> option supports Webform token replacements.') . theme('webform_token_help', array('groups' => array('basic', 'node', 'special', 'submission'))),
   );
   $form['submission']['redirection']['redirect']= array(
     '#type' => 'radios',

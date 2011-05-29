@@ -13,16 +13,11 @@
 function webform_emails_form($form, $form_state, $node) {
   module_load_include('inc', 'webform', 'includes/webform.components');
 
-  $path = drupal_get_path('module', 'webform');
-  $form = array(
-    '#tree' => TRUE,
-    '#node' => $node,
-    '#attached' =>  array(
-      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1)),
-      'js' => array($path . '/js/webform-admin.js' => array('preprocess' => FALSE)),
-    ),
-    'components' => array(),
-  );
+  $form['#attached']['library'][] = array('webform', 'admin');
+
+  $form['#tree'] = TRUE;
+  $form['#node'] = $node;
+  $form['components'] = array();
 
   $form['nid'] = array(
     '#type' => 'value',
@@ -170,17 +165,10 @@ function webform_emails_form_submit($form, &$form_state) {
 function webform_email_edit_form($form, $form_state, $node, $email = array()) {
   module_load_include('inc', 'webform', 'includes/webform.components');
 
-  $path = drupal_get_path('module', 'webform');
-  $form = array(
-    '#tree' => TRUE,
-    '#attached' =>  array(
-      'css' => array($path . '/css/webform-admin.css' => array('preprocess' => FALSE, 'group' => CSS_DEFAULT, 'weight' => 1)),
-      'js' => array(
-        $path . '/js/webform-admin.js' => array('preprocess' => FALSE),
-        array('data' => array('webform' => array('revertConfirm' => t('Are you sure you want to revert any changes to your template back to the default?'))), 'type' => 'setting'),
-      ),
-    ),
-  );
+  $form['#attached']['library'][] = array('webform', 'admin');
+  $form['#attached']['js'][] = array('data' => array('webform' => array('revertConfirm' => t('Are you sure you want to revert any changes to your template back to the default?'))), 'type' => 'setting');
+
+  $form['#tree'] = TRUE;
   $form['node'] = array(
     '#type' => 'value',
     '#value' => $node,
@@ -278,26 +266,25 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
     '#type' => 'textarea',
     '#rows' => max(10, min(20, count(explode("\n", $template)))),
     '#default_value' => $template,
+    '#wysiwyg' => webform_email_html_capable() ? NULL : FALSE,
   );
 
   $form['template']['html'] = array(
     '#type' => 'checkbox',
     '#title' => t('Send e-mail as HTML'),
     '#default_value' => $email['html'],
-    '#access' => module_exists('mimemail') && !variable_get('webform_format_override', 0),
-    '#description' => t('This feature not yet working in Drupal 7. See <a href="https://drupal.org/node/1043086">Webform-MIME Mail integration issue</a>.'),
+    '#access' => webform_email_html_capable() && !variable_get('webform_format_override', 0),
   );
 
   $form['template']['attachments'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include files as attachments'),
     '#default_value' => $email['attachments'],
-    '#access' => module_exists('mimemail'),
-    '#description' => t('This feature not yet working in Drupal 7. See <a href="https://drupal.org/node/1043086">Webform-MIME Mail integration issue</a>.'),
+    '#access' => webform_email_html_capable(),
   );
 
   $form['template']['tokens'] = array(
-    '#value' => theme('webform_token_help'),
+    '#markup' => theme('webform_token_help', array('groups' => 'all')),
   );
 
   $form['template']['components'] = array(
@@ -318,6 +305,7 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
     '#value' => $default_template,
     '#resizable' => FALSE,
     '#weight' => 19,
+    '#wysiwyg' => FALSE,
   );
 
   // Add the submit button.

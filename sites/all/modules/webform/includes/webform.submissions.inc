@@ -56,15 +56,15 @@ function webform_submission_update($node, $submission) {
   }
 
   // Update the main submission info.
-   db_update('webform_submissions')
-     ->fields(array(
-       'uid' => $submission->uid,
-       'submitted' => $submission->submitted,
-       'remote_addr' => $submission->remote_addr,
-       'is_draft' => $submission->is_draft,
-     ))
-     ->condition('sid', $submission->sid)
-     ->execute();
+  db_update('webform_submissions')
+    ->fields(array(
+      'uid' => $submission->uid,
+      'submitted' => $submission->submitted,
+      'remote_addr' => $submission->remote_addr,
+      'is_draft' => $submission->is_draft,
+    ))
+    ->condition('sid', $submission->sid)
+    ->execute();
 
   // If is draft, only delete data for components submitted, to
   // preserve any data from form pages not visited in this submission.
@@ -199,7 +199,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
   $send_count = 0;
   foreach ($emails as $eid => $email) {
     // Set the HTML property based on availablity of MIME Mail.
-    $email['html'] = ($email['html'] && module_exists('mimemail'));
+    $email['html'] = ($email['html'] && webform_email_html_capable());
 
     // Pass through the theme layer if using the default template.
     if ($email['template'] == 'default') {
@@ -281,7 +281,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
         'submission' => $submission,
       );
 
-      if (module_exists('mimemail')) {
+      if (webform_email_html_capable()) {
         // Load attachments for the e-mail.
         $attachments = array();
         if ($email['attachments']) {
@@ -289,8 +289,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
           foreach ($node->webform['components'] as $component) {
             if (webform_component_feature($component['type'], 'attachment') && !empty($submission->data[$component['cid']]['value'][0])) {
               $file = webform_get_file($submission->data[$component['cid']]['value'][0]);
-              if ($file) {
-                $file->list = 1; // Needed to include in attachments.
+              if ($file && ($file->filepath = drupal_realpath($file->uri))) {
                 $attachments[] = $file;
               }
             }
@@ -300,8 +299,14 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
         // Add the attachments to the mail parameters.
         $mail_params['attachments'] = $attachments;
 
-        // TODO: Perform any other modifications necessary to get MIME Mail
-        // sending e-mail properly as HTML and attachments.
+        // Set all other properties for HTML e-mail handling.
+        $mail_params['plain'] = !$email['html'];
+        $mail_params['plaintext'] = $email['html'] ? NULL : $email['message'];
+        $mail_params['headers'] = $email['headers'];
+        if ($email['html']) {
+          // MIME Mail requires this header or it will filter all text.
+          $mail_params['headers']['Content-Type'] = 'text/html; charset=UTF-8';
+        }
       }
 
       // Mail the submission.
@@ -329,6 +334,9 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
  */
 function webform_submission_delete_form($form, $form_state, $node, $submission) {
   webform_set_breadcrumb($node, $submission);
+
+  // Set the correct page title.
+  drupal_set_title(webform_submission_title($node, $submission));
 
   // Keep the NID and SID in the same location as the webform_client_form().
   // This helps mollom identify the same fields when deleting a submission.
@@ -379,11 +387,11 @@ function webform_submission_title($node, $submission) {
 function webform_submission_page($node, $submission, $format) {
   global $user;
 
-  // Add admin CSS.
-  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform-admin.css', array('group' => CSS_DEFAULT));
-
   // Render the admin UI breadcrumb.
   webform_set_breadcrumb($node, $submission);
+
+  // Set the correct page title.
+  drupal_set_title(webform_submission_title($node, $submission));
 
   if ($format == 'form') {
     $output = drupal_get_form('webform_client_form_' . $node->nid, $node, $submission);
@@ -419,7 +427,17 @@ function webform_submission_page($node, $submission, $format) {
     webform_disable_page_cache();
   }
 
-  return theme('webform_submission_page', array('node' => $node, 'submission' => $submission, 'submission_content' => $output, 'submission_navigation' => $navigation, 'submission_information' => $information, 'submission_actions' => $actions));
+  $page = array(
+    '#theme' => 'webform_submission_page',
+    '#node' => $node,
+    '#submission' => $submission,
+    '#submission_content' => $output,
+    '#submission_navigation' => $navigation,
+    '#submission_information' => $information,
+    '#submission_actions' => $actions,
+  );
+  $page['#attached']['library'][] = array('webform', 'admin');
+  return $page;
 }
 
 /**
@@ -457,7 +475,7 @@ function webform_submission_resend($form, $form_state, $node, $submission) {
     $form['actions'] = array('#type' => 'actions');
     $form['actions']['resend'] = array(
       '#type' => 'submit',
-      '#value' => 'Resend e-mails',
+      '#value' => t('Resend e-mails'),
     );
     $form['actions']['cancel'] = array(
       '#type' => 'markup',
@@ -513,7 +531,7 @@ function webform_submission_resend_submit($form, &$form_state) {
 function theme_webform_submission_resend($variables) {
   $form = $variables['form'];
 
-  $header = array('',t('E-mail to'), t('Subject'));
+  $header = array('', t('E-mail to'), t('Subject'));
   $rows = array();
   if (!empty($form['emails'])) {
     foreach (element_children($form['emails']) as $eid) {
@@ -553,11 +571,17 @@ function webform_submission_render($node, $submission, $email, $format) {
   // Set the theme function for submissions.
   $renderable['#theme'] = array('webform_submission_' . $node->nid, 'webform_submission');
 
-  _webform_components_tree_build($node->webform['components'], $component_tree, 0, $page_count);
+  // Remove excluded components.
+  $components = $node->webform['components'];
+  foreach ($excluded_components as $cid) {
+    unset($components[$cid]);
+  }
+
+  _webform_components_tree_build($components, $component_tree, 0, $page_count);
 
   // Recursively add components to the form.
   foreach ($component_tree['children'] as $cid => $component) {
-    if (!in_array($cid, $excluded_components) && _webform_client_form_rule_check($node, $component, $component['page_num'], NULL, $submission)) {
+    if (_webform_client_form_rule_check($node, $component, $component['page_num'], NULL, $submission)) {
       _webform_client_form_add_component($node, $component, NULL, $renderable, $renderable, NULL, $submission, $format);
     }
   }
@@ -650,9 +674,9 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
   $query->leftJoin('users', 'u', 'u.uid = s.uid');
   $query
     ->fields('s')
-    ->fields('sd')
+    ->fields('sd', array('cid', 'no', 'data'))
     ->fields('u', array('name'))
-     ->condition('s.sid', $sids, 'IN')
+    ->condition('s.sid', $sids, 'IN')
     ->orderBy('sd.sid', 'ASC')
     ->orderBy('sd.cid', 'ASC')
     ->orderBy('sd.no', 'ASC');
@@ -705,7 +729,7 @@ function webform_get_submission_count($nid, $uid = NULL, $reset = FALSE) {
       $query->condition('uid', $uid);
     }
     if ($uid === 0) {
-      $submissions = isset($_SESSION['webform_submission']) ? $_SESSION['webform_submission'] : array();
+      $submissions = isset($_SESSION['webform_submission']) ? $_SESSION['webform_submission'] : array(0);
       $query->condition('sid', $submissions, 'IN');
     }
 

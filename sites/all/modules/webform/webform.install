@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function webform_schema() {
   $schema = array();
@@ -363,7 +363,7 @@ function webform_schema() {
 }
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function webform_install() {
   module_load_include('inc', 'node', 'content_types');
@@ -389,7 +389,7 @@ function webform_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function webform_uninstall() {
   // Unset webform variables.
@@ -571,4 +571,12 @@ function webform_update_7311() {
   if (!db_index_exists('webform_submissions', 'nid_uid_sid')) {
     db_add_index('webform_submissions', 'nid_uid_sid', array('nid', 'uid', 'sid'));
   }
+}
+
+/**
+ * Remove unused Webform variables.
+ */
+function webform_update_6327() {
+  variable_del('node_types');
+  variable_del('components');
 }

@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of _webform_defaults_component().
+ * Implements _webform_defaults_component().
  */
 function _webform_defaults_date() {
   return array(
@@ -29,7 +29,7 @@ function _webform_defaults_date() {
 }
 
 /**
- * Implementation of _webform_theme_component().
+ * Implements _webform_theme_component().
  */
 function _webform_theme_date() {
   return array(
@@ -47,7 +47,7 @@ function _webform_theme_date() {
 }
 
 /**
- * Implementation of _webform_edit_component().
+ * Implements _webform_edit_component().
  */
 function _webform_edit_date($component) {
   $form = array();
@@ -64,9 +64,9 @@ function _webform_edit_date($component) {
     '#type' => 'radios',
     '#title' => t('Default value timezone'),
     '#default_value' => empty($component['extra']['timezone']) ? 'user' : $component['extra']['timezone'],
-    '#description' => t('Adjust the default time value according to a specific timezone.'),
+    '#description' => t('If using relative dates for a default value (e.g. "today") base the current day on this timezone.'),
     '#options' => array('user' => t('User timezone'), 'site' => t('Website timezone')),
-    '#weight' => -1,
+    '#weight' => 2,
     '#access' => variable_get('configurable_timezones', 1),
   );
 
@@ -113,18 +113,21 @@ function _webform_edit_date($component) {
 }
 
 /**
- * Implementation of _webform_render_component().
+ * Implements _webform_render_component().
  */
 function _webform_render_date($component, $value = NULL, $filter = TRUE) {
   $element = array(
+    '#type' => 'date',
     '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
     '#weight' => $component['weight'],
-    '#type' => 'date',
     '#description' => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
     '#required' => $component['mandatory'],
     '#year_start' => $component['extra']['year_start'],
     '#year_end' => $component['extra']['year_end'],
+    '#year_textfield' => $component['extra']['year_textfield'],
+    '#default_value' => $filter ? _webform_filter_values($component['value'], NULL, NULL, NULL, FALSE) : $component['value'],
+    '#timezone' => $component['extra']['timezone'],
     '#process' => array('webform_expand_date'),
     '#theme' => 'webform_date',
     '#theme_wrappers' => array('webform_element'),
@@ -141,6 +144,7 @@ function _webform_render_date($component, $value = NULL, $filter = TRUE) {
     );
   }
 
+  // Set the value from Webform.
   if (isset($value[0]) && $value[0] !== '') {
     $value = webform_date_array($value[0], 'date');
     $element['#default_value'] = $value;
@@ -153,11 +157,11 @@ function _webform_render_date($component, $value = NULL, $filter = TRUE) {
  * Form API #process function for Webform date fields.
  */
 function webform_expand_date($element) {
-  $component = $element['#webform_component'];
-
   // Accept a string or array value for #default_value.
   if (isset($element['#default_value']) && is_string($element['#default_value'])) {
-    $element['#default_value'] = webform_date_array($element['#default_value'], 'date');
+    $timezone = $element['#timezone'] != 'user' ? NULL : 'user';
+    $timestring = webform_strtodate('c', $element['#default_value'], $timezone);
+    $element['#default_value'] = webform_date_array($timestring, 'date');
   }
 
   // Set defaults according to existing #default_value (set by Form API)
@@ -167,11 +171,6 @@ function webform_expand_date($element) {
       'day' => $element['#default_value']['day'],
       'year' => $element['#default_value']['year'],
     );
-  }
-  // Or, if none, use set the defaults of the component.
-  elseif (drupal_strlen($component['value']) > 0) {
-    $timezone = $component['extra']['timezone'] != 'user' ? NULL : 'user';
-    $default_values = webform_date_array(webform_strtodate('c', $component['value'], $timezone), 'date');
   }
   else {
     $default_values = array(
@@ -206,13 +205,13 @@ function webform_expand_date($element) {
   foreach (array('year_start', 'year_end') as $start_end) {
     $year = $element['#' . $start_end];
     if (strpos($year, '-') === 0 || strpos($year, '+') === 0) {
-      $timezone = $component['extra']['timezone'] != 'user' ? NULL : 'user';
+      $timezone = $element['#timezone'] != 'user' ? NULL : 'user';
       $element['#' . $start_end] = webform_strtodate('Y', $year . ' years', $timezone);
     }
   }
 
   // Tweak the year field.
-  if ($component['extra']['year_textfield']) {
+  if ($element['#year_textfield']) {
     $element['year']['#type'] = 'textfield';
     $element['year']['#size'] = 5;
     $element['year']['#maxlength'] = 4;
@@ -272,21 +271,17 @@ function theme_webform_date($variables) {
  * Element validation for Webform date fields.
  */
 function webform_validate_date($element, $form_state) {
-  $component = $element['#webform_component'];
-  $form_key = $component['form_key'];
-  $name = $component['name'];
-
   // Check if the user filled the required fields.
   foreach (array('day', 'month', 'year') as $field_type) {
     if (!is_numeric($element[$field_type]['#value']) && $element['#required']) {
-      form_error($element, t('!name field is required.', array('!name' => $name)));
+      form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
       return;
     }
   }
   // Check for a valid date.
   if ($element['month']['#value'] !== '' || $element['day']['#value'] !== '' || $element['year']['#value'] !== '') {
     if (!checkdate((int)$element['month']['#value'], (int)$element['day']['#value'], (int)$element['year']['#value'])) {
-      form_error($element, t('Entered !name is not a valid date.', array('!name' => $name)));
+      form_error($element, t('Entered !name is not a valid date.', array('!name' => $element['#title'])));
       return;
     }
   }
@@ -303,7 +298,7 @@ function webform_validate_date($element, $form_state) {
 }
 
 /**
- * Implementation of _webform_submit_component().
+ * Implements _webform_submit_component().
  */
 function _webform_submit_date($component, $value) {
   // Convert the date to an ISO 8601 format.
@@ -311,7 +306,7 @@ function _webform_submit_date($component, $value) {
 }
 
 /**
- * Implementation of _webform_display_component().
+ * Implements _webform_display_component().
  */
 function _webform_display_date($component, $value, $format = 'html') {
   $value = webform_date_array(isset($value[0]) ? $value[0] : '', 'date');
@@ -343,7 +338,7 @@ function theme_webform_display_date($variables) {
 }
 
 /**
- * Implementation of _webform_analysis_component().
+ * Implements _webform_analysis_component().
  */
 function _webform_analysis_date($component, $sids = array()) {
   $query = db_select('webform_submitted_data', 'wsd', array('fetch' => PDO::FETCH_ASSOC))
@@ -375,7 +370,7 @@ function _webform_analysis_date($component, $sids = array()) {
 }
 
 /**
- * Implementation of _webform_table_component().
+ * Implements _webform_table_component().
  */
 function _webform_table_date($component, $value) {
   if ($value[0]) {
@@ -389,7 +384,7 @@ function _webform_table_date($component, $value) {
 }
 
 /**
- * Implementation of _webform_csv_headers_component().
+ * Implements _webform_csv_headers_component().
  */
 function _webform_csv_headers_date($component, $export_options) {
   $header = array();
@@ -400,7 +395,7 @@ function _webform_csv_headers_date($component, $export_options) {
 }
 
 /**
- * Implementation of _webform_csv_data_component().
+ * Implements _webform_csv_data_component().
  */
 function _webform_csv_data_date($component, $export_options, $value) {
   if ($value[0]) {
