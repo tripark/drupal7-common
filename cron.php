@@ -1,10 +1,11 @@
 <?php
-// $Id: cron.php,v 1.43 2009/11/02 03:30:49 webchick Exp $
 
 /**
  * @file
  * Handles incoming requests to fire off regularly-scheduled tasks (cron jobs).
  */
+
+ini_set("memory_limit","180M");
 
 /**
  * Root directory of Drupal installation.

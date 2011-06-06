@@ -7,11 +7,21 @@
  * Perform actions to set up the site for this profile.
  */
 function tpc_install() {
+  // Add custom date formats and date format types.
+  system_date_format_save(array('type' => 'custom', 'format' => 'F j, Y', 'locked' => 0, 'is_new' => 1));
+  system_date_format_save(array('type' => 'custom', 'format' => 'g:ia', 'locked' => 0, 'is_new' => 1));
+  system_date_format_type_save(array('type' => 'date_only', 'title' => 'Date only', 'locked' => 0, 'is_new' => 1));
+  system_date_format_type_save(array('type' => 'time_only', 'title' => 'Time only', 'locked' => 0, 'is_new' => 1));
+
   // Set preferred date formats.
   variable_set('date_format_long', 'l, F j, Y - g:ia');
 	variable_set('date_format_medium', 'D, m/d/Y - g:ia');
 	variable_set('date_format_short', 'm/d/Y - g:ia');
-  
+	variable_set('date_format_short', 'm/d/Y - g:ia');
+	variable_set('date_format_date_only', 'F j, Y');
+	variable_set('date_format_time_only', 'g:ia');
+	variable_set('date_default_timezone', 'America/Chicago');
+
   // User registration defaults.
   variable_set('user_register', 0);
   variable_set('user_pictures', 0);

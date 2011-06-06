@@ -1,5 +1,4 @@
 <?php
-// $Id: index.php,v 1.99 2009/10/15 14:07:25 dries Exp $
 
 /**
  * @file
@@ -11,6 +10,8 @@
  * All Drupal code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
  */
+
+ini_set("memory_limit","180M");
 
 /**
  * Root directory of Drupal installation.
