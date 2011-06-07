@@ -26,6 +26,7 @@ dependencies[] = menu_block
 dependencies[] = menu_position
 dependencies[] = pathauto
 dependencies[] = pathologic
+dependencies[] = role_delegation
 dependencies[] = token
 dependencies[] = tpc_general
 dependencies[] = views
@@ -34,5 +35,5 @@ dependencies[] = wysiwyg
 
 files[] = tpc.profile
 
-version = "7.0"
+version = "7.2"
 project = "drupal"

@@ -1,0 +1,112 @@
+/**
+ * @file
+ * Styles that should be implemented in all Triangle Park Creative designed
+ * Drupal sites.
+ *
+ * If you are not using this module you MUST implement these styles in your
+ * theme.
+ */
+
+/**
+ * TinyMCE - WYSIWYG
+ * Make sure the editor has a white background.
+ */
+body#tinymce {
+  background: #fff;
+}
+
+
+/**
+ * Image alignement
+ * For styling images input using textile, and a right/left class to align.
+ * !(right)sites/default/files/image.png! should align right
+ * !(left)sites/default/files/image.png! should align left
+ */
+img.left {
+   float: left;
+   margin: 0 12px 6px 0;
+}
+ 
+img.right {
+  float: right;
+  margin: 0 0 6px 12px;
+}
+
+img.center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	}
+        
+/**
+ * Clear floats
+ */
+.clear,
+.clear-both {
+  clear: both;
+}
+.clear-left {
+  clear: left;
+}
+.clear-right {
+  clear: right;
+}
+
+/**
+ * Styles for tables on node-edit forms
+ * This should make the file attachements table, and any image field tables
+ * fill up all the avialable space.
+ */
+.node-form table {
+  width: 100%;
+  }
+
+/**
+ * Styling for node form submit/preview/delete buttons.
+ * As per TPC Standards, delete button should at a minimum be
+ * floated to the right, away from the other two buttons.
+ */
+.node-form #edit-submit,
+.node-form #edit-preview,
+.node-form #edit-delete {
+	margin: 2em 10px 1em 0;
+	padding: 6px 12px;
+	font-weight: bold;
+	cursor: pointer;
+	}
+	
+.node-form #edit-submit {
+	border: 1px solid #3b7e00;
+	padding-left: 22px;
+	color: #3b7e00;
+	background: #ececec url(tick.png) no-repeat 2px center;
+	}
+
+.node-form #edit-submit:hover {
+	color: #fff;
+	background-color: #3b7e00;
+	}
+	
+.node-form #edit-preview {
+	border: 1px solid #ff8300;
+	background: #ececec;
+	color: #ff8300;
+	}
+
+.node-form #edit-preview:hover {
+	color: #fff;
+	background-color: #ff8300;
+	}
+	
+.node-form #edit-delete {
+	float: right;
+	border: 1px solid #ff1d00;
+	padding-left: 22px;
+	background: #ececec url(delete.png) no-repeat 2px center;
+	color: #ff1d00;
+	}
+	
+.node-form #edit-delete:hover {
+	color: #fff;
+	background-color: #ff1d00;
+	}

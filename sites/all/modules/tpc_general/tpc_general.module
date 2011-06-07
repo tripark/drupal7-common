@@ -5,8 +5,44 @@
  */
 function tpc_general_init() {
   drupal_add_js(drupal_get_path('module', 'tpc_general') . '/tpc_general.js');
+  drupal_add_css(drupal_get_path('module', 'tpc_general') . '/tpc_general.css');
 }
 
+/**
+ * Implements hook_form_alter().
+ *
+ * Expose the body summary sub-field by default on node edit forms.
+ */
+function tpc_general_form_alter(&$form, &$form_state, $form_id) {
+  if (!empty($form['#node_edit_form'])) {
+    drupal_add_js('jQuery(function(){jQuery(".link-edit-summary").click();});', array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * Use body summary for META description tag, if available.
+ */
+function tpc_general_preprocess_node(&$vars) {
+  // Only do this when viewing single nodes; hence checking arg(0).
+  if (arg(0) == 'node' && !empty($vars['body'][0]['summary'])) {
+    $description = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'description' => check_plain($vars['body'][0]['summary']),
+      ),
+    );
+    drupal_add_html_head($description, 'tpc_general_meta_description');
+  }  
+}
+
+/**
+ * Implements hook_menu_breadcrumb_alter().
+ *
+ * If in the admin section, change the breadcrumb root to "Dashboard" instead
+ * of "Home".
+ */
 function tpc_general_menu_breadcrumb_alter(&$active_trail, $item) {
   if (in_array('admin', $item['original_map'])) {
     $active_trail[0]['title'] = t('Dashboard');
@@ -14,3 +50,11 @@ function tpc_general_menu_breadcrumb_alter(&$active_trail, $item) {
   }
 }
 
+/**
+ * Implements hook_views_api().
+ */
+function tpc_general_views_api() {
+  return array(
+    'api' => '3',
+  );
+}

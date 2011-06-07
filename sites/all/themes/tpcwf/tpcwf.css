@@ -1,0 +1,66 @@
+/* Social media links */
+#block-block-2 li {
+  list-style: none;
+  display: inline;
+}
+
+/* Subscribe block */
+#block-block-3 .form-text {
+  width: 85px;
+  margin-right: 6px;
+}
+#block-block-3 .form-submit {
+  padding: 4px 4px;
+}
+
+/* footer navigation menu block */
+.block-menu-block
+{
+}
+
+#footer .block-menu-block {
+}
+#footer .block-menu-block h3 {
+  display: none;
+}
+#footer .block-menu-block ul {
+  margin: 0 5px 0 0px;
+  padding: 0;
+  overflow: visible;
+}
+#footer .block-menu-block ul ul {
+  margin: 0;
+  padding: 0;
+}
+#footer .block-menu-block li {
+  display: inline;
+  float: left;
+  width: auto;
+  max-width: 120px;
+  padding-right: 0px;
+  margin: 0 30px 0 0;
+  list-style: none none;
+  font-size: 11px;
+}
+#footer .block-menu-block li li {
+  display: block;
+  float: none;
+  max-width: 150px;
+  margin: 0;
+  padding-top: 1em;
+}
+#footer .block-menu-block li a {
+  float: none;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1;
+  border: 0;
+  padding: 0;
+}
+#footer .block-menu-block li li a {
+  font-weight: normal;
+}
+#footer .block-menu-block li li li {
+  padding-left: 15px;
+  list-style-type: circle;
+}

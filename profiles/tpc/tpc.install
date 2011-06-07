@@ -15,16 +15,29 @@ function tpc_install() {
 
   // Set preferred date formats.
   variable_set('date_format_long', 'l, F j, Y - g:ia');
-	variable_set('date_format_medium', 'D, m/d/Y - g:ia');
-	variable_set('date_format_short', 'm/d/Y - g:ia');
-	variable_set('date_format_short', 'm/d/Y - g:ia');
-	variable_set('date_format_date_only', 'F j, Y');
-	variable_set('date_format_time_only', 'g:ia');
-	variable_set('date_default_timezone', 'America/Chicago');
+  variable_set('date_format_medium', 'D, m/d/Y - g:ia');
+  variable_set('date_format_short', 'm/d/Y - g:ia');
+  variable_set('date_format_short', 'm/d/Y - g:ia');
+  variable_set('date_format_date_only', 'F j, Y');
+  variable_set('date_format_time_only', 'g:ia');
+  variable_set('date_default_timezone', 'America/Chicago');
+  variable_set('configurable_timezones', 0);
 
   // User registration defaults.
   variable_set('user_register', 0);
   variable_set('user_pictures', 0);
+  
+  // Create utility menu.
+  module_load_include('inc', 'menu', 'menu.admin');
+  $edit = array(
+    'values' => array(
+      'title' => 'Utility menu',
+      'menu_name' => 'utility-menu',
+      'description' => 'Miscellaneous links that, while important, do not fit into the main navigation tree.',
+    ),
+  );
+  drupal_form_submit('menu_edit_menu', $edit, 'create');
+  variable_set('menu_secondary_links_source', 'menu-utility-menu');
   
   // Pathauto defaults.
   variable_set('pathauto_node_news_pattern', 'news/[node:created:custom:Y]/[node:created:custom:m]/[node:nid]');
@@ -34,6 +47,9 @@ function tpc_install() {
   variable_set('pathauto_update_action', 2); // Change to 3 when redirect.module is ready
   
   // Add text formats.
+  // Figure out pathologic paths.
+  $absolute_path = array_shift(explode('install.php', $_SERVER['HTTP_REFERER']));
+  $relative_path = array_shift(explode('install.php', $_SERVER['REQUEST_URI']));
   $filtered_html_format = array(
     'format' => 'filtered_html',
     'name' => 'Filtered HTML',
@@ -56,8 +72,17 @@ function tpc_install() {
       ),
       // HTML corrector filter.
       'filter_htmlcorrector' => array(
+        'weight' => 9,
+        'status' => 1,
+      ),
+      // Pathologic filter.
+      'pathologic' => array(
         'weight' => 10,
         'status' => 1,
+        'settings' => array(
+          'local_paths' => '/\r\n' . $relative_path . '\r\n' . $absolute_path,
+          'absolute' => 1,
+        ),
       ),
     ),
   );
@@ -67,7 +92,7 @@ function tpc_install() {
   $full_html_format = array(
     'format' => 'full_html',
     'name' => 'Full HTML',
-    'weight' => 1,
+    'weight' => -1,
     'filters' => array(
       // URL filter.
       'filter_url' => array(
@@ -81,13 +106,66 @@ function tpc_install() {
       ),
       // HTML corrector filter.
       'filter_htmlcorrector' => array(
+        'weight' => 9,
+        'status' => 1,
+      ),
+      // Pathologic filter.
+      'pathologic' => array(
         'weight' => 10,
         'status' => 1,
+        'settings' => array(
+          'local_paths' => '/' . "\r\n" . $relative_path . "\r\n" . $absolute_path,
+          'absolute' => 1,
+        ),
       ),
     ),
   );
   $full_html_format = (object) $full_html_format;
   filter_format_save($full_html_format);
+
+  // Configure WYSIWYG in full HTML format.
+  $wysiwyg_config = array(
+  'default' => 1,
+  'user_choose' => 0,
+  'show_toggle' => 1,
+  'theme' => 'advanced',
+  'language' => 'en',
+  'buttons' => array(
+    'default' => array(
+      'Bold' => 1,
+      'Italic' => 1,
+      'JustifyLeft' => 1,
+      'JustifyCenter' => 1,
+      'BulletedList' => 1,
+      'NumberedList' => 1,
+      'Link' => 1,
+      'Unlink' => 1,
+      'Image' => 1,
+      'Blockquote' => 1,
+      'PasteText' => 1,
+      'PasteFromWord' => 1,
+      'ShowBlocks' => 1,
+      'RemoveFormat' => 1,
+      'Format' => 1,
+      'Table' => 1,
+    ),
+  ),
+  'toolbar_loc' => 'top',
+  'toolbar_align' => 'left',
+  'path_loc' => 'bottom',
+  'resizing' => 1,
+  'verify_html' => 0,
+  'preformatted' => 0,
+  'convert_fonts_to_spans' => 1,
+  'remove_linebreaks' => 0,
+  'apply_source_formatting' => 1,
+  'paste_auto_cleanup_on_paste' => 1,
+  'block_formats' => 'p,h2,h3,h4,h5,h6',
+  'css_setting' => 'theme',
+  'css_path' => '',
+  'css_classes' => '',
+  );
+  db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES ('full_html', 'ckeditor', :settings)", array(':settings' => serialize($wysiwyg_config)));
 
   // Enable the admin theme, TPC wireframe as default; disable Bartik.
   db_update('system')
@@ -109,6 +187,60 @@ function tpc_install() {
   variable_set('admin_theme', 'seven');
   variable_set('node_admin_theme', '1');
 
+  // Create custom blocks we often use.
+  $blocks = array(
+    array(
+      'bid' => 1,
+      'info' => 'Footer address',
+      'body' => "<p style='text-align: center;'>Organization Address<br />123 Triangle Way<br />City, ST 55555<br />Email | Phone | Fax</p>",
+      'format' => 'full_html',
+    ),
+    array(
+      'bid' => 2,
+      'info' => 'Social media links',
+      'body' => '<ul>
+        <li><a href="http://www.facebook.com/"><img alt="Facebook" src="sites/all/icons/services/facebook_22.png" /></a></li>
+        <li><a href="http://www.twitter.com/"><img alt="Twitter" src="sites/all/icons/services/twitter_22.png" /></a></li>
+        <li><a href="http://www.youtube.com/"><img alt="YouTube" src="sites/all/icons/services/youtube_22.png" /></a></li>
+        <li><a href="rss.xml"><img alt="RSS" src="sites/all/icons/services/rss_22.png" /></a></li>
+</ul>',
+      'format' => 'full_html',
+    ),
+    array(
+      'bid' => 3,
+      'info' => 'Subscribe to mailing list',
+      'body' => '<form id="email-signup"><input class="form-text" name="email" size="20" type="text" value="email" /> <input class="form-submit" name="submit" type="submit" value="Sign up" /></form>',
+      'format' => 'full_html',
+    ),
+  );
+  $query = db_insert('block_custom')->fields(array('bid', 'body', 'info', 'format'));
+  foreach ($blocks as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+  
+  // Create standard menu blocks, which are stored in the variables table.
+  variable_set('menu_block_1_admin_title', 'Second-level navigation');
+  variable_set('menu_block_1_depth', '0');
+  variable_set('menu_block_1_expanded', 0);
+  variable_set('menu_block_1_follow', 0);
+  variable_set('menu_block_1_level', '2');
+  variable_set('menu_block_1_parent', '_active:0');
+  variable_set('menu_block_1_sort', 0);
+  variable_set('menu_block_1_title_link', 0);
+
+  variable_set('menu_block_2_admin_title', 'Footer navigation');
+  variable_set('menu_block_2_depth', '3');
+  variable_set('menu_block_2_expanded', 1);
+  variable_set('menu_block_2_follow', 0);
+  variable_set('menu_block_2_level', '1');
+  variable_set('menu_block_2_parent', 'main-menu:0');
+  variable_set('menu_block_2_sort', 0);
+  variable_set('menu_block_2_title_link', 0);
+
+  variable_set('menu_block_ids', array(1,2));
+  variable_set('menu_block_menu_order', array('main-menu' => '', 'menu-utility-menu' => ''));
+
   // Enable some standard blocks.
   $default_theme = 'tpcwf';
   $admin_theme = 'seven';
@@ -121,6 +253,7 @@ function tpc_install() {
       'weight' => 0,
       'region' => 'content',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -129,18 +262,20 @@ function tpc_install() {
       'theme' => $default_theme,
       'status' => 1,
       'weight' => -1,
-      'region' => 'sidebar_first',
+      'region' => 'header',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
-      'module' => 'node',
-      'delta' => 'recent',
+      'module' => 'views',
+      'delta' => 'tpc_content-recent_edits',
       'theme' => $admin_theme,
       'status' => 1,
-      'weight' => 10,
+      'weight' => 0,
       'region' => 'dashboard_main',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -151,16 +286,7 @@ function tpc_install() {
       'weight' => 0,
       'region' => 'sidebar_first',
       'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'system',
-      'delta' => 'navigation',
-      'theme' => $default_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'sidebar_first',
-      'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -171,6 +297,7 @@ function tpc_install() {
       'weight' => 0,
       'region' => 'help',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -181,6 +308,7 @@ function tpc_install() {
       'weight' => 0,
       'region' => 'content',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -191,6 +319,7 @@ function tpc_install() {
       'weight' => 0,
       'region' => 'help',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
@@ -201,20 +330,88 @@ function tpc_install() {
       'weight' => 10,
       'region' => 'content',
       'pages' => '',
+      'title' => '',
       'cache' => -1,
     ),
     array(
-      'module' => 'search',
-      'delta' => 'form',
+      'module' => 'system',
+      'delta' => 'user-menu',
       'theme' => $admin_theme,
       'status' => 1,
       'weight' => -10,
       'region' => 'dashboard_sidebar',
       'pages' => '',
+      'title' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'navigation',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => -9,
+      'region' => 'dashboard_sidebar',
+      'pages' => '',
+      'title' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'block',
+      'delta' => '1',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 10,
+      'region' => 'footer',
+      'pages' => '',
+      'title' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'block',
+      'delta' => '2',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 10,
+      'region' => 'sidebar_first',
+      'pages' => '',
+      'title' => 'Connect',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'block',
+      'delta' => '3',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 11,
+      'region' => 'sidebar_first',
+      'pages' => '',
+      'title' => 'Subscribe',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'menu_block',
+      'delta' => '1',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 1,
+      'region' => 'sidebar_first',
+      'pages' => '',
+      'title' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'menu_block',
+      'delta' => '2',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 1,
+      'region' => 'footer',
+      'pages' => '',
+      'title' => '<none>',
       'cache' => -1,
     ),
   );
-  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
+  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'title', 'cache'));
   foreach ($values as $record) {
     $query->values($record);
   }
@@ -247,6 +444,7 @@ function tpc_install() {
   foreach ($types as $type) {
     $type = node_type_set_defaults($type);
     node_type_save($type);
+    node_add_body_field($type);
   }
 
   // Insert default pre-defined RDF mapping into the database.
@@ -278,12 +476,14 @@ function tpc_install() {
   }
 
   // "Basic page" content type settings.
-  variable_set('node_options_page', array('status'));
+  variable_set('menu_options_page', array('main-menu', 'menu-utility-menu'));
+  variable_set('node_options_page', array('status','revision'));
   variable_set('node_submitted_page', FALSE);
   variable_set('comment_page', COMMENT_NODE_HIDDEN);
 
   // "News" content type settings.
   variable_set('menu_options_news', array());
+  variable_set('node_options_news', array('status','revision'));
   variable_set('node_submitted_page', FALSE);
   variable_set('comment_page', COMMENT_NODE_HIDDEN);
 
@@ -353,7 +553,7 @@ function tpc_install() {
   // See http://api.drupal.org/api/function/field_create_field/7
 
   $field = array(
-    'field_name' => 'field_node_image',
+    'field_name' => 'field_image',
     'type' => 'image',
     'cardinality' => 1,
     'translatable' => TRUE,
@@ -374,7 +574,7 @@ function tpc_install() {
   // Many of the following values will be defaulted, they're included here as an illustrative examples.
   // See http://api.drupal.org/api/function/field_create_instance/7
   $instance = array(
-    'field_name' => 'field_node_image',
+    'field_name' => 'field_image',
     'entity_type' => 'node',
     'label' => 'Image',
     'bundle' => 'page',
@@ -416,16 +616,82 @@ function tpc_install() {
     ),
   );
   field_create_instance($instance);
+  
+  // Create default pages.
+  $node = new stdClass();
+  $node->type = 'page';
+  node_object_prepare($node);
+  $node->title = 'Home';
+  $node->language = LANGUAGE_NONE;
+  $node->status = 1;
+  $node->uid = 1;
+  $node->path = array('alias' => 'home');
+  node_save($node);
+  unset($node);
+
+  $node = new stdClass();
+  $node->type = 'page';
+  node_object_prepare($node);
+  $node->title = 'Typography';
+  $node->language = LANGUAGE_NONE;
+  $node->status = 1;
+  $node->uid = 1;
+  $node->body = array('und' => array(0 => array(
+    'value' => '<h1>This is a header 1<br />
+      breaking to a new line</h1>
+<p>It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife. However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families, that he is considered the rightful property of some one or other of their daughters.</p>
+<h2>This is a header 2<br />
+      breaking to a new line</h2>
+<p>&quot;Why, my dear, you must know, Mrs. Long says that Netherfield is taken by a young man of large fortune from the north of England; that he came down on Monday in a chaise and four to see the place, and was so much delighted with it, that he agreed with Mr. Morris immediately; that he is to take possession before Michaelmas, and some of his servants are to be in the house by the end of next week.&quot;</p>
+<h3>This is a header 3<br />
+      breaking to a new line</h3>
+<p>Mr. Bennet was so odd a mixture of quick parts, sarcastic humour, reserve, and caprice, that the experience of three-and-twenty years had been insufficient to make his wife understand his character. Her mind was less difficult to develop. She was a woman of mean understanding, little information, and uncertain temper. When she was discontented, she fancied herself nervous. The business of her life was to get her daughters married; its solace was visiting and news.</p>
+<h4>This is a header 4<br />
+      breaking to a new line</h4>
+<p>Mr. Bennet was among the earliest of those who waited on Mr. Bingley. He had always intended to visit him, though to the last always assuring his wife that he should not go; and till the evening after the visit was paid she had no knowledge of it. It was then disclosed in the following manner.</p>
+<ul><li>This is a list item.</li>
+<li>This is another list item.</li>
+<li>An invitation to dinner was soon afterwards dispatched; and already had Mrs. Bennet planned the courses that were to do credit to her housekeeping, when an answer arrived which deferred it all. Mr. Bingley was obliged to be in town the following day, and, consequently, unable to accept the honour of their invitation, etc. Mrs. Bennet was quite disconcerted.</li>
+</ul>
+<table><thead>
+              <tr>
+                      <th scope="col">Header row</th>
+                      <th scope="col">Column header</th>
+                      <th scope="col">Column header<br />
+                              line break</th>
+              </tr>
+      </thead>
+      <tbody>
+              <tr>
+                      <td>&quot;To-morrow fortnight.&quot;</td>
+                      <td>&quot;Then, my dear, you may have the advantage of your friend, and introduce Mr. Bingley to _her_.&quot;</td>
+                      <td>&quot;But you forget, mamma,&quot; said Elizabeth, &quot;that we shall meet him at the assemblies, and that Mrs. Long promised to introduce him.&quot;</td>
+              </tr>
+              <tr>
+                      <td>&nbsp;</td>
+                      <td>&quot;We are not in a way to know _what_ Mr. Bingley likes,&quot; said her mother resentfully, &quot;since we are not to visit.&quot;</td>
+                      <td>&quot;Impossible, Mr. Bennet, impossible, when I am not acquainted with him myself; how can you be so teasing?&quot;</td>
+              </tr>
+      </tbody>
+</table>
+<blockquote>Nothing is more deceitful ... than the appearance of humility. It is often only carelessness of opinion, and sometimes an indirect boast.</blockquote>',
+    'format' => 'full_html',
+  )));
+  $node->path = array('alias' => 'typography');
+  node_save($node);
+
+  // Set the site front page to the home page node.
+  variable_set('site_frontpage', 'node/1');
 
   // Enable default permissions for system roles.
   $filtered_html_permission = filter_permission_name($filtered_html_format);
-  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'access comments', $filtered_html_permission));
-  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content', 'access comments', 'post comments', 'skip comment approval', $filtered_html_permission));
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content', 'access comments', 'search content', $filtered_html_permission));
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content', 'access comments', 'post comments', 'skip comment approval', 'search content', $filtered_html_permission));
 
   // Create a default role for site administrators, with all available permissions assigned.
   $admin_role = new stdClass();
   $admin_role->name = 'administrator';
-  $admin_role->weight = 2;
+  $admin_role->weight = 3;
   user_role_save($admin_role);
   user_role_grant_permissions($admin_role->rid, array_keys(module_invoke_all('permission')));
   // Set this as the administrator role.
@@ -439,8 +705,9 @@ function tpc_install() {
   // Create a default role for site managers.
   $manager_role = new stdClass();
   $manager_role->name = 'manager';
-  $manager_role->weight = 3;
+  $manager_role->weight = 4;
   user_role_save($manager_role);
+  user_role_grant_permissions($manager_role->rid, array('access content overview', 'access contextual links', 'access dashboard', 'access overlay', 'access site reports', 'access toolbar', 'access user profiles', 'administer blocks', 'administer menu', 'administer nodes', 'administer taxonomy', 'administer url aliases', 'administer users', 'administer views', 'assign manager role', 'bypass node access', 'create url aliases', 'use text format full_html', 'view the administration theme'));
 
   // Create a Home link in the main menu.
   $item = array(
