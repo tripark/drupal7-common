@@ -38,6 +38,32 @@ function tpc_general_preprocess_node(&$vars) {
 }
 
 /**
+ * Implements hook_field_formatter_info().
+ *
+ * Add a text formatter similar to plain text, but with HTML line breaks.
+ */
+function tpc_general_field_formatter_info() {
+  return array(
+    'text_plain_linebreaks' => array(
+      'label' => t('Plain text with linebreaks'),
+      'field types' => array('text_long', 'text_with_summary'),
+    ),
+  );
+}
+
+function tpc_general_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  switch ($display['type']) {
+    case 'text_plain_linebreaks':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => nl2br(strip_tags($item['value'])));
+      }
+      break;
+  }
+  return $element;
+}
+  
+/**
  * Implements hook_menu_breadcrumb_alter().
  *
  * If in the admin section, change the breadcrumb root to "Dashboard" instead
