@@ -77,6 +77,19 @@ function tpc_general_menu_breadcrumb_alter(&$active_trail, $item) {
 }
 
 /**
+ * Display the relative filepath for file fields.
+ */
+function tpc_general_preprocess_file_widget_multiple(&$vars) {
+  foreach(element_children($vars['element']) AS $key) {
+    if (!empty($vars['element'][$key]['#default_value']['uri'])) {
+      $file_public_path = '/' . variable_get('file_public_path', 'sites/default/files') . '/';
+      $relative = str_replace('public://', $file_public_path, $vars['element'][$key]['#default_value']['uri']);
+      $vars['element'][$key]['filename']['#suffix'] .= '<div class="file-relative-path">' . $relative . '</div>';
+    }
+  }
+}
+
+/**
  * Implements hook_views_api().
  */
 function tpc_general_views_api() {
