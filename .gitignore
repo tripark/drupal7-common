@@ -9,5 +9,4 @@
 # Ignore the sites/default directory which will house content specific to an
 # individual site.
 sites/default/*
-sites/all/libraries
 
