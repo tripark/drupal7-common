@@ -53,7 +53,7 @@
 
       <div id="content" class="column"><div class="section">
 
-        <?php print $highlight; ?>
+        <?php print $highlighted; ?>
 
         <?php if ($title): ?>
           <h1 class="title"><?php print $title; ?></h1>

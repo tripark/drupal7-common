@@ -29,11 +29,11 @@ function views_bulk_operations_drush_command() {
       'type:[name=]value ...' => 'Parameters to be passed as view input filters, view arguments or operation arguments, where type is respectively {input, argument, operation}.',
     ),
     'examples' => array(
-      '$ drush vbo-execute admin_content node_publish_action' => 
+      '$ drush vbo-execute admin_content node_publish_action' =>
         'Publish nodes returned by view admin_content.',
-      '$ drush vbo-execute 44 node_assign_owner_action operation:owner_uid=3' => 
+      '$ drush vbo-execute 44 node_assign_owner_action operation:owner_uid=3' =>
         'Change node ownership on nodes returned by view #44, passing argument owner_uid=3 to the action.',
-      '$ drush vbo-execute admin_content node_unpublish_action input:type=expense argument:3' => 
+      '$ drush vbo-execute admin_content node_unpublish_action input:type=expense argument:3' =>
         'Unpublish nodes returned by view admin_content, filtering results of type expense and passing value 3 as first view argument.',
     ),
   );
@@ -46,30 +46,28 @@ function views_bulk_operations_drush_command() {
 function views_bulk_operations_drush_list() {
   // Impersonate admin.
   global $user;
-  $user = user_load(array('uid' => '1'));
-  session_save_session(FALSE);
+  $user = user_load(1);
+  drupal_save_session(FALSE);
 
   // Find all VBO views and their associated operations.
-  $rows = array(array(sprintf('%5s', dt('VID')), dt('NAME'), dt('DESCRIPTION'), dt('OPERATIONS')));
+  $rows = array(array(sprintf('%5s', dt('View ID')), dt('Name'), dt('Description'), dt('Operations')));
   foreach (views_get_all_views() as $name => $view) {
-    foreach (array_keys($view->display) as $display) {
-      $display_options = &$view->display[$display]->display_options;
-      if (isset($display_options['style_plugin']) && $display_options['style_plugin'] == 'bulk') {
-        $view->build($display);
-        $operations = array();
-        foreach (array_filter($display_options['style_options']['selected_operations']) as $operation) {
-          if (isset($view->style_plugin->options['all_operations'][$operation])) {
-            $operations[] = $view->style_plugin->options['all_operations'][$operation]['label'] .' ('. $operation .')';
-          }
+    $view->build();
+    $vbo = _views_bulk_operations_get_field($view);
+    if ($vbo) {
+      $operations = array();
+      foreach (array_filter($vbo->options['vbo']['selected_operations']) as $operation) {
+        if (isset($vbo->all_operations[$operation])) {
+          $operations[] = $vbo->all_operations[$operation]['label'] .' ('. $operation .')';
         }
-        $operations[] = "---------------";
-        $rows[] = array(
-          sprintf('%5d', $view->vid),
-          $view->name,
-          $view->description,
-          implode("\n", $operations),
-        );
       }
+      $operations[] = "---------------";
+      $rows[] = array(
+        sprintf('%5d', $view->vid),
+        $view->name,
+        $view->description,
+        implode("\n", $operations),
+      );
     }
   }
   drush_print_table($rows, TRUE);
@@ -77,7 +75,7 @@ function views_bulk_operations_drush_list() {
 
 /**
  * Implementation of 'vbo execute' command.
- */ 
+ */
 function views_bulk_operations_drush_execute($vid = NULL, $operation = NULL) {
   // Parse arguments.
   if (is_null($vid)) {
@@ -116,10 +114,9 @@ function views_bulk_operations_drush_execute($vid = NULL, $operation = NULL) {
 
   // Impersonate admin.
   global $user;
-  $user = user_load(array('uid' => '1'));
-  session_save_session(FALSE);
+  $user = user_load(1);
+  drupal_save_session(FALSE);
 
   // Execute the VBO.
   views_bulk_operations_execute($vid, $operation, $operation_arguments, $view_exposed_input, $view_arguments);
 }
-

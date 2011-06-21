@@ -130,7 +130,7 @@ var {
  * the line heights of any larger fonts be a multiple of 1.5 ems. For more
  * information, see http://24ways.org/2006/compose-to-a-vertical-rhythm
  */
-h1, h2, h3, h4, h5, h6
+h1, h2, h3, h4, h5, h6,
 p, blockquote, pre,
 ul, ol, dl,
 hr, table, fieldset {

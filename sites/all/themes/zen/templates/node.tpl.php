@@ -27,6 +27,7 @@
  *     name will often be in a short form of the human readable label.
  *   - node-teaser: Nodes in teaser form.
  *   - node-preview: Nodes in preview mode.
+ *   - view-mode-[mode]: The view mode, e.g. 'full', 'teaser'...
  *   The following are controlled through the node publishing options.
  *   - node-promoted: Nodes promoted to the front page.
  *   - node-sticky: Nodes ordered above other non-sticky nodes in teaser

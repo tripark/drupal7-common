@@ -14,11 +14,11 @@ function field_group_schema() {
 
     // CTools export definitions.
     'export' => array(
-      'key' => 'id',
+      'key' => 'identifier',
       'identifier' => 'field_group',
       'default hook' => 'field_group_info',
       'save callback' => 'field_group_save',
-      'delete callback' => 'field_group_delete',
+      'delete callback' => 'field_group_export_delete',
       'can disable' => FALSE,
       'api' => array(
         'owner' => 'field_group',
@@ -33,6 +33,14 @@ function field_group_schema() {
         'type' => 'serial',
         'not null' => TRUE,
         'description' => 'The primary identifier for a group',
+        'no export' => TRUE,
+      ),
+      'identifier' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The unique string identifier for a group.',
       ),
       'group_name' => array(
         'type' => 'varchar',
@@ -177,5 +185,47 @@ function field_group_install() {
     }
 
   }
+
+  // Set weight to 1.
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('name', 'field_group')
+    ->execute();
+}
+
+/**
+ * Update hook on the field_group table to add an unique identifier.
+ */
+function field_group_update_7001() {
+
+  if (!db_field_exists('field_group', 'identifier')) {
+    // Add the new string identifier field for ctools.
+    db_add_field('field_group', 'identifier', array(
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+      'description' => 'The unique string identifier for a group.',
+    ));
+
+    module_load_include('module', 'field_group');
+    _field_group_recreate_identifiers();
+
+  }
+
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('name', 'field_group')
+    ->execute();
+
+}
+
+/**
+ * Update hook to clear cache for new changes to take effect.
+ */
+function field_group_update_7002() {
+
+  module_load_include('module', 'field_group');
+  _field_group_recreate_identifiers();
 
 }

@@ -86,6 +86,13 @@ function zen_form_system_theme_settings_alter(&$form, $form_state) {
                         ),
     '#default_value' => theme_get_setting('zen_layout'),
   );
+  $form['themedev']['zen_jump_link_target'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Anchor ID for “Jump to Navigation” link'),
+    '#default_value' => theme_get_setting('zen_jump_link_target'),
+    '#field_prefix'  => '#',
+    '#description'   => t('Specify the HTML ID of the main navigation menu; this will be used by the accessible-but-hidden “Jump to Navigation" link at the top of each page.'),
+  );
   $form['themedev']['zen_wireframes'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Add wireframes around main layout elements'),

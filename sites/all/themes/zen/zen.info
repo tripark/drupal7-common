@@ -23,12 +23,13 @@ settings[zen_breadcrumb_home]      = 1
 settings[zen_breadcrumb_trailing]  = 1
 settings[zen_breadcrumb_title]     = 0
 settings[zen_layout]               = zen-columns-liquid
+settings[zen_jump_link_target]     = main-menu
 settings[zen_rebuild_registry]     = 0
 settings[zen_wireframes]           = 0
 
-; Information added by drupal.org packaging script on 2011-04-05
-version = "7.x-3.0"
+; Information added by drupal.org packaging script on 2011-04-25
+version = "7.x-3.1"
 core = "7.x"
 project = "zen"
-datestamp = "1302021117"
+datestamp = "1303759317"
 

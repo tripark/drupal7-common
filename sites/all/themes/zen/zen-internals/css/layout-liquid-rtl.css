@@ -9,18 +9,18 @@
  */
 #content {
   float: right;
-  margin-left: -100%;
-  margin-right: 0; /* Negative value of #content's width + left margin. */
+  margin-left: -100%; /* Negative value of #content's width + right margin. */
+  margin-right: 0;
 }
 
 .sidebar-first #content .section {
-  padding-left: 0; /* The width + left margin of .region-sidebar-first. */
-  padding-right: 200px;
+  padding-left: 0;
+  padding-right: 200px; /* The width + right margin of .region-sidebar-first. */
 }
 
 .sidebar-second #content .section {
-  padding-left: 200px;
-  padding-right: 0; /* The width + right margin of .region-sidebar-second. */
+  padding-left: 200px; /* The width + left margin of .region-sidebar-second. */
+  padding-right: 0;
 }
 
 /*
@@ -28,8 +28,8 @@
  */
 #navigation {
   float: right;
-  margin-left: -100%;
-  margin-right: 0; /* Negative value of #navigation's width + left margin. */
+  margin-left: -100%; /* Negative value of #navigation's width + right margin. */
+  margin-right: 0;
 }
 
 /*
@@ -37,8 +37,8 @@
  */
 .region-sidebar-first {
   float: right;
-  margin-left: -200px;
-  margin-right: 0; /* Negative value of .region-sidebar-first's width + left margin. */
+  margin-left: -200px; /* Negative value of .region-sidebar-first's width + right margin. */
+  margin-right: 0;
 }
 
 .region-sidebar-first .section {
@@ -50,8 +50,8 @@
  */
 .region-sidebar-second {
   float: left;
-  margin-left: 0; /* Negative value of .region-sidebar-second's width + right margin. */
-  margin-right: -200px;
+  margin-left: 0;
+  margin-right: -200px; /* Negative value of .region-sidebar-second's width + left margin. */
 }
 
 .region-sidebar-second .section {

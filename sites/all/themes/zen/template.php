@@ -12,7 +12,7 @@
  */
 
 // Auto-rebuild the theme registry during theme development.
-if (theme_get_setting('zen_rebuild_registry')) {
+if (theme_get_setting('zen_rebuild_registry') && !defined('MAINTENANCE_MODE')) {
   // Rebuild .info data.
   system_rebuild_theme_data();
   // Rebuild theme registry.
@@ -210,6 +210,7 @@ function zen_preprocess_html(&$variables, $hook) {
       $variables['classes_array'][] = 'page-panels';
       break;
   }
+  $variables['jump_link_target'] = theme_get_setting('zen_jump_link_target');
 }
 
 /**
@@ -262,6 +263,11 @@ function zen_preprocess_maintenance_page(&$variables, $hook) {
 function zen_preprocess_node(&$variables, $hook) {
   // Add $unpublished variable.
   $variables['unpublished'] = (!$variables['status']) ? TRUE : FALSE;
+
+  // Add a class for the view mode.
+  if (!$variables['teaser']) {
+    $variables['classes_array'][] = 'view-mode-' . $variables['view_mode'];
+  }
 
   // Add a class to show node is authored by current user.
   if ($variables['uid'] && $variables['uid'] == $GLOBALS['user']->uid) {

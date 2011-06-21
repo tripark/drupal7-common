@@ -1,3 +1,14 @@
+Zen 7.x-3.1, 2011-04-26
+-----------------------
+- #812480 by Garrett Albright and JohnAlbin: Make "Jump to Nav" link configurable
+- #1135120: PHP notice about undefined $highlight variable on maintenance-page.tpl
+- #705264 by grendzy: Allow Zen (and subthemes) to be used without a database
+- #774838: Add view_mode class to node.tpl
+- #1126206 by mahfiaz: Typo in print.css; should be .region-footer
+- #1118168 by kristofer: Remove toolbar from printed pages
+- #1118182: Block-level vertical rhythm CSS rule is broken
+- #1117372: Bullets appear next to Main menu links and Secondary menu links
+
 Zen 7.x-3.0, 2011-04-06
 -----------------------
 - #774836 by hefox: Check if node $title is set before outputting

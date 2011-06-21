@@ -105,9 +105,6 @@ div#site-name /* The name of the website */ {
 .region-highlighted {
 }
 
-.region-content-top /* Wrapper for any blocks placed in the "content top" region */ {
-}
-
 .breadcrumb /* The path to the current page in the form of a list of links */ {
   padding-bottom: 0; /* Undo system.css */
 }
@@ -193,9 +190,6 @@ ul.links li {
 }
 
 .more-link /* Aggregator, blog, and forum more link */ {
-}
-
-.region-content-bottom /* Wrapper for any blocks placed in the "content bottom" region */ {
 }
 
 /*

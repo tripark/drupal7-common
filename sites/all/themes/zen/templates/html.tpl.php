@@ -25,6 +25,8 @@
  * - $styles: Style tags necessary to import all CSS files for the page.
  * - $scripts: Script tags necessary to load the JavaScript files and settings
  *   for the page.
+ * - $jump_link_target: The HTML ID of the element that the "Jump to Navigation"
+ *   link should jump to. Defaults to "main-menu".
  * - $page_top: Initial markup from any modules that have altered the
  *   page. This variable should always be output first, before all other dynamic
  *   content.
@@ -69,7 +71,7 @@
 </head>
 <body class="<?php print $classes; ?>" <?php print $attributes;?>>
   <div id="skip-link">
-    <a href="#main-menu" class="element-invisible element-focusable"><?php print t('Jump to Navigation'); ?></a>
+    <a href="#<?php print $jump_link_target; ?>" class="element-invisible element-focusable"><?php print t('Jump to Navigation'); ?></a>
   </div>
   <?php print $page_top; ?>
   <?php print $page; ?>

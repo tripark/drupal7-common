@@ -379,10 +379,27 @@ function field_group_format_settings_form(&$group) {
     '#type' => 'textfield',
     '#title' => t('Field group label'),
     '#default_value' => $group->label,
-    '#weight' => -5
+    '#weight' => -5,
+    '#element_validate' => array('field_group_format_settings_label_validate'),
   );
   $form += module_invoke_all('field_group_format_settings', $group);
+  $form['#validate'] = array('field_group_format_settings_form_validate');
   return $form;
+}
+
+/**
+ * Validate the label. Label is required for fieldsets that are collapsible.
+ */
+function field_group_format_settings_label_validate($element, &$form_state) {
+
+  $group = $form_state['values']['fields'][$element['#parents'][1]];
+  $settings = $group['format_settings']['settings'];
+  $name = $form_state['formatter_settings_edit'];
+  $form_state['values']['fields'][$name]['settings_edit_form']['settings'] = $settings;
+  if ($group['format']['type'] == 'fieldset' && ($settings['formatter'] == 'collapsed' || $settings['formatter'] == 'collapsible') && empty($settings['label'])) {
+    form_error($element, t('The label is required when formatter is collapsible or collapsed'));
+  }
+
 }
 
 /**
@@ -414,7 +431,7 @@ function field_group_formatter_settings_update(& $group, $settings) {
   // for format changes we load the defaults.
   if (empty($settings['format_settings']['settings'])) {
     $group->format_settings = array(
-      'formatter' => $formatter['default_formatter'],
+      'formatter' => isset($formatter['default_formatter']) ? $formatter['default_formatter'] : '',
       'instance_settings' => $formatter['instance_settings']
     );
   }
@@ -570,6 +587,7 @@ function field_group_field_overview_submit($form, &$form_state) {
     $formatter = $field_group_types[($mode == 'form' ? 'form' : 'display')][$values['format']['type']];
 
     $new_group = (object) array(
+      'identifier' => $values['group_name'] . '|' . $entity_type . '|' . $bundle . '|' . $mode,
       'group_name' => $values['group_name'],
       'entity_type' => $entity_type,
       'bundle' => $bundle,

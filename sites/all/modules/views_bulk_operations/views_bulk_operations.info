@@ -1,26 +1,15 @@
 name = Views Bulk Operations
-description = Exposes new Views style 'Bulk Operations' for selecting multiple nodes and applying operations on them.
+description = Provides a way of selecting multiple rows and applying operations to them.
+dependencies[] = entity
 dependencies[] = views
 package = Views
 core = 7.x
-files[] = views_bulk_operations.module
-files[] = views_bulk_operations.rules.inc
-files[] = views_bulk_operations.views.inc
-files[] = views_bulk_operations.views_default.inc
-files[] = views_bulk_operations_plugin_style.inc
-files[] = argument_selector.action.inc
-files[] = delete.action.inc
-files[] = fields.action.inc
-files[] = profile.action.inc
-files[] = ruleset.action.inc
-files[] = script.action.inc
-files[] = taxonomy.action.inc
-files[] = user_roles.action.inc
 
+files[] = views/views_bulk_operations_handler_field_operations.inc
 
-; Information added by drupal.org packaging script on 2011-05-11
-version = "7.x-3.x-dev"
+; Information added by drupal.org packaging script on 2011-06-19
+version = "7.x-3.0-alpha3"
 core = "7.x"
 project = "views_bulk_operations"
-datestamp = "1305075139"
+datestamp = "1308505319"
 

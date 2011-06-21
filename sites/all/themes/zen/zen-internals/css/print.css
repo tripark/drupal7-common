@@ -50,10 +50,11 @@ body,
 
 /* Hide sidebars and nav elements */
 #skip-to-nav,
+#toolbar,
 #navigation,
 .region-sidebar-first,
 .region-sidebar-second,
-.footer-region,
+.region-footer,
 .breadcrumb,
 div.tabs,
 .action-links,
