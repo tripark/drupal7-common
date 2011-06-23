@@ -9,6 +9,28 @@ function tpc_general_init() {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function tpc_general_menu() {
+  $items = array(
+    'googled8b6d4569de16b0f.html' => array(
+      'title' => 'Google Webmaster Tools verification file',
+      'page callback' => 'tpc_general_gwt_verification',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+    ),
+  );
+  return $items;
+}
+
+/**
+ * Output the Google Webmaster Tools verification string for TPC's account.
+ */
+function tpc_general_gwt_verification() {
+  echo "google-site-verification: googled8b6d4569de16b0f.html";
+}
+
+/**
  * Implements hook_form_alter().
  *
  * Expose the body summary sub-field by default on node edit forms.
@@ -84,7 +106,7 @@ function tpc_general_preprocess_file_widget_multiple(&$vars) {
     if (!empty($vars['element'][$key]['#default_value']['uri'])) {
       $file_public_path = '/' . variable_get('file_public_path', 'sites/default/files') . '/';
       $relative = str_replace('public://', $file_public_path, $vars['element'][$key]['#default_value']['uri']);
-      $vars['element'][$key]['filename']['#suffix'] .= '<div class="file-relative-path">' . $relative . '</div>';
+      $vars['element'][$key]['filename']['#suffix'] = '<div class="file-relative-path">' . $relative . '</div>';
     }
   }
 }
