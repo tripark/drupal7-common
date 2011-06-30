@@ -1,11 +1,10 @@
 <?php
+ini_set("memory_limit","180M");
 
 /**
  * Root directory of Drupal installation.
  */
 define('DRUPAL_ROOT', getcwd());
-
-ini_set("memory_limit","180M");
 
 /**
  * @file
@@ -386,10 +385,6 @@ if (empty($op) && update_access_allowed()) {
 
   // Set up theme system for the maintenance page.
   drupal_maintenance_theme();
-
-  // Rebuild the registry to ensure that removed hooks in modules do not result
-  // in undefined function errors and that newly defined hooks are called.
-  registry_rebuild();
 
   // Check the update requirements for Drupal.
   update_check_requirements();

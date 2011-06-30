@@ -1,4 +1,5 @@
 <?php
+ini_set("memory_limit","180M");
 
 /**
  * @file
@@ -10,8 +11,6 @@
  * All Drupal code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
  */
-
-ini_set("memory_limit","180M");
 
 /**
  * Root directory of Drupal installation.

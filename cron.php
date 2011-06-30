@@ -1,11 +1,10 @@
 <?php
+ini_set("memory_limit","180M");
 
 /**
  * @file
  * Handles incoming requests to fire off regularly-scheduled tasks (cron jobs).
  */
-
-ini_set("memory_limit","180M");
 
 /**
  * Root directory of Drupal installation.
