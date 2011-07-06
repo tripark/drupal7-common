@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * DO NOT EDIT. This file will be removed in the next release. It has been moved
+ * to the includes folder, but is retained here so that the autoloader doesn't
+ * trigger a fatal error before media_update_7015() runs.
+ */
 /**
  * A base class for Resource Stream Wrappers.
  *

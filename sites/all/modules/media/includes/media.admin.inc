@@ -156,20 +156,13 @@ function media_admin_thumbnails() {
   //   with browser_pager_limit?
   $limit = variable_get('media_admin_limit', 50);
 
+
   $query = new EntityFieldQuery();
-
   $query->pager($limit);
-  $query->entityCondition('entity_type', 'media');
+  $query->entityCondition('entity_type', 'file');
   $query->propertyCondition('status', FILE_STATUS_PERMANENT);
-
   $result = $query->execute();
-  $ids = key_exists('media', $result) ? array_keys($result['media']) : FALSE;
-  if ($ids) {
-    $media_entities = entity_load('media', $ids);
-  }
-  else {
-    $media_entities = array();
-  }
+  $files = file_load_multiple(array_keys($result['file']));
 
   $destination = drupal_get_destination();
   $rows = array();
@@ -180,16 +173,14 @@ function media_admin_thumbnails() {
    '#suffix' => '</ul></div>',
   );
 
-  if (count($media_entities)) {
-    foreach ($media_entities as $media) {
-     $preview = media_get_thumbnail_preview($media, TRUE);
-     $form['files'][$media->fid] = array(
-       '#type' => 'checkbox',
-       '#title' => '',
-       '#prefix' => '<li>' . drupal_render($preview),
-       '#suffix' => '</li>',
-     );
-    }
+  foreach ($files as $file) {
+   $preview = media_get_thumbnail_preview($file, TRUE);
+   $form['files'][$file->fid] = array(
+     '#type' => 'checkbox',
+     '#title' => '',
+     '#prefix' => '<li>' . drupal_render($preview),
+     '#suffix' => '</li>',
+   );
   }
 
   $form['pager'] = array('#markup' => theme('pager', array('tags' => NULL)));
@@ -284,56 +275,6 @@ function media_admin_submit($form, &$form_state) {
     // show the confirmation form for the deletion of nodes.
     $form_state['rebuild'] = TRUE;
   }
-}
-
-/**
- * Display all media types.
- */
-function media_admin_type_list() {
-  $types = media_type_get_types();
-  $field_ui = module_exists('field_ui');
-  $header = array(t('Name'), array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2'));
-  $rows = array();
-
-  foreach ($types as $key => $info) {
-    $type = $types[$key];
-    $type_url_str = str_replace('_', '-', $key);
-    $row = array();
-    $label = $info->label;
-
-    // Set the name column.
-    $row[] = array('data' => t($info->label));
-
-    // Set the edit column.
-    $row[] = array('data' => l(t('settings'), 'admin/config/media/types/manage/' . $type_url_str));
-
-    if ($field_ui) {
-      // Manage fields.
-      $row[] = array('data' => l(t('manage fields'), 'admin/config/media/types/manage/' . $type_url_str . '/fields'));
-
-      // Display fields.
-      $row[] = array('data' => l(t('manage display'), 'admin/config/media/types/manage/' . $type_url_str . '/display'));
-    }
-
-    // Set the delete column.
-    if (empty($type->base)) {
-      $row[] = array('data' => l(t('delete'), 'admin/config/media/types/manage/' . $type_url_str . '/delete'));
-    }
-    else {
-      $row[] = array('data' => '');
-    }
-
-    $rows[] = $row;
-
-  }
-
-  $build['media_type_table'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows
-  );
-
-  return $build;
 }
 
 /**
@@ -559,8 +500,10 @@ function media_import_batch_import_files($files, &$context) {
       $file_obj = media_parse_to_file($file);
       $context['results']['success'][] = $file;
       if (!$image_in_message) {
-        $media = media_load($file_obj->fid);
-        $image_in_message = field_view_field('media', $media, 'file', 'media_preview');
+        // @todo Is this load step really necessary? When there's time, test
+        //   this, and either remove it, or comment why it's needed.
+        $loaded_file = file_load($file_obj->fid);
+        $image_in_message = file_view_file($loaded_file, 'media_preview');
       }
     }
     catch(Exception $e) {

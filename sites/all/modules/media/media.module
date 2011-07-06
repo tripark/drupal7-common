@@ -16,13 +16,13 @@
 // A registry of variable_get defaults.
 require_once ( dirname(__FILE__) . '/includes/media.variables.inc');
 
-// Creating media types, entity definition
+// Define media related file types and how to display them.
 require_once ( dirname(__FILE__) . '/includes/media.types.inc');
 
-// Code relating to using media as a field
+// Code relating to using media as a field.
 require_once ( dirname(__FILE__) . '/includes/media.fields.inc');
 
- // Functions for working with [[inline tags]] and wysiwyg editors
+ // Functions for working with [[inline tags]] and wysiwyg editors.
 require_once ( dirname(__FILE__) . '/includes/media.filter.inc');
 
 /* ***************************************** */
@@ -54,6 +54,19 @@ function media_help($path,$arg) {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ *
+ * Add view modes to the file entity type, appropriate for displaying media.
+ */
+function media_entity_info_alter(&$entity_info) {
+  $entity_info['file']['view modes']['media_link'] = array('label' => t('Link'), 'custom settings' => TRUE);
+  $entity_info['file']['view modes']['media_preview'] = array('label' => t('Preview'), 'custom settings' => TRUE);
+  $entity_info['file']['view modes']['media_small'] = array('label' => t('Small'), 'custom settings' => TRUE);
+  $entity_info['file']['view modes']['media_large'] = array('label' => t('Large'), 'custom settings' => TRUE);
+  $entity_info['file']['view modes']['media_original'] = array('label' => t('Original'), 'custom settings' => TRUE);
+}
+
+/**
  * Implement of hook_menu().
  */
 function media_menu() {
@@ -75,32 +88,24 @@ function media_menu() {
     'access arguments' => array('administer media'),
     'file' => 'includes/media.admin.inc',
   );
-  // For managing different types of media and the fields associated with them.
-  $items['admin/config/media/types'] = array(
-    'title' => 'Media Types',
-    'description' => 'Manage files used on your site.',
-    'page callback' => 'media_admin_type_list',
-    'access arguments' => array('administer media'),
-    'file' => 'includes/media.admin.inc',
-  );
 
   // Settings used for determining the type of media a file is.
-  $items['admin/config/media/types/manage/%media_type'] = array(
-    'title' => 'Manage media',
-    'title callback' => 'media_type_page_title',
-    'title arguments' => array(5),
-    'description' => 'Manage files used on your site.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('media_admin_type_manage_form', 5),
-    'access arguments' => array('administer media'),
-    'file' => 'includes/media.admin.inc',
-  );
-
-  $items['admin/config/media/types/manage/%media_type/settings'] = array(
-    'title' => 'Settings',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -1,
-  );
+  // @todo Find a new home for this that integrates with the file_entity module.
+//  $items['admin/config/media/types/manage/%media_type'] = array(
+//    'title' => 'Manage media',
+//    'title callback' => 'media_type_page_title',
+//    'title arguments' => array(5),
+//    'description' => 'Manage files used on your site.',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('media_admin_type_manage_form', 5),
+//    'access arguments' => array('administer media'),
+//    'file' => 'includes/media.admin.inc',
+//  );
+//  $items['admin/config/media/types/manage/%media_type/settings'] = array(
+//    'title' => 'Settings',
+//    'type' => MENU_DEFAULT_LOCAL_TASK,
+//    'weight' => -1,
+//  );
 
   // Administrative screens for managing media.
   $items['admin/content/media'] = array(
@@ -171,32 +176,33 @@ function media_menu() {
     'file' => 'includes/media.browser.inc',
   );
 
-  $items['media/%media/format-form'] = array(
+  $items['media/%file/format-form'] = array(
     'title' => 'Style selector',
     'description' => 'Choose a format for a piece of media',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_format_form', 1),
-    'access arguments' => array('administer media'),
+    'access callback' => 'media_access',
+    'access arguments' => array('view'),
     'weight' => 0,
     'file' => 'includes/media.filter.inc',
     'theme callback' => 'media_dialog_get_theme_name',
   );
 
-  $items['media/%media'] = array(
-    'page callback' => 'media_file_view',
+  $items['media/%file'] = array(
+    'page callback' => 'media_view_page',
     'page arguments' => array(1),
     'access callback' => 'media_access',
     'access arguments' => array('view'),
     'file' => 'includes/media.pages.inc',
   );
 
-  $items['media/%media/view'] = array(
+  $items['media/%file/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
 
-  $items['media/%media/edit'] = array(
+  $items['media/%file/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'media_page_edit',
     'page arguments'  => array(1),
@@ -222,7 +228,7 @@ function media_menu() {
     'theme callback' => '_node_custom_theme',
   );
 
-  $items['media/%media/delete'] = array(
+  $items['media/%file/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'media_page_delete',
     'page arguments'  => array(1),
@@ -238,7 +244,7 @@ function media_menu() {
 
   $items['admin/content/media/browser'] = $items['media/browser'];
   $items['admin/content/media/browser']['type'] = MENU_LOCAL_ACTION;
-  
+
   $items['media/js'] = array(
     'page callback' => 'media_preview_ajax',
     'access callback' => 'media_access',
@@ -341,7 +347,7 @@ function media_theme() {
     ),
 
     'media_formatter_large_icon' => array(
-      'variables' => array('file' => NULL),
+      'variables' => array('file' => NULL, 'attributes' => array()),
       'file' => 'includes/media.theme.inc',
     ),
   );
@@ -365,29 +371,16 @@ function media_image_default_styles() {
 }
 
 /**
- * Implement hook_file_insert().
- */
-function media_file_insert($file) {
-  $file->type = media_get_type($file);
-  drupal_write_record('file_managed', $file, array('fid'));
-  media_save_attached_file($file);
-}
-
-/**
  * Implement hook_file_update().
  */
 function media_file_update($file) {
-  $file->type = media_get_type($file);
-  media_save_attached_file($file);
+  media_filter_invalidate_caches($file->fid);
 }
 
 /**
  * Implements hook_file_delete().
  */
 function media_file_delete($file) {
-  // @todo: call field_attach_delete() from here, or add media_delete().
-
-  // Remove this file from the {media_filter_usage} table.
   db_delete('media_filter_usage')->condition('fid', $file->fid)->execute();
 }
 
@@ -541,95 +534,18 @@ function media_forms($form_id, $args) {
 /* ***************************************** */
 
 /**
- * Loads a Media Asset
- *
- * @param string $fid
- * @return Media
- */
-function media_load($fid) {
-  if ($files = entity_load('media', array($fid))) {
-    return array_shift($files);
-  }
-  return FALSE;
-}
-
-/**
- * Loads multiple media Assets
+ * Load callback for %media_multi placeholder in menu paths.
  *
  * @param string $fids
- *  Separated by plus(+) signs. e.g. 3+6+12+99
+ *   Separated by space (e.g., "3 6 12 99"). This often appears as "+" within
+ *   URLs (e.g., "3+6+12+99"), but Drupal automatically decodes paths when
+ *   intializing $_GET['q'].
  *
  * @return array
- *  An array of corresponding media entities.
+ *   An array of corresponding file entities.
  */
 function media_multi_load($fids) {
-  $fids = explode(" ", $fids);
-  if ($files = media_load_multiple($fids)) {
-    return $files;
-  }
-}
-
-/**
- * Load media entities from the database.
- *
- * @see entity_load()
- *
- * @param $fids
- *   An array of media file IDs.
- * @param $conditions
- *   An array of conditions on the {file_managed} table in the form
- *   'field' => $value.
- * @param $reset
- *   Whether to reset the internal media_load cache.
- *
- * @return
- *   An array of media objects indexed by fid.
- */
-function media_load_multiple($fids = array(), $conditions = array(), $reset = FALSE) {
-  return entity_load('media', $fids, $conditions, $reset);
-}
-
-/**
- * Save a Media Asset
- *
- * @param $media
- * @return StdClass
- */
-function media_save($media) {
-  field_attach_presave('media', $media);
-  if ($media->fid) {
-    $op = 'update';
-  }
-  else {
-    $op = 'insert';
-  }
-  // Do something here for insert update
-  if ($op == 'insert') {
-    // should never happen I think, except perhaps on import.
-    // @todo: validate bundle, etc
-    field_attach_insert('media', $media);
-  }
-  else {
-    field_attach_update('media', $media);
-    media_filter_invalidate_caches($media->fid);
-  }
-
-  // Since the Media module can't make files into fieldable entities directly
-  // without hacking Drupal core, it does so indirectly via a "media" entity
-  // type. The indirection requires media entities to have one of its fields be
-  // a file field containing the file that defines the media entity itself.
-  // The File module treats this media entity / file field relationship like
-  // any other entity / file field relationship, and increments the file usage
-  // count whenever the media entity is saved, as part of the
-  // field_attach_(insert|update)() execution above. However, we don't want the
-  // media entity's reference to itself to count as usage, since that would
-  // result in all media entities being "in use" and undeletable, so we remove
-  // the self-referential usage record.
-  if ($media->fid) {
-    // file_usage_delete() requires the first argument to be an instance of
-    // stdClass, but $media is an instance of some other class, so we cast it.
-    file_usage_delete((object)(array) $media, 'file', 'media', $media->fid);
-  }
+  return file_load_multiple(explode(" ", $fids));
 }
 
 /**
@@ -949,50 +865,6 @@ function media_parse_to_file($url) {
 }
 
 /**
- *  When we save a file, we need to ensure any required media entity info is
- *  saved as well.
- */
-function media_save_attached_file($file) {
-  if ($file) {
-    // This is terrible.  Just awful.
-    if ($file->status != FILE_STATUS_PERMANENT) {
-      // We only want to manage files which are FILE_STATUS_PERMANENT
-      return;
-    }
-    $defaults = array (
-      'display' => TRUE,
-    );
-
-    // Make a copy of the file object to use as the media object
-    // (file is a field of media and the base table). This is weird.
-    // The problem is, files get managed elsewhere, and when they move from
-    // temporary to PERMANENT files, we want to create media entities for them.
-    // Unfortunately, there is no hook for that, so on every insert / update
-    // we have to look to see if the media entity has been setup
-    // and if not, we have to create it.
-    $media = media_load($file->fid);
-    if (!$media->file) { //Then we haven't setup the media entity.
-      $media->file = array();
-      $media->file[LANGUAGE_NONE] = array();
-      $media->file[LANGUAGE_NONE][0] = (array)$file + $defaults;
-      $media->is_new = TRUE;
-      field_attach_presave('media', $media);
-      field_attach_update('media', $media);
-      //field_attach_insert('media', $media);
-      // @todo Why aren't we calling media_save() instead of the above code.
-      //   Since we aren't, we have to update usage here too, as we do in
-      //   media_save().
-      file_usage_delete((object)(array) $media, 'file', 'media', $media->fid);
-
-      // Also clear cached text formats from here.
-      media_filter_invalidate_caches($media->fid);
-    }
-  }
-  return $media;
-}
-
-
-/**
  * Implements hook_element_info().
  */
 function media_element_info() {
@@ -1024,10 +896,12 @@ function media_element_info() {
   return $types;
 }
 
+/**
+ * #process callback for the media form element.
+ */
 function media_element_process(&$element, &$form_state, $form) {
   $fid = isset($element['#value']['fid']) ? $element['#value']['fid'] : 0;
-  //$fid = isset($element['#default_value']['fid']) ? $element['#default_value']['fid'] : 0;
-  $media = media_load($fid);
+  $file = file_load($fid);
   $path = drupal_get_path('module', 'media');
 
   $element['title'] = array(
@@ -1040,8 +914,8 @@ function media_element_process(&$element, &$form_state, $form) {
 
   //@TODO: This should be loaded from the JS in case of a failed form submission.
   $markup = '';
-  if (!empty($media)) {
-    $preview = media_get_thumbnail_preview($media);
+  if (!empty($file)) {
+    $preview = media_get_thumbnail_preview($file);
     $markup = drupal_render($preview);
   }
   $element['preview'] = array(
@@ -1072,11 +946,8 @@ function media_element_process(&$element, &$form_state, $form) {
 //  array_push($parents, 'more_fields');
 //
 //  if ($file) {
-//    $media_wo_file = $file;
-//    $media_wo_file->file = array(); // heh, let's see how this works.
-//    field_attach_prepare_view('media', array($file->fid => $media_wo_file));
-//    entity_prepare_view('media', array($file->fid => $media_wo_file));
-//    $element['more_fields_wrapper']['more_fields'] = field_attach_view('media', $media_wo_file, 'media_preview');
+//    $element['more_fields_wrapper']['more_fields'] = file_view($file, 'media_preview');
+//    unset($element['more_fields_wrapper']['more_fields']['file']);
 //  }
 
   //@HACK: @todo: this is so I can find it in media.js without putting every field in a settings variable.
@@ -1175,57 +1046,17 @@ function _media_save_file_permenently(&$file) {
  * Returns a renderable array with the necessary classes to support a media
  * thumbnail.  Also provides default fallback images if no image is available.
  *
- * @param $media
+ * @param $file
  *
  * @return array
  *   Renderable array.
  */
-function media_get_thumbnail_preview($media, $link = NULL) {
-  $preview = field_view_field('media', $media, 'file', 'media_preview');
+function media_get_thumbnail_preview($file, $link = NULL) {
+  $preview = file_view_file($file, 'media_preview');
   $preview['#show_names'] = TRUE;
   $preview['#add_link'] = $link;
   $preview['#theme_wrappers'][] = 'media_thumbnail';
   return $preview;
-}
-
-/**
- * Implements hook_entity_info().
- */
-function media_entity_info() {
-  $view_modes = media_field_view_modes('media');
-  $return = array(
-    'media' => array(
-      'label' => t('Media'),
-      'base table' => 'file_managed',
-      'fieldable' => TRUE,
-      'view modes' => $view_modes,
-      'entity keys' => array(
-        'id' => 'fid',
-        'bundle' => 'type', // @TODO: Why 'type' here...
-      ),
-      'bundle keys' => array(
-        'bundle' => 'name', // @TODO: But 'name' here?
-      ),
-      'bundles' => array(),
-    ),
-  );
-
-  $media_types = media_type_get_types();
-
-  foreach ($media_types as $type => $bundle_info) {
-    $return['media']['bundles'][$type] = (array)$bundle_info;
-    $return['media']['bundles'][$type]['admin'] = array(
-      'label' => $bundle_info->label,
-      'path' => 'admin/config/media/types/manage/%media_type',
-      'real path' => 'admin/config/media/types/manage/' . $type,
-      'bundle argument' => 5,
-      // @TODO: Add an 'administer media types' perm?
-      'access arguments' => array('administer site configuration'),
-    );
-  }
-
-  // @TODO: Do we need to define search-related view modes for attached fields?
-  return $return;
 }
 
 /**
@@ -1262,4 +1093,20 @@ function media_flush_caches() {
   // content. This prevents fids from staying in this table indefinitely,
   // even if the post that references them is edited or deleted.
   db_delete('media_filter_usage')->condition('timestamp', REQUEST_TIME - 86400 * 120, '<')->execute();
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ *
+ * Lets CTools know which plugin APIs are implemented by Media module.
+ */
+function media_ctools_plugin_api($owner, $api) {
+  static $api_versions = array(
+    'file_entity' => array(
+      'file_default_displays' => 1,
+    ),
+  );
+  if (isset($api_versions[$owner][$api])) {
+    return array('version' => $api_versions[$owner][$api]);
+  }
 }

@@ -12,23 +12,19 @@ function media_browser($selected = NULL) {
   array_walk_recursive($params, '_media_recursive_check_plain');
   media_set_browser_params($params);
   
-  // How do we validate these?  I don't know.
-  // I think PDO should protect them, but I'm not 100% certain.
+  // If one or more files have been selected, the browser interaction is now
+  // complete. Return empty page content to the dialog which now needs to close,
+  // but populate Drupal.settings with information about the selected files.
   if (isset($params['fid'])) {
-    // A form has submitted, selected a piece (or pieces) of media and we refreshed.
-    // So we're just going to send the media entity out as a JS setting so the browser can close itself.
-    $selected = $params['fid'];
-    if (!is_array($params['fid'])) {
-      $selected = array($params['fid']);
-    }
-    if (!is_numeric($selected[0])) {
+    $fids = is_array($params['fid']) ? $params['fid'] : array($params['fid']);
+    if (!is_numeric($fids[0])) {
       throw new Exception('Error selecting media, fid param is not an fid or an array of fids');
     }
-    $selectedMedia = entity_load('media', $selected);
-    foreach ($selectedMedia as &$media) {
-      media_browser_build_media_item($media);
+    $files = file_load_multiple($fids);
+    foreach ($files as $file) {
+      media_browser_build_media_item($file);
     }
-    $setting = array('media' => array('selectedMedia' => array_values($selectedMedia)));
+    $setting = array('media' => array('selectedMedia' => array_values($files)));
     drupal_add_js($setting, 'setting');
     return $output;
   }
@@ -149,12 +145,10 @@ function media_browser_list() {
   $start = isset($params['start']) ? $params['start'] : 0;
   $limit = isset($params['limit']) ? $params['limit'] : media_variable_get('browser_pager_limit');
   
-  $conditions = array();
-
   $query = new EntityFieldQuery();
   
   $query->range($start, $limit);
-  $query->entityCondition('entity_type', 'media');
+  $query->entityCondition('entity_type', 'file');
   $query->entityOrderBy('entity_id', 'DESC');
 
   if ($types) {
@@ -171,7 +165,7 @@ function media_browser_list() {
 
   // @todo Implement granular editorial access: http://drupal.org/node/696970.
   //   In the meantime, protect information about private files from being
-  //   discovered by unprivileged users. See also media_file_view().
+  //   discovered by unprivileged users. See also media_view_page().
   if (!user_access('administer media')) {
     $query->propertyCondition('uri', 'private://%', 'NOT LIKE');
   }
@@ -179,19 +173,12 @@ function media_browser_list() {
   $query->propertyCondition('status', FILE_STATUS_PERMANENT);
 
   $result = $query->execute();
-  $ids = array_keys($result['media']);
-  if ($ids) {
-    $media_entities = entity_load('media', $ids);
-  }
-  else {
-    $media_entities = array();
+  $files = file_load_multiple(array_keys($result['file']));
+  foreach ($files as $file) {
+    media_browser_build_media_item($file);
   }
   
-  foreach ($media_entities as &$media) {
-    media_browser_build_media_item($media);
-  }
-  
-  drupal_json_output(array('media' => array_values($media_entities)));
+  drupal_json_output(array('media' => array_values($files)));
   exit();
 
 }
@@ -415,13 +402,10 @@ EOF;
 }
 
 /**
- * Adds on properties to the media item which are expected by callers who are
- * going to act on the returned item.
- *
- * @param Object &$media;
+ * Adds properties to the passed in file that are needed by the media browser JS code.
  */
-function media_browser_build_media_item(&$media) {
-  $preview = media_get_thumbnail_preview($media);
-  $media->preview = drupal_render($preview);
-  $media->url = file_create_url($media->uri);
+function media_browser_build_media_item($file) {
+  $preview = media_get_thumbnail_preview($file);
+  $file->preview = drupal_render($preview);
+  $file->url = file_create_url($file->uri);
 }
