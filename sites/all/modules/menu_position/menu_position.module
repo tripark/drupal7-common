@@ -205,6 +205,9 @@ function menu_position_evaluate_rules($context = array()) {
         $active_trail = menu_set_active_trail();
         // Replace the menu_position item with the original menu item.
         array_pop($active_trail);
+        if ($active_trail[count($active_trail)-1]['page_callback'] == 'menu_position_router') {
+          array_pop($active_trail);
+        }
         $active_trail[] = $original_router_item;
         menu_set_active_trail($active_trail);
         $breadcrumb_set = TRUE;
