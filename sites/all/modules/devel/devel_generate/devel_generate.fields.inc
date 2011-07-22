@@ -1,5 +1,4 @@
 <?php
-// $Id: devel_generate.fields.inc,v 1.10 2010/08/15 01:24:37 weitzman Exp $
 
 /**
  * @file
