@@ -13,9 +13,17 @@ function tpc_general_init() {
  */
 function tpc_general_menu() {
   $items = array(
+    'google77fb9b8c2bc767f8.html' => array(
+      'title' => 'Google Webmaster Tools verification file',
+      'page callback' => 'tpc_general_gwt_verification',
+      'page arguments' => array('google77fb9b8c2bc767f8'),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+    ),
     'googled8b6d4569de16b0f.html' => array(
       'title' => 'Google Webmaster Tools verification file',
       'page callback' => 'tpc_general_gwt_verification',
+      'page arguments' => array('googled8b6d4569de16b0f'),
       'access callback' => TRUE,
       'type' => MENU_CALLBACK,
     ),
@@ -32,8 +40,8 @@ function tpc_general_menu() {
 /**
  * Output the Google Webmaster Tools verification string for TPC's account.
  */
-function tpc_general_gwt_verification() {
-  echo "google-site-verification: googled8b6d4569de16b0f.html";
+function tpc_general_gwt_verification($id) {
+  echo "google-site-verification: $id.html";
 }
 
 /**
