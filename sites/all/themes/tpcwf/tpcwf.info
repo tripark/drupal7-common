@@ -26,4 +26,5 @@ regions[footer_fourthcolumn] = Footer fourth column
 regions[footer] = Footer
 
 stylesheets[all][] = tpcwf.css
+stylesheets[all][] = css/nodes.css
 stylesheets[all][] = css/colors.css

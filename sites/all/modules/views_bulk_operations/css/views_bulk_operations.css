@@ -1,19 +1,21 @@
-.vbo-views-form thead .form-type-checkbox {
-  margin-bottom: 0;
+.vbo-select-all-markup, .vbo-table-select-all-markup {
+  display: none;
 }
 
 /* "Select all" for table styles. */
-.vbo-select-all {
+.vbo-views-form thead .form-type-checkbox {
+  margin: 0;
+}
+.vbo-table-select-all {
   display: none;
 }
-.vbo-select-all-markup {
+.views-table-row-select-all {
   display: none;
 }
-.views-row-select-all {
+.views-table-row-select-all td {
   text-align: center;
-  display: none;
 }
-td .vbo-select-all-pages, td .vbo-select-this-page {
+.vbo-table-select-all-pages, .vbo-table-select-this-page {
   margin: 0 !important;
   padding: 2px 5px !important;
 }
@@ -21,14 +23,13 @@ td .vbo-select-all-pages, td .vbo-select-this-page {
 /* Generic "select all" */
 .vbo-fieldset-select-all {
   text-align: center;
-  width: 18%;
-  padding: 0.7em 0;
+  width: 210px;
+  padding: 0.6em 0;
 }
-
 .vbo-fieldset-select-all .form-item {
   margin-bottom: 0;
 }
-
-.vbo-fieldset-select-all .fieldset-wrapper {
-  padding: 0;
+.vbo-fieldset-select-all div {
+  padding: 0 !important;
+  margin: 0 !important;
 }

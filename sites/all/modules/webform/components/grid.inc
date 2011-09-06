@@ -27,6 +27,7 @@ function _webform_defaults_grid() {
       'custom_option_keys' => 0,
       'custom_question_keys' => 0,
       'description' => '',
+      'private' => FALSE,
     ),
   );
 }
@@ -39,9 +40,11 @@ function _webform_theme_grid() {
   return array(
     'webform_grid' => array(
       'render element' => 'element',
+      'file' => 'components/grid.inc',
     ),
     'webform_display_grid' => array(
       'render element' => 'element',
+      'file' => 'components/grid.inc',
     ),
   );
 }
@@ -273,7 +276,7 @@ function theme_webform_display_grid($variables) {
   else {
     $items = array();
     foreach (element_children($element) as $key) {
-      $items[] = ' - ' . $element[$key]['#title'] . ': ' . $element[$key]['#value'];
+      $items[] = ' - ' . $element[$key]['#title'] . ': ' . (isset($element['#grid_options'][$element[$key]['#value']]) ? $element['#grid_options'][$element[$key]['#value']] : '');
     }
     $output = implode("\n", $items);
   }
@@ -416,7 +419,7 @@ function theme_webform_grid($variables) {
     // Render each radio button in the row.
     $radios = form_process_radios($question_element);
     foreach (element_children($radios) as $key) {
-      unset($radios[$key]['#title']);
+      $radios[$key]['#title_display'] = 'invisible';
       $row[] = array('data' => drupal_render($radios[$key]), 'class' => array('checkbox', 'webform-grid-option'));
     }
     $rows[] = $row;

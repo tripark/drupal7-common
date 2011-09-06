@@ -24,6 +24,7 @@ function _webform_defaults_textarea() {
       'disabled' => 0,
       'description' => '',
       'attributes' => array(),
+      'private' => FALSE,
     ),
   );
 }
@@ -36,6 +37,7 @@ function _webform_theme_textarea() {
   return array(
     'webform_display_textarea' => array(
       'render element' => 'element',
+      'file' => 'components/textarea.inc',
     ),
   );
 }

@@ -27,6 +27,7 @@ function _webform_defaults_select() {
       'description' => '',
       'custom_keys' => FALSE,
       'options_source' => '',
+      'private' => FALSE,
     ),
   );
 }
@@ -38,6 +39,7 @@ function _webform_theme_select() {
   return array(
     'webform_display_select' => array(
       'render element' => 'element',
+      'file' => 'components/select.inc',
     ),
   );
 }
@@ -279,6 +281,18 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
     _webform_shuffle_options($options);
   }
 
+  // Add default options if using a select list with no default. This trigger's
+  // Drupal 7's adding of the option for us. See @form_process_select().
+  if ($component['extra']['aslist'] && !$component['extra']['multiple'] && $default_value === '') {
+    $element['#empty_value'] = '';
+  }
+
+  // Add default options if using a select list with no default. This trigger's
+  // Drupal 7's adding of the option for us. See @form_process_select().
+  if ($component['extra']['aslist'] && !$component['extra']['multiple'] && $default_value === '') {
+    $element['#empty_value'] = '';
+  }
+
   // Set the component options.
   $element['#options'] = $options;
 
@@ -327,7 +341,7 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
     $element['#other'] = !empty($component['extra']['other_text']) ? check_plain($component['extra']['other_text']) : t('Other...');
     $element['#other_unknown_defaults'] = 'other';
     $element['#other_delimiter'] = ', ';
-    $element['#process'] = array('select_or_other_process', 'webform_expand_select_or_other');
+    $element['#process'] = array('select_or_other_element_process', 'webform_expand_select_or_other');
     if ($component['extra']['multiple']) {
       $element['#multiple'] = TRUE;
       $element['#select_type'] = 'checkboxes';

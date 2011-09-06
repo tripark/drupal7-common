@@ -23,7 +23,7 @@ class draggableviews_plugin_style_draggabletable extends views_plugin_style_tabl
     $options['tabledrag_hierarchy'] = array('default' => array('field' => 'none', 'handler' => ''));
     $options['tabledrag_hierarchy_visible'] = array('default' => array());
     $options['draggableviews_depth_limit'] = array('default' => 0);
-    $options['draggableviews_repair'] = array('default' => array('repair'));
+    $options['draggableviews_repair'] = array('default' => array('repair' => 'repair'));
     $options['tabledrag_types'] = array('default' => array());
     $options['tabledrag_expand'] = array('default' => array());
     $options['draggableviews_extensions'] = array('default' => array('extension_top' => 3, 'extension_bottom' => 3));
@@ -91,7 +91,7 @@ class draggableviews_plugin_style_draggabletable extends views_plugin_style_tabl
 
       // Get the first sort criteria.
       $sort = current($sorts);
-      if (strcmp($order_field['table'] . $order_field['field'], $sort['table'] . $sort['field']) != 0 || $sort['order'] == 'DESC') {
+      if (strcmp($order_field['table'] . $order_field['field'], $sort['table'] . $sort['field']) != 0 || (isset($sort['order']) && $sort['order'] == 'DESC')) {
         $errors[] = t('Display "@display": Draggableviews: You must sort by <i>@group: @title</i> ascending as the first sort criteria to display the structure correctly.', array('@display' => $this->display->display_title, '@group' => $handlers[$this->options['tabledrag_order']['field']]->definition['group'], '@title' => $handlers[$this->options['tabledrag_order']['field']]->definition['title']));
       }
     }

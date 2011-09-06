@@ -22,6 +22,17 @@ function rules_action_drupal_message($message, $status, $repeat) {
  * @see rules_drupal_goto_alter()
  */
 function rules_action_drupal_goto($url, $force = FALSE, $destination = FALSE) {
+  // Don't let administrators lock them out from Rules administration pages.
+  if (isset($_GET['q']) && strpos($_GET['q'], 'admin/config/workflow/rules') === 0) {
+    rules_log('Skipped page redirect on Rules administration page.', array(), RulesLog::WARN);
+    return;
+  }
+  // Do not redirect during batch processing.
+  if (($batch = batch_get()) && isset($batch['current_set'])) {
+    rules_log('Skipped page redirect during batch processing.');
+    return;
+  }
+
   // Keep the current destination parameter if there is one set.
   if ($destination) {
     $url .= strpos($url, '?') === FALSE ? '?' : '&';
@@ -158,6 +169,7 @@ class RulesTokenEvaluator extends RulesDataInputEvaluator {
     $replacements = array();
     $data = array();
     foreach (token_scan($text) as $var_name => $tokens) {
+      $var_name = str_replace('-', '_', $var_name);
       if (isset($var_info[$var_name]) && ($token_type = _rules_system_token_map_type($var_info[$var_name]['type']))) {
         // We have to key $data with the type token uses for the variable.
         $data = rules_unwrap_data(array($token_type => $state->get($var_name)), array($token_type => $var_info[$var_name]));
@@ -199,7 +211,7 @@ class RulesTokenEvaluator extends RulesDataInputEvaluator {
           '#prefix' => '<h3>' . t('Replacement patterns for %label', array('%label' => $var_info[$name]['label'])) . '</h3>',
         );
         foreach ($token_info['tokens'][$token_type] as $token => $info) {
-          $token = '[' . $name . ':' . $token . ']';
+          $token = '[' . str_replace('_', '-', $name) . ':' . $token . ']';
           $render[$name]['#rows'][$token] = array(check_plain($token), check_plain($info['name']), check_plain($info['description']));
         }
       }

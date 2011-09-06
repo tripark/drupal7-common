@@ -8,17 +8,12 @@
  */
 
 // The safe offset guarantees that all order values are unique.
-
 // (This is essential to make sure that child nodes appear right after their parents)
-
 define('DRAGGABLEVIEWS_SAFE_OFFSET', 0.0001);
 // The minimum value is used for unused levels to prevent display errors. Order values should always
-
 // be >= 0. The value -1 allows new nodes to appear on the very top.
-
 define('DRAGGABLEVIEWS_MIN_VALUE', -2);
 // SQL doesn't support an OFFSET without a LIMIT, so we choose a high number for LIMIT.
-
 define('DRAGGABLEVIEWS_DBQUERY_LIMIT', 99999999);
 
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'draggableviews') . '/draggableviews.inc';
@@ -104,8 +99,8 @@ function draggableviews_view_draggabletable_form($form, $form_state, $style_plug
     '#value' => t(isset($options['draggableviews_button_text']) ? $options['draggableviews_button_text'] : t('Save order')),
   );
   $form['#submit'] = array('draggableviews_view_draggabletable_form_submit');
-  // Use pager information and all exposed input data to build the query.
 
+  // Use pager information and all exposed input data to build the query.
   $query = 'page=' . (!empty($_GET['page']) ? $_GET['page'] : '');
   if (isset($view->exposed_input)) {
     foreach ($view->exposed_input as $filter => $data) {
@@ -129,10 +124,7 @@ function draggableviews_view_draggabletable_form($form, $form_state, $style_plug
       }
     }
   }
-  $form_state['#redirect'] = array(
-    'path' => $_GET['q'],
-    'query' => $query,
-  );
+
   $form['#theme'] = 'draggableviews_view_draggabletable_form';
 
   $info = &$view->draggableviews_info;
@@ -147,19 +139,15 @@ function draggableviews_view_draggabletable_form($form, $form_state, $style_plug
         if ($modus == 'hierarchy') {
           $value = $info['nodes'][$nid]['parent'];
 
-          // get the field that should be rendered
-
+          // Get the field that should be rendered.
           $field = &$info['hierarchy']['field'];
         }
         else {
-          // get depth of current field
-
+          // Get depth of current field.
           $depth = $info['nodes'][$nid]['depth'];
-
           $value = $info['nodes'][$nid]['order'][$depth];
 
-          // get the field that should be rendered
-
+          // Get the field that should be rendered.
           $field = &$info['order']['field'];
         }
 
@@ -249,7 +237,7 @@ function draggableviews_views_pre_execute(&$view) {
   $info['pager'] = $info['view']->query->pager;
   $info['globals'] = array();
 
-  if ($info['pager']->options['items_per_page'] > 0) {
+  if (isset($info['pager']->options['items_per_page'])) {
     // Paging is beeing used. We modify some paging settings before the view gets executed.
 
 
@@ -332,7 +320,7 @@ function draggableviews_views_pre_render(&$view) {
   $view->draggableviews_info = _draggableviews_info($view, $view->draggableviews_info);
   $info = &$view->draggableviews_info;
 
-  if ($info['pager']->options['items_per_page'] > 0 && empty($info['hierarchy'])) {
+  if (isset($info['pager']->options['items_per_page']) && empty($info['hierarchy'])) {
     // The current page of hierarchies cannot be checked here because $views->total_rows will not be
 
     // calculated when the entire view gets loaded.
@@ -389,7 +377,7 @@ function draggableviews_views_pre_render(&$view) {
     }
   }
 
-  if ($info['pager']->options['items_per_page'] > 0) {
+  if (isset($info['pager']->options['items_per_page'])) {
     global $pager_page_array, $pager_total, $pager_total_items;
     // The global $pager_total variable was calculated with wrong values because we changed the
 
@@ -422,8 +410,8 @@ function draggableviews_views_pre_render(&$view) {
  * Implements hook_submit().
  */
 function draggableviews_view_draggabletable_form_submit($form, &$form_state) {
-  // Check permissions.
 
+  // Check permissions.
   if (!user_access('Allow Reordering')) {
     drupal_set_message(t('You are not allowed to reorder nodes.'), 'error');
     return;
@@ -447,19 +435,15 @@ function draggableviews_view_draggabletable_form_submit($form, &$form_state) {
   }
 
   // Loop through all resulting nodes.
-
   foreach ($results as $row) {
-    // set order values
-
+    // Set order values.
     if (isset($info['order']['field'])) {
       // The input array must have the same structure as the node array.
-
       // E.g. because of _draggableviews_get_hierarchy_depth(..).
-
       $info['input'][$row->{$view->base_field}]['order'][0] = $input[$info['order']['field']['field_name'] . '_' . $row->{$view->base_field}];
     }
-    // Set parent values.
 
+    // Set parent values.
     if (isset($info['hierarchy'])) {
       $info['input'][$row->{$view->base_field}]['parent'] = $input[$info['hierarchy']['field']['field_name'] . '_' . $row->{$view->base_field}];
     }
@@ -470,8 +454,7 @@ function draggableviews_view_draggabletable_form_submit($form, &$form_state) {
   _draggableviews_save_hierarchy($info);
 
   if (isset($info['hierarchy'])) {
-    // save expanded/collapsed states.
-
+    // Save expanded/collapsed states.
     global $user;
     $uid = $info['expand_links']['by_uid'] ? $user->uid : 0;
 
@@ -482,25 +465,30 @@ function draggableviews_view_draggabletable_form_submit($form, &$form_state) {
         /* db_query("DELETE FROM {draggableviews_collapsed}
          WHERE uid=%d AND parent_nid=%d AND view_name='%s'", $uid, $parent_nid, $view->name) */
         db_delete('draggableviews_collapsed')
-  ->condition('uid', $uid)
-  ->condition('parent_nid', $parent_nid)
-  ->condition('view_name', $view->name)
-  ->execute();
+        ->condition('uid', $uid)
+        ->condition('parent_nid', $parent_nid)
+        ->condition('view_name', $view->name)
+        ->execute();
 
         // TODO Please review the conversion of this statement to the D7 database API syntax.
         /* db_query("INSERT INTO {draggableviews_collapsed}
          (uid, view_name, parent_nid, collapsed) VALUES (%d, '%s', %d, %d)", $uid, $view->name, $parent_nid, $val) */
         $id = db_insert('draggableviews_collapsed')
-  ->fields(array(
-          'uid' => $uid,
-          'view_name' => $view->name,
-          'parent_nid' => $parent_nid,
-          'collapsed' => $val,
-        ))
-  ->execute();
+        ->fields(array(
+                'uid' => $uid,
+                'view_name' => $view->name,
+                'parent_nid' => $parent_nid,
+                'collapsed' => $val,
+              ))
+        ->execute();
       }
     }
   }
+
+  // Redirect form.
+  $get = $_GET;
+  unset($get['q']);
+  $form_state['redirect'] = array($_GET['q'], array('query' => $get));
 }
 
 /**

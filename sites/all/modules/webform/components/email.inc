@@ -23,6 +23,7 @@ function _webform_defaults_email() {
       'title_display' => 0,
       'description' => '',
       'attributes' => array(),
+      'private' => FALSE,
     ),
   );
 }
@@ -34,6 +35,7 @@ function _webform_theme_email() {
   return array(
     'webform_display_email' => array(
       'render element' => 'element',
+      'file' => 'components/email.inc',
     ),
   );
 }

@@ -223,7 +223,8 @@ function _draggableviews_quick_check_structure($info) {
   // Calculate views page offset.
 
   $pager  = $info['view']->query->pager;
-  $offset = $pager->options['items_per_page'] * $pager->current_page + $pager->options['offset'];
+  $items_per_page = isset($pager->options['items_per_page']) ? $pager->options['items_per_page'] : 0;
+  $offset = $items_per_page * $pager->current_page + $pager->options['offset'];
 
   // Call function in checking mode (renumber = FALSE). The order value must begin with $offset.
 
@@ -370,7 +371,8 @@ function _draggableviews_build_hierarchy(&$info) {
   // calculate views page offset
 
   $pager  = $info['view']->query->pager;
-  $offset = $pager->options['items_per_page'] * $pager->current_page + $pager->options['offset'];
+  $items_per_page = isset($pager->options['items_per_page']) ? $pager->options['items_per_page'] : 0;
+  $offset = $items_per_page * $pager->current_page + $pager->options['offset'];
   _draggableviews_ascending_numbers($info, $offset, TRUE);
 }
 
@@ -384,43 +386,27 @@ function _draggableviews_build_hierarchy(&$info) {
  */
 function _draggableviews_rebuild_hierarchy(&$info) {
   // We backup the page settings and restore them after completing all operations.
-
   $pager = $info['view']->query->pager;
 
-  if ($pager->options['items_per_page'] > 0) {
+  if (isset($pager->options['items_per_page']) && $pager->options['items_per_page'] > 0) {
     // We have to make sure that there's no hidden node with an order value that refers to the current page.
-
     // If the items to display per page are limitated we load the entire view.
-
-
     //@todo: We reduce the fields to a minimum because of performance issues.
-
-
     _draggableviews_reload_info($info, DRAGGABLEVIEWS_DBQUERY_LIMIT, 0, $pager->options['offset']);
   }
 
   // Calculate depth values.
-
   // Nodes with broken parents will be brought down to the root level.
-
   // These depth values will be used for both theming and repairing broken structures.
-
   _draggableviews_calculate_depths($info);
 
   // Detect and repair ordering errors.
-
   // The child node order values on the parent's level have to equal
-
   // with the parent's order values. If they don't equal they will be set properly.
-
   // In order to avoid ambiguous values we add unique float
-
   // values ($safe_offset < 1) to all order values. This assures that
-
   // child nodes always appear right after their parents even if there
-
   // are other nodes with the same order value on the parents level.
-
   $safe_offset = 0;
   foreach ($info['nodes'] as $nid => $values) {
     $info['nodes'][$nid]['order'][$values['depth']] += $safe_offset;
@@ -429,22 +415,16 @@ function _draggableviews_rebuild_hierarchy(&$info) {
   _draggableviews_check_order($info);
 
   // The last issue we have to deal with is the order itself.
-
   // We just sort the nodes by their current order values and
-
   // then we subsequently assign ascending numbers.
-
   _draggableviews_sort_nodes($info['nodes']);
   _draggableviews_ascending_numbers($info, $pager->options['offset'], TRUE);
 
   // Save hierarchy.
-
   _draggableviews_save_hierarchy($info);
 
   // The structure should be valid now.
-
   // Nonetheless let's make a final check for debugging reasons.
-
   if (!_draggableviews_quick_check_structure($info)) {
     drupal_set_message(t("Draggableviews: Rebuilding structure didn't work. The structure is broken."), "error");
   }
@@ -595,7 +575,7 @@ function _draggableviews_extend_view_window(&$info, $reload = FALSE) {
   // For building the new view we always use the "should-be" pager information.
 
 
-  $items_per_page = $info['pager']->options['items_per_page'];
+  $items_per_page = isset($info['pager']->options['items_per_page']) ? $info['pager']->options['items_per_page'] : 0;
   $current_page   = $info['pager']->current_page;
   $offset         = $info['pager']->options['offset'];
 
@@ -781,7 +761,7 @@ function _draggableviews_click_sort(&$info) {
   // If the items to display per page are limited we load the entire view.
 
   $pager = $info['view']->query->pager;
-  if ($pager->options['items_per_page'] > 0) {
+  if (isset($pager->options['items_per_page'])) {
     _draggableviews_reload_info($info, DRAGGABLEVIEWS_DBQUERY_LIMIT, 0, $pager->options['offset']);
   }
 

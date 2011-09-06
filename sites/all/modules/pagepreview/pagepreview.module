@@ -92,7 +92,7 @@ function pagepreview_get_preview($token) {
   // Suppress fancy stuff like admin and admin_menu.module for the preview.
   module_invoke_all('suppress');
 
-  drupal_deliver_page(drupal_render($preview));
+  drupal_deliver_page($preview);
 
   $user = $original_user;
   drupal_save_session(TRUE);
@@ -136,11 +136,22 @@ function pagepreview_render_preview($node) {
       $node->in_preview = TRUE;
       // If enabled, allow page_manager.module to handle node rendering.
       if (module_exists('page_manager')) {
-        module_load_include('inc', 'page_manager', 'plugins/tasks/node_view');
-        $output = page_manager_node_view($node);
+        // Load my task plugin
+        $task = page_manager_get_task('node_view');
+
+        // Load the node into a context.
+        ctools_include('context');
+        ctools_include('context-task-handler');
+        $contexts = ctools_context_handler_get_task_contexts($task, '', array($node));
+
+        $output = ctools_context_handler_render($task, '', $contexts, array($node->nid));
+        // Page manager is not handeling node_view
+        if ($output === FALSE) {
+          $output = drupal_render(node_view($node, 'full'));
+        }
       }
       else {
-        $output = node_view($node, 'full');
+        $output = drupal_render(node_view($node, 'full'));
       }
       unset($node->in_preview);
       // Rather than the default t('Preview') allow user to see more acurate rendering

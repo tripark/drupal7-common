@@ -76,6 +76,8 @@ function _pathologic($text, $filter) {
     // Remove duplicates, since it's possible "this" path was already in the list;
     // also do escaping
     $paths = array_map('_pathologic_escape', array_unique($paths));
+    // Create a list of protocol prefixes so we can ignore them
+    $proto_prefixes = implode('|', variable_get('filter_allowed_protocols', array('ftp', 'http', 'https', 'irc', 'mailto', 'news', 'nntp', 'rtsp', 'sftp', 'ssh', 'tel', 'telnet', 'webcal')));
 
     // We need to account for the fact that
     // http://example.com/foo
@@ -89,10 +91,10 @@ function _pathologic($text, $filter) {
                                                                  # to search for
         (internal:|files:|' . implode('|', $paths) . ')?      # Path prefixes to
                                                                      #search for
-        (
-          /(\#.*)?|              # A / path with a possible anchor fragment, or…
-          (?!(\#|/|mailto:|[a-z]+:/))                 # Exclude likely protocols
-          ((index\.php)?(\?q=)?)       # Allow for paths which include index.php
+        (?:
+          /(?:\#.*)?|            # A / path with a possible anchor fragment, or…
+          (?!(?:\#|/|(?:' . $proto_prefixes . '):/))  # Exclude likely protocols
+          (?:(?:index\.php)?(?:\?q=)?) # Allow for paths which include index.php
                                                                     # and/or ?q=
           ([^"]*)                                       # Finally, get the path.
         )"~x

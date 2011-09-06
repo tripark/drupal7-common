@@ -17,9 +17,9 @@ files[] = views/draggableviews_plugin_style_draggabletable.inc
 files[] = handlers/views_handler_field_draggableviews_structure.inc
 files[] = handlers/views_handler_sort_draggableviews_structure.inc
 
-; Information added by drupal.org packaging script on 2011-05-06
+; Information added by drupal.org packaging script on 2011-07-22
 version = "7.x-1.x-dev"
 core = "7.x"
 project = "draggableviews"
-datestamp = "1304640401"
+datestamp = "1311293284"
 
