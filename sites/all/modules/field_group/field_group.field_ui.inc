@@ -88,7 +88,10 @@ function field_group_field_ui_overview_form_alter(&$form, &$form_state, $display
   // Update existing rows accordingly to the parents.
   foreach (element_children($table) as $name) {
     $table[$name]['parent_wrapper']['parent']['#options'] = $table['#parent_options'];
-    $table[$name]['parent_wrapper']['parent']['#default_value'] = isset($params->parents[$name]) ? $params->parents[$name] : '';
+    // Inherit the value of the parent when default value is empty.
+    if (empty($table[$name]['parent_wrapper']['parent']['#default_value'])) {
+      $table[$name]['parent_wrapper']['parent']['#default_value'] = isset($params->parents[$name]) ? $params->parents[$name] : '';
+    }
   }
 
   $formatter_options = field_group_field_formatter_options($display_overview ? 'display' : 'form');
@@ -597,12 +600,16 @@ function field_group_field_overview_submit($form, &$form_state) {
       'weight' => $values['weight'],
       'label' => $values['label'],
       'format_type' => $values['format']['type'],
+      'disabled' => FALSE,
     );
     $new_group->format_settings = array('formatter' => isset($formatter['default_formatter']) ? $formatter['default_formatter'] : '');
     if (isset($formatter['instance_settings'])) {
       $new_group->format_settings['instance_settings'] = $formatter['instance_settings'];
     }
+
+    // Save and enable it in ctools
     ctools_export_crud_save('field_group', $new_group);
+    ctools_export_crud_enable('field_group', $new_group->identifier);
 
     // Store new group information for any additional submit handlers.
     $form_state['groups_added']['_add_new_group'] = $new_group->group_name;
@@ -698,7 +705,7 @@ function field_group_delete_form_submit($form, &$form_state) {
   $bundle_label = $bundles[$entity_type][$bundle]['label'];
 
   ctools_include('export');
-  ctools_export_crud_delete('field_group', $group);
+  field_group_export_delete($group, FALSE);
 
   drupal_set_message(t('The group %group has been deleted from the %type content type.', array('%group' => t($group->label), '%type' => $bundle_label)));
 

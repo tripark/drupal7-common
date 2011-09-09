@@ -1,4 +1,3 @@
-
 (function ($) {
 
 /**
@@ -115,6 +114,7 @@ Drupal.horizontalTab.prototype = {
    */
   focus: function () {
     this.fieldset
+      .show()
       .siblings('fieldset.horizontal-tabs-pane')
         .each(function () {
           var tab = $(this).data('horizontalTab');
@@ -122,7 +122,6 @@ Drupal.horizontalTab.prototype = {
           tab.item.removeClass('selected');
         })
         .end()
-      .show()
       .siblings(':hidden.horizontal-tabs-active-tab')
         .val(this.fieldset.attr('id'));
     this.item.addClass('selected');
