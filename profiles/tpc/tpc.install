@@ -41,8 +41,8 @@ function tpc_install() {
   
   // Pathauto defaults.
   variable_set('pathauto_node_news_pattern', 'news/[node:created:custom:Y]/[node:created:custom:m]/[node:nid]');
-	variable_set('pathauto_node_page_pattern', '[node:menu-link:parent:url:alias]/[node:menu-link:title]');
-	variable_set('pathauto_node_pattern', '');
+  variable_set('pathauto_node_page_pattern', '[node:menu-link:parent:url:path]/[node:menu-link:title]');
+  variable_set('pathauto_node_pattern', '');
   variable_set('pathauto_ignore_words', 'a, an, and, our, the, us');
   variable_set('pathauto_update_action', 2); // Change to 3 when redirect.module is ready
   
