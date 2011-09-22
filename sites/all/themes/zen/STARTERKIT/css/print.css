@@ -5,6 +5,14 @@
  * We provide some sane print styling for Drupal using Zen's layout method.
  */
 
+#page-wrapper,
+#page,
+#content,
+#main
+ {
+  width: auto !important;
+  margin: 0 !important;
+}
 
 /* underline all links */
 a:link,
@@ -54,6 +62,7 @@ body,
 #navigation,
 .region-sidebar-first,
 .region-sidebar-second,
+.region-header,
 .region-footer,
 .breadcrumb,
 div.tabs,
