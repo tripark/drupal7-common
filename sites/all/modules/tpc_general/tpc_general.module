@@ -62,7 +62,7 @@ function tpc_general_bing_verification() {
  */
 function tpc_general_form_alter(&$form, &$form_state, $form_id) {
   if (!empty($form['#node_edit_form'])) {
-    drupal_add_js('jQuery(function(){jQuery(".link-edit-summary").click();});', array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
+    drupal_add_js('jQuery(function(){jQuery(".form-item-body-und-0-value .link-edit-summary").click();});', array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
   }
 }
 
