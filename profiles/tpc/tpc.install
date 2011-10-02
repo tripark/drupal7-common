@@ -27,6 +27,10 @@ function tpc_install() {
   variable_set('user_register', 0);
   variable_set('user_pictures', 0);
   
+  // Update notification settings.
+  variable_set('update_notification_threshold', 'security');
+  variable_set('update_check_frequency', '7');
+
   // Create utility menu.
   module_load_include('inc', 'menu', 'menu.admin');
   $edit = array(
@@ -44,7 +48,7 @@ function tpc_install() {
   variable_set('pathauto_node_page_pattern', '[node:menu-link:parent:url:path]/[node:menu-link:title]');
   variable_set('pathauto_node_pattern', '');
   variable_set('pathauto_ignore_words', 'a, an, and, our, the, us');
-  variable_set('pathauto_update_action', 2); // Change to 3 when redirect.module is ready
+  variable_set('pathauto_update_action', 3);
   
   // Add text formats.
   // Figure out pathologic paths.
@@ -268,17 +272,6 @@ function tpc_install() {
       'cache' => -1,
     ),
     array(
-      'module' => 'views',
-      'delta' => 'tpc_content-recent_edits',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'dashboard_main',
-      'pages' => '',
-      'title' => '',
-      'cache' => -1,
-    ),
-    array(
       'module' => 'user',
       'delta' => 'login',
       'theme' => $default_theme,
@@ -329,28 +322,6 @@ function tpc_install() {
       'status' => 1,
       'weight' => 10,
       'region' => 'content',
-      'pages' => '',
-      'title' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'system',
-      'delta' => 'user-menu',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => -10,
-      'region' => 'dashboard_sidebar',
-      'pages' => '',
-      'title' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'system',
-      'delta' => 'navigation',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => -9,
-      'region' => 'dashboard_sidebar',
       'pages' => '',
       'title' => '',
       'cache' => -1,
@@ -448,31 +419,33 @@ function tpc_install() {
   }
 
   // Insert default pre-defined RDF mapping into the database.
-  $rdf_mappings = array(
-    array(
-      'type' => 'node',
-      'bundle' => 'page',
-      'mapping' => array(
-        'rdftype' => array('foaf:Document'),
-      ),
-    ),
-    array(
-      'type' => 'node',
-      'bundle' => 'news',
-      'mapping' => array(
-        'field_node_image' => array(
-          'predicates' => array('og:image', 'rdfs:seeAlso'),
-          'type' => 'rel',
-        ),
-        'field_tags' => array(
-          'predicates' => array('dc:subject'),
-          'type' => 'rel',
+  if (module_exists('rdf')) {
+    $rdf_mappings = array(
+      array(
+        'type' => 'node',
+        'bundle' => 'page',
+        'mapping' => array(
+          'rdftype' => array('foaf:Document'),
         ),
       ),
-    ),
-  );
-  foreach ($rdf_mappings as $rdf_mapping) {
-    rdf_mapping_save($rdf_mapping);
+      array(
+        'type' => 'node',
+        'bundle' => 'news',
+        'mapping' => array(
+          'field_node_image' => array(
+            'predicates' => array('og:image', 'rdfs:seeAlso'),
+            'type' => 'rel',
+          ),
+          'field_tags' => array(
+            'predicates' => array('dc:subject'),
+            'type' => 'rel',
+          ),
+        ),
+      ),
+    );
+    foreach ($rdf_mappings as $rdf_mapping) {
+      rdf_mapping_save($rdf_mapping);
+    }
   }
 
   // "Basic page" content type settings.
@@ -582,10 +555,10 @@ function tpc_install() {
     'required' => FALSE,
 
     'settings' => array(
-      'file_directory' => 'field/image',
+      'file_directory' => 'images',
       'file_extensions' => 'png gif jpg jpeg',
       'max_filesize' => '',
-      'max_resolution' => '',
+      'max_resolution' => '800x600',
       'min_resolution' => '',
       'alt_field' => TRUE,
       'title_field' => '',
@@ -594,7 +567,7 @@ function tpc_install() {
     'widget' => array(
       'type' => 'image_image',
       'settings' => array(
-        'progress_indicator' => 'throbber',
+        'progress_indicator' => 'bar',
         'preview_image_style' => 'thumbnail',
       ),
       'weight' => -1,
@@ -604,7 +577,7 @@ function tpc_install() {
       'default' => array(
         'label' => 'hidden',
         'type' => 'image',
-        'settings' => array('image_style' => 'large', 'image_link' => ''),
+        'settings' => array('image_style' => 'medium', 'image_link' => ''),
         'weight' => -1,
       ),
       'teaser' => array(
@@ -707,7 +680,7 @@ function tpc_install() {
   $manager_role->name = 'manager';
   $manager_role->weight = 4;
   user_role_save($manager_role);
-  user_role_grant_permissions($manager_role->rid, array('access content overview', 'access contextual links', 'access dashboard', 'access overlay', 'access site reports', 'access toolbar', 'access user profiles', 'administer blocks', 'administer menu', 'administer nodes', 'administer taxonomy', 'administer url aliases', 'administer users', 'administer views', 'assign manager role', 'bypass node access', 'create url aliases', 'use text format full_html', 'view the administration theme', 'access administration pages'));
+  user_role_grant_permissions($manager_role->rid, array('access content overview', 'access contextual links', 'access overlay', 'access site reports', 'access toolbar', 'access user profiles', 'administer blocks', 'administer menu', 'administer nodes', 'administer taxonomy', 'administer url aliases', 'administer users', 'administer views', 'assign manager role', 'bypass node access', 'create url aliases', 'use text format full_html', 'view the administration theme', 'access administration pages'));
 
   // Create a Home link in the main menu.
   $item = array(
