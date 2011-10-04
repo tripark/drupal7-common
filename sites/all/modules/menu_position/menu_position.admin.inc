@@ -398,6 +398,10 @@ function menu_position_rule_form($form, &$form_state) {
     '#default_value' => $default,
   );
 
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
   if ($rid) {
     $form['delete'] = array(
       '#type' => 'submit',
@@ -410,10 +414,6 @@ function menu_position_rule_form($form, &$form_state) {
       '#value' => t('Cancel'),
     );
   }
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save'),
-  );
 
   // Add conditions.
   foreach (menu_position_get_plugins() as $plugin) {
