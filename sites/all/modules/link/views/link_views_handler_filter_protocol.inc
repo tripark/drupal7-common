@@ -73,7 +73,7 @@ class link_views_handler_filter_protocol extends views_handler_filter_string {
    * Filter down the query to include only the selected protocols.
    */
   function op_protocol($field, $upper) {
-    global $db_type;
+    $db_type = db_driver();
 
     $protocols = $this->value;
 

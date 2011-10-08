@@ -173,6 +173,20 @@ function link_field_instance_settings_form($field, $instance) {
     '#description' => t('When output, this link will have have this class attribute. Multiple classes should be separated by spaces.'),
     '#default_value' => empty($instance['settings']['attributes']['class']) ? '' : $instance['settings']['attributes']['class'],
   );
+  $form['attributes']['configurable_title'] = array(
+    '#title' => t("Allow the user to enter a link 'title' attribute"),
+    '#type' => 'checkbox',
+    '#default_value' => empty($instance['settings']['attributes']['configurable_title']) ? '' : $instance['settings']['attributes']['configurable_title'],
+  );
+  $form['attributes']['title'] = array(
+    '#title' => t("Default link 'title' Attribute"),
+    '#type' => 'textfield',
+    '#description' => t('When output, links will use this "title" attribute if the user does not provide one and when different from the link text. Read <a href="http://www.w3.org/TR/WCAG10-HTML-TECHS/#links">WCAG 1.0 Guidelines</a> for links comformances. Tokens values will be evaluated.'),
+    '#default_value' => empty($instance['settings']['attributes']['title']) ? '' : $instance['settings']['attributes']['title'],
+    '#field_prefix' => 'title = "',
+    '#field_suffix' => '"',
+    '#size' => 20,
+  );
   return $form;
 }
 
@@ -295,7 +309,9 @@ function _link_process(&$item, $delta = 0, $field, $entity) {
   }
 
   // Serialize the attributes array.
-  $item['attributes'] = serialize($item['attributes']);
+  if (!is_string($item['attributes'])) {
+    $item['attributes'] = serialize($item['attributes']);
+  }
 
   // Don't save an invalid default value (e.g. 'http://').
   if ((isset($field['widget']['default_value'][$delta]['url']) && $item['url'] == $field['widget']['default_value'][$delta]['url'])
@@ -468,6 +484,19 @@ function _link_sanitize(&$item, $delta, &$field, $instance, &$node) {
     $item['attributes']['rel'] = str_replace('nofollow', '', $item['attributes']);
   }
 
+  // Handle "title" link attribute.
+  if (!empty($item['attributes']['title']) && module_exists('token')) {
+    // Load the node (necessary for nodes in views).
+    $token_node = isset($node->nid) ? node_load($node->nid) : $node;
+    $item['attributes']['title'] = filter_xss(token_replace($item['attributes']['title'], array('node' => $token_node)),
+                        array('b', 'br', 'code', 'em', 'i', 'img', 'span', 'strong', 'sub', 'sup', 'tt', 'u'));
+  }
+  // Remove title attribute if it's equal to link text.
+  if ($item['attributes']['title'] == $item['title']) {
+    unset($item['attributes']['title']);
+  }
+  unset($item['attributes']['configurable_title']);
+
   // Remove empty attributes.
   $item['attributes'] = array_filter($item['attributes']);
 
@@ -494,6 +523,9 @@ function link_theme() {
       'variables' => array('element' => NULL),
     ),
     'link_formatter_link_plain' => array(
+      'variables' => array('element' => NULL),
+    ),
+    'link_formatter_link_title_plain' => array(
       'variables' => array('element' => NULL),
     ),
     'link_formatter_link_url' => array(
@@ -537,6 +569,9 @@ function theme_link_field($vars) {
   $output .= '</div>';
   if (!empty($element['attributes']['target'])) {
     $output .= '<div class="link-attributes">'. drupal_render($element['attributes']['target']) .'</div>';
+  }
+  if (!empty($element['attributes']['title'])) {
+    $output .= '<div class="link-attributes">'. drupal_render($element['attributes']['title']) .'</div>';
   }
   return $output;
 }
@@ -586,7 +621,8 @@ function link_field_process($element, $form_state, $complete_form) {
       '#type' => 'textfield',
       '#maxlength' => '255',
       '#title' => t('Title'),
-      '#required' => ($settings['title'] == 'required' && !empty($element['#value']['url'])) ? TRUE : FALSE,
+  /*  '#required' => ($settings['title'] == 'required' && !empty($element['#value']['url'])) ? TRUE : FALSE, */
+      '#required' => ($settings['title'] == 'required' && (($element['#delta'] == 0 && $element['#required']) || !empty($element['#value']['url']))) ? TRUE : FALSE, // davereids patch from jan 2011
       '#default_value' => isset($element['#value']['title']) ? $element['#value']['title'] : NULL,
     );
   }
@@ -595,7 +631,7 @@ function link_field_process($element, $form_state, $complete_form) {
   if (!is_array($settings['attributes'])) {
     $settings['attributes'] = array();
   }
-  // Add default atrributes.
+  // Add default attributes.
   $settings['attributes'] += _link_default_attributes();
   $attributes = isset($element['#value']['attributes']) ? $element['#value']['attributes'] : $settings['attributes'];
   if (!empty($settings['attributes']['target']) && $settings['attributes']['target'] == LINK_TARGET_USER) {
@@ -606,6 +642,20 @@ function link_field_process($element, $form_state, $complete_form) {
       '#default_value' => isset($attributes['target']) ? $attributes['target'] : FALSE,
     );
   }
+  if (!empty($settings['attributes']['configurable_title']) && $settings['attributes']['configurable_title'] == 1) {
+    $element['attributes']['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link "title" attribute'),
+      '#default_value' => isset($attributes['title']) ? $attributes['title'] : '',
+      '#field_prefix' => 'title = "',
+      '#field_suffix' => '"',
+    );
+  }
+
+  // To prevent an extra required indicator, disable the required flag on the
+  // base element since all the sub-fields are already required if desired.
+  $element['#required'] = FALSE; // davereids patch from jan 2011
+
   return $element;
 }
 
@@ -616,6 +666,11 @@ function link_field_formatter_info() {
   return array(
     'link_default' => array(
       'label' => t('Title, as link (default)'),
+      'field types' => array('link_field'),
+      'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+    ),
+    'link_title_plain' => array(
+      'label' => t('Title, as plain text'),
       'field types' => array('link_field'),
       'multiple values' => FIELD_BEHAVIOR_DEFAULT,
     ),
@@ -690,6 +745,13 @@ function theme_link_formatter_link_plain($vars) {
   return empty($vars['element']['url']) ?
     check_plain($vars['element']['title']) :
     url($vars['element']['url'], $link_options);
+}
+
+/**
+ * Theme function for 'title_plain' text field formatter.
+ */
+function theme_link_formatter_link_title_plain($vars) {
+  return empty($vars['element']['title']) ? '' : check_plain($vars['element']['title']);
 }
 
 /**
