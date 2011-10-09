@@ -2,9 +2,9 @@ name = Page Preview
 description = Allows node previews to be viewed as fully-rendered pages.
 core = 7.x
 
-; Information added by drupal.org packaging script on 2011-03-08
+; Information added by drupal.org packaging script on 2011-09-07
 version = "7.x-1.x-dev"
 core = "7.x"
 project = "pagepreview"
-datestamp = "1299543449"
+datestamp = "1315356566"
 

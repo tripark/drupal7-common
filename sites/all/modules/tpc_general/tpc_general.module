@@ -34,7 +34,44 @@ function tpc_general_menu() {
       'type' => MENU_CALLBACK,
     ),
   );
+  $items['admin/config/system/tpc_general'] = array(
+    'title' => 'TPC General settings',
+    'description' => 'Custom configuration options used by TPC staff.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tpc_general_admin_settings_form'),
+    'access callback' => 'tpc_general_admin_access',
+    'file' => 'tpc_general.admin.inc',
+  );
+  $items['tpc_general/heartbeat'] = array(
+    'title' => 'TPC phone home',
+    'description' => 'A poor man\'s heartbeat module implementation.',
+    'page callback' => 'tpc_general_heartbeat_report',
+    'access callback' => 'tpc_general_heartbeat_access',
+    'file' => 'tpc_general.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
   return $items;
+}
+
+/**
+ * Access callback for TPC reporting function. Restricts access by IP address.
+ */
+function tpc_general_heartbeat_access() {
+  $allowed_ips = variable_get('tpc_general_wiki_ip', '209.240.78.13,209.240.68.25,209.240.68.26');
+  $allowed_ips = explode(',', $allowed_ips);
+  if (in_array($_SERVER['REMOTE_ADDR'], $allowed_ips)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+// Access callback for settings form. Restricts access to superuser for now.
+function tpc_general_admin_access() {
+  global $user;
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
