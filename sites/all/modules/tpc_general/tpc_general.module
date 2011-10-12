@@ -181,3 +181,58 @@ function tpc_general_views_api() {
     'api' => '3',
   );
 }
+
+/**
+ * Implements hook_cron().
+ *
+ * If the TPC Wiki Node ID for this site is known, update the wiki.
+ * Uses the wiki's XML-RPC server defined by tpc_siteinfo.module.
+ */
+function tpc_general_cron() {
+  $site_nid = variable_get('tpc_general_heartbeat_site_nid', FALSE);
+  if (is_numeric($site_nid)) {
+    module_load_include('inc', 'tpc_general', 'tpc_general.admin');
+    $url = variable_get('tpc_general_heartbeat_url', 'https://www.tripark.org/wiki/xmlrpc.php');
+    $data = tpc_general_heartbeat_data();
+    $options = array();
+    $options['tpc_siteinfo.stethoscope'] = array((int)$site_nid, $data);
+    $request = xmlrpc($url, $options);
+  }
+}
+
+/**
+ * Implements hook_action_info().
+ *
+ * Necessary for Views Bulk Operations integration.
+ */
+function pathauto_action_info() {
+  return array(
+    'pathauto_node_update_action' => array(
+      'type' => 'node',
+      'label' => t('Update node alias'),
+      'configurable' => FALSE,
+      'triggers' => array('node_insert', 'node_update'),
+    ),
+    'pathauto_user_update_action' => array(
+      'type' => 'user',
+      'label' => t('Update user alias'),
+      'configurable' => FALSE,
+      'triggers' => array('user_insert', 'user_update'),
+    ),
+  );
+}
+
+/**
+ * Update action wrapper for pathauto_node_update_alias().
+ */
+function pathauto_node_update_action($node, $context = array()) {
+  pathauto_node_update_alias($node, 'bulkupdate', array('message' => TRUE));
+}
+
+/**
+ * Update action wrapper for pathauto_user_update_alias().
+ */
+function pathauto_user_update_action($user, $context = array()) {
+  pathauto_user_update_alias($node, 'bulkupdate', array('message' => TRUE));
+}
+
