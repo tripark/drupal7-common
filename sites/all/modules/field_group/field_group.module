@@ -83,8 +83,7 @@ function field_group_permission() {
 }
 
 /**
- * Menu load
- * Load a group instance based on group and bundle name.
+ * Menu Wildcard loader function to load group definitions.
  *
  * @param $group_name
  *   The name of the group, as contained in the path.
@@ -108,19 +107,37 @@ function field_group_menu_load($group_name, $entity_type, $bundle_name, $bundle_
   $args_pop = array_pop($args);
   $mode = array_pop($args_pop);
 
+  return field_group_load_field_group($group_name, $entity_type, $bundle_name, $mode);
+}
+
+/**
+ * Loads a group definition.
+ *
+ * @param $group_name
+ *   The name of the group.
+ * @param $entity_type
+ *   The name of the entity.
+ * @param $bundle_name
+ *   The name of the bundle.
+ * @param $mode
+ *   The view mode to load.
+ */
+function field_group_load_field_group($group_name, $entity_type, $bundle_name, $mode) {
+
   ctools_include('export');
   $objects = ctools_export_load_object('field_group', 'conditions', array(
     'group_name' => $group_name,
     'entity_type' => $entity_type,
     'bundle' => $bundle_name,
-    'mode' => $mode
+    'mode' => $mode,
   ));
   $object = array_shift($objects);
+
   if ($object && isset($object->data)) {
     return field_group_unpack($object);
   }
-  return $object;
 
+  return $object;
 }
 
 /**
@@ -223,14 +240,14 @@ function field_group_field_group_formatter_info() {
         'label' => t('Div'),
         'description' => t('This fieldgroup renders the inner content in a simple div with the titel as legend.'),
         'format_types' => array('open', 'collapsible', 'collapsed'),
-        'instance_settings' => array('show_label' => 1, 'label_element' => 'h3', 'effect' => 'none', 'speed' => 'fast', 'classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'show_label' => 1, 'label_element' => 'h3', 'effect' => 'none', 'speed' => 'fast', 'classes' => '', 'required_fields' => 1),
         'default_formatter' => 'open',
       ),
       'fieldset' => array(
         'label' => t('Fieldset'),
         'description' => t('This fieldgroup renders the inner content in a fieldset with the titel as legend.'),
         'format_types' => array('open', 'collapsible', 'collapsed'),
-        'instance_settings' => array('classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'classes' => '', 'required_fields' => 1),
         'default_formatter' => 'collapsible',
       ),
       'tabs' => array(
@@ -242,7 +259,7 @@ function field_group_field_group_formatter_info() {
         'label' => t('Vertical tab'),
         'description' => t('This fieldgroup renders the content in a fieldset, part of vertical tabs group.'),
         'format_types' => array('open', 'closed'),
-        'instance_settings' => array('classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'classes' => '', 'required_fields' => 1),
         'default_formatter' => 'closed',
       ),
       'htabs' => array(
@@ -255,7 +272,7 @@ function field_group_field_group_formatter_info() {
         'format_types' => array('open', 'closed'),
         'description' => t('This fieldgroup renders the content in a fieldset, part of horizontal tabs group.'),
         'default_formatter' => 'closed',
-        'instance_settings' => array('classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'classes' => '', 'required_fields' => 1),
       ),
       'multipage-group' => array(
         'label' => ('Multipage group'),
@@ -267,19 +284,19 @@ function field_group_field_group_formatter_info() {
         'format_types' => array('start', 'no-start'),
         'description' => t('This fieldgroup renders the content in a page.'),
         'default_formatter' => 'no-start',
-        'instance_settings' => array('classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'classes' => '', 'required_fields' => 1),
       ),
       'accordion' => array(
         'label' => t('Accordion group'),
         'description' => t('This fieldgroup renders child groups as jQuery accordion.'),
-        'instance_settings' => array('classes' => ''),
+        'instance_settings' => array('effect' => 'none', 'classes' => ''),
       ),
       'accordion-item' => array(
         'label' => t('Accordion item'),
         'format_types' => array('open', 'closed'),
         'description' => t('This fieldgroup renders the content in a div, part of accordion group.'),
         'default_formatter' => 'closed',
-        'instance_settings' => array('classes' => '', 'required_fields' => 1),
+        'instance_settings' => array('description' => '', 'classes' => '', 'required_fields' => 1),
       ),
     ),
     'display' => array(
@@ -287,14 +304,14 @@ function field_group_field_group_formatter_info() {
         'label' => t('Div'),
         'description' => t('This fieldgroup renders the inner content in a simple div with the titel as legend.'),
         'format_types' => array('open', 'collapsible', 'collapsed'),
-        'instance_settings' => array('show_label' => 1, 'label_element' => 'h3', 'effect' => 'none', 'speed' => 'fast', 'classes' => ''),
+        'instance_settings' => array('description' => '', 'show_label' => 1, 'label_element' => 'h3', 'effect' => 'none', 'speed' => 'fast', 'classes' => ''),
         'default_formatter' => 'collapsible',
       ),
       'fieldset' => array(
         'label' => t('Fieldset'),
         'description' => t('This fieldgroup renders the inner content in a fieldset with the titel as legend.'),
         'format_types' => array('open', 'collapsible', 'collapsed'),
-        'instance_settings' => array('classes' => ''),
+        'instance_settings' => array('description' => '', 'classes' => ''),
         'default_formatter' => 'collapsible',
       ),
       'tabs' => array(
@@ -306,7 +323,7 @@ function field_group_field_group_formatter_info() {
         'label' => t('Vertical tab'),
         'description' => t('This fieldgroup renders the content in a fieldset, part of vertical tabs group.'),
         'format_types' => array('open', 'closed'),
-        'instance_settings' => array('classes' => ''),
+        'instance_settings' => array('description' => '', 'classes' => ''),
         'default_formatter' => 'closed',
       ),
       'htabs' => array(
@@ -318,13 +335,13 @@ function field_group_field_group_formatter_info() {
         'label' => t('Horizontal tab item'),
         'format_types' => array('open', 'closed'),
         'description' => t('This fieldgroup renders the content in a fieldset, part of horizontal tabs group.'),
-        'instance_settings' => array('classes' => ''),
+        'instance_settings' => array('description' => '', 'classes' => ''),
         'default_formatter' => 'closed',
       ),
       'accordion' => array(
         'label' => t('Accordion group'),
         'description' => t('This fieldgroup renders child groups as jQuery accordion.'),
-        'instance_settings' => array('classes' => ''),
+        'instance_settings' => array('description' => '', 'classes' => ''),
       ),
       'accordion-item' => array(
         'label' => t('Accordion item'),
@@ -366,7 +383,8 @@ function field_group_field_group_format_settings($group) {
       '#weight' => 1,
     );
   }
-  if ($mode == 'form') {
+
+  if (isset($formatter['instance_settings']['required_fields']) && $mode == 'form') {
     $form['instance_settings']['required_fields'] = array(
       '#type' => 'checkbox',
       '#title' => t('Mark group for required fields.'),
@@ -374,19 +392,24 @@ function field_group_field_group_format_settings($group) {
       '#weight' => 2,
     );
   }
-  $form['instance_settings']['classes'] = array(
-    '#title' => t('Extra CSS classes'),
-    '#type' => 'textfield',
-    '#default_value' => isset($group->format_settings['instance_settings']['classes']) ? $group->format_settings['instance_settings']['classes'] : (isset($formatter['instance_settings']['classes']) ? $formatter['instance_settings']['classes'] : ''),
-    '#weight' => 3,
-    '#element_validate' => array('field_group_validate_css_class'),
-  );
-  $form['instance_settings']['description'] = array(
-    '#title' => t('Description'),
-    '#type' => 'textarea',
-    '#default_value' => isset($group->format_settings['instance_settings']['description']) ? $group->format_settings['instance_settings']['description'] : (isset($formatter['instance_settings']['description']) ? $formatter['instance_settings']['description'] : ''),
-    '#weight' => 0,
-  );
+
+  if (isset($formatter['instance_settings']['classes'])) {
+    $form['instance_settings']['classes'] = array(
+      '#title' => t('Extra CSS classes'),
+      '#type' => 'textfield',
+      '#default_value' => isset($group->format_settings['instance_settings']['classes']) ? $group->format_settings['instance_settings']['classes'] : (isset($formatter['instance_settings']['classes']) ? $formatter['instance_settings']['classes'] : ''),
+      '#weight' => 3,
+      '#element_validate' => array('field_group_validate_css_class'),
+    );
+  }
+  if (isset($formatter['instance_settings']['description'])) {
+    $form['instance_settings']['description'] = array(
+      '#title' => t('Description'),
+      '#type' => 'textarea',
+      '#default_value' => isset($group->format_settings['instance_settings']['description']) ? $group->format_settings['instance_settings']['description'] : (isset($formatter['instance_settings']['description']) ? $formatter['instance_settings']['description'] : ''),
+      '#weight' => 0,
+    );
+  }
 
   // Add optional instance_settings.
   switch ($group->format_type) {
@@ -453,11 +476,15 @@ function field_group_field_group_format_settings($group) {
       );
     case 'tabs':
     case 'htabs':
+      break;
     case 'accordion':
-      unset($form['instance_settings']['description']);
-      if (isset($form['instance_settings']['required_fields'])) {
-        unset($form['instance_settings']['required_fields']);
-      }
+      $form['instance_settings']['effect'] = array(
+        '#title' => t('Effect'),
+        '#type' => 'select',
+        '#options' => array('none' => t('None'), 'bounceslide' => t('Bounce slide')),
+        '#default_value' => isset($group->format_settings['instance_settings']['effect']) ? $group->format_settings['instance_settings']['effect'] : $formatter['instance_settings']['effect'],
+        '#weight' => 2,
+      );
       break;
     case 'multipage':
       break;
@@ -479,7 +506,7 @@ function field_group_field_group_format_settings($group) {
 function field_group_pre_render_prepare(&$group) {
 
   // Prepare extra classes.
-  $group->classes = array($group->format_type, str_replace('_', '-', $group->group_name));
+  $group->classes = array('field-group-' . $group->format_type, str_replace('_', '-', $group->group_name));
   if (isset($group->format_settings['formatter'])) {
     $group->collapsible = in_array($group->format_settings['formatter'], array('collapsible', 'collapsed'));
     // Open or closed horizontal or vertical tabs will be collapsible by default.
@@ -614,13 +641,15 @@ function field_group_pre_render_div(&$element, $group, &$form) {
  * @param $form The root element or form.
  */
 function field_group_pre_render_accordion(&$element, $group, &$form) {
+  $effect = isset($group->format_settings['instance_settings']['effect']) ? $group->format_settings['instance_settings']['effect'] : 'none';
+
+  $group->classes .= " effect-$effect";
 
   $element += array(
     '#type' => 'markup',
     '#prefix' => '<div class="field-group-' . $group->format_type . '-wrapper ' . $group->classes . '">',
     '#suffix' => '</div>',
   );
-
 }
 
 /**
@@ -713,8 +742,12 @@ function field_group_pre_render_multipage_group(&$element, &$group, &$form) {
   $move_additional = isset($group->format_settings['instance_settings']['move_additional']) ? ($group->format_settings['instance_settings']['move_additional'] && isset($form['additional_settings'])) : isset($form['additional_settings']);
   $move_button = isset($group->format_settings['instance_settings']['move_button']) ? $group->format_settings['instance_settings']['move_button'] : 0;
 
-  drupal_add_js(array('multipage_move_submit' => $move_button, 'multipage_move_additional' => $move_additional), 'setting');
-
+  drupal_add_js(array(
+    'field_group' => array(
+      'multipage_move_submit' => (bool) $move_button,
+      'multipage_move_additional' => (bool) $move_additional
+    )
+  ), 'setting');
 
 }
 
@@ -932,12 +965,13 @@ function field_group_remove_empty_form_groups($name, & $element, $groups, &$form
   if (!$hasChildren) {
 
     // Remove empty elements from the #groups.
-    if (empty($element) && isset($form_groups[$name])) {
-      unset($form_groups[$name]);
+    if (empty($element) && isset($form_groups[$name]) && !is_array($form_groups[$name])) {
       foreach ($form_groups as $group_name => $group) {
-        $group_children = array_flip($group->children);
-        if (isset($group_children[$name])) {
-          unset($form_groups[$group_name]->children[$group_children[$name]]);
+        if (isset($group->children)) {
+          $group_children = array_flip($group->children);
+          if (isset($group_children[$name])) {
+            unset($form_groups[$group_name]->children[$group_children[$name]]);
+          }
         }
       }
     }
@@ -1092,18 +1126,29 @@ function field_group_field_extra_fields() {
   $extra['user']['user'] = array('form' => array());
 
   // User picture field to integrate with user module.
-  $extra['user']['user']['form']['picture'] = array(
-    'label' => t('Picture'),
-    'description' => t('User picture'),
-    'weight' => -5,
-  );
+  if (variable_get('user_pictures', 0)) {
+    $extra['user']['user']['form']['picture'] = array(
+      'label' => t('Picture'),
+      'description' => t('User picture'),
+      'weight' => 5,
+    );
+  }
+
+  // Field to itegrate with overlay module.
+  if (module_exists('overlay')) {
+    $extra['user']['user']['form']['overlay_control'] = array(
+      'label' => t('Administrative overlay'),
+      'description' => t('Administrative overlay'),
+      'weight' => 5,
+    );
+  }
 
   // Field to itegrate with contact module.
   if (module_exists('contact')) {
     $extra['user']['user']['form']['contact'] = array(
       'label' => t('Contact'),
       'description' => t('Contact user element'),
-      'weight' => -5,
+     'weight' => 5,
     );
   }
 
@@ -1112,7 +1157,16 @@ function field_group_field_extra_fields() {
     $extra['user']['user']['form']['locale'] = array(
       'label' => t('Language settings'),
       'description' => t('Language settings for the user account.'),
-      'weight' => -5,
+      'weight' => 5,
+    );
+  }
+
+  // Field to integrate with the wysiwyg module on user settings.
+  if (module_exists('wysiwyg')) {
+    $extra['user']['user']['form']['wysiwyg'] = array(
+      'label' => t('Wysiwyg status'),
+      'description' => t('Text formats enabled for rich-text editing'),
+      'weight' => 5,
     );
   }
 
@@ -1285,7 +1339,7 @@ function theme_multipage_pane($variables) {
       $title = t('Step %count of %total', array('%count' => $multipages[$parent_group->group_name], '%total' => count($parent_group->children)));
       break;
     case 3:
-      $title = t('Step %count of %total @label', array('%count' => $multipages[$parent_group->group_name], '%total' => count($parent_group->children), '@label' => $element['#title']));
+      $title = t('Step %count of %total !label', array('%count' => $multipages[$parent_group->group_name], '%total' => count($parent_group->children), '!label' => $element['#title']));
       break;
     case 0:
     default:
@@ -1368,6 +1422,12 @@ function field_group_info_groups($entity_type = NULL, $bundle = NULL, $view_mode
 
 /**
  * Read all groups.
+ *
+ * @param $params
+ *   Parameters for the query
+ *   $name The name of the entity.
+ *   $bundle The name of the bundle.
+ *   $view_mode The view mode.
  */
 function field_group_read_groups($params = array()) {
 
@@ -1382,7 +1442,8 @@ function field_group_read_groups($params = array()) {
   }
 
   foreach ($records as $group) {
-    // Deleted groups
+    // Deleted groups.
+    // @TODO remove the code below and add something meaningfull for "disabled" state.
     if (isset($group->disabled) && $group->disabled) {
       continue;
     }
@@ -1488,7 +1549,7 @@ function field_group_pack($group) {
  * @param $ctools_crud
  *  Is this function called by the ctools crud delete.
  */
-function field_group_export_delete($group, $ctools_crud = TRUE) {
+function field_group_group_export_delete($group, $ctools_crud = TRUE) {
 
   $query = db_delete('field_group');
 
@@ -1514,7 +1575,7 @@ function field_group_export_delete($group, $ctools_crud = TRUE) {
 }
 
 /**
- * field_group_save().
+ * field_group_group_save().
  *
  * Saves a group definition.
  * This function is called by ctools export when calls are made
@@ -1523,7 +1584,7 @@ function field_group_export_delete($group, $ctools_crud = TRUE) {
  * @param $group
  *   A group definition.
  */
-function field_group_save(& $group) {
+function field_group_group_save(& $group) {
 
   // Prepare the record.
   $object = field_group_pack($group);
@@ -1620,6 +1681,12 @@ function field_group_attach_groups(&$element, $view_mode, $form_state = array())
  */
 function field_group_build_pre_render($element) {
 
+  // Skip the nesting and field_group functions if no fieldgroups.
+  // This could be because you don't see them in the UI or programmatically.
+  if (empty($element['#fieldgroups'])) {
+    return $element;
+  }
+
   // Merge our #fieldgroups with #groups to avoid conflicts on fieldset types.
   $element['#groups'] = array_merge($element['#groups'], $element['#fieldgroups']);
 
@@ -1686,11 +1753,13 @@ function field_group_fields_nest(&$element) {
  * @param $form The form object itself.
  */
 function field_group_pre_render(& $element, $group, & $form) {
+
   // Only run the pre_render function if the group has elements.
   // $group->group_name
   if ($element == array()) {
     return;
   }
+
   // Let modules define their wrapping element.
   // Note that the group element has no properties, only elements.
   foreach (module_implements('field_group_pre_render') as $module) {
@@ -1702,4 +1771,8 @@ function field_group_pre_render(& $element, $group, & $form) {
       $function($element, $group, $form);
     }
   }
+
+  // Allow others to alter the pre_render.
+  drupal_alter('field_group_pre_render', $element, $group, $form);
+
 }
