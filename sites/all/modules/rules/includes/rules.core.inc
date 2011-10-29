@@ -5,6 +5,12 @@
  * Rules base classes and interfaces needed for any rule evaluation.
  */
 
+// This is not necessary as the classes are autoloaded via the registry. However
+// it saves some possible update headaches until the registry is rebuilt.
+// @todo
+//   Remove for a future release.
+require_once dirname(__FILE__) . '/faces.inc';
+
 /**
  * Make sure loaded rule configs are instantiated right.
  */
@@ -16,6 +22,22 @@ class RulesEntityController extends EntityAPIControllerExportable {
    */
   protected function attachLoad(&$queried_entities, $revision_id = FALSE) {
     // Retrieve stdClass records and turn them in rules objects stored in 'data'
+    $ids = array_keys($queried_entities);
+    $result = db_select('rules_tags')
+      ->fields('rules_tags', array('id', 'tag'))
+      ->condition('id', $ids, 'IN')
+      ->execute();
+    foreach ($result as $row) {
+      $tags[$row->id][] = $row->tag;
+    }
+    $result = db_select('rules_dependencies')
+      ->fields('rules_dependencies', array('id', 'module'))
+      ->condition('id', $ids, 'IN')
+      ->execute();
+    foreach ($result as $row) {
+      $modules[$row->id][] = $row->module;
+    }
+
     $entities = array();
     foreach ($queried_entities as $record) {
       $entity = $record->data;
@@ -24,17 +46,9 @@ class RulesEntityController extends EntityAPIControllerExportable {
         $entity->$field = $record->$field;
       }
       unset($entity->data, $entity->plugin);
-      // Load possible tags.
-      $entity->tags = db_select('rules_tags')
-        ->fields('rules_tags', array('tag'))
-        ->condition('id', $entity->id)
-        ->execute()
-        ->fetchCol('tag');
-      $entity->dependencies = db_select('rules_dependencies')
-        ->fields('rules_dependencies', array('module'))
-        ->condition('id', $entity->id)
-        ->execute()
-        ->fetchCol('module');
+      // Add any tags or dependencies.
+      $entity->dependencies = isset($modules[$entity->id]) ? $modules[$entity->id] : array();
+      $entity->tags = isset($tags[$entity->id]) ? $tags[$entity->id] : array();
       $entities[$entity->id] = $entity;
     }
     $queried_entities = $entities;
@@ -427,6 +441,7 @@ abstract class RulesPlugin extends RulesExtendable {
 
   /**
    * Gets the element map helper object, which helps mapping elements to ids.
+   *
    * @return RulesElementMap
    */
   public function elementMap() {
@@ -435,6 +450,15 @@ abstract class RulesPlugin extends RulesExtendable {
       $config->map = new RulesElementMap($config);
     }
     return $config->map;
+  }
+
+  /**
+   * Do a deep clone.
+   */
+  public function __clone() {
+    // Make sure the element map is cleared.
+    // @see self::elementMap()
+    unset($this->map);
   }
 
   /**
@@ -915,16 +939,21 @@ abstract class RulesPlugin extends RulesExtendable {
       return $this->parent->save($name, $module);
     }
     else {
-      // In case the config is not dirty, pre-calculate the dependencies for
-      // later checking. Note that this also triggers processing settings if
-      // necessary.
-      // @see rules_modules_enabled()
+      // Update the dirty flag before saving.
       // However, this operation depends on a fully built Rules-cache, so skip
       // it when entities in code are imported to the database.
       // @see _rules_rebuild_cache()
-      if (empty($this->dirty) && empty($this->is_rebuild)) {
-        $this->dependencies = $this->dependencies();
+      if (empty($this->is_rebuild)) {
+        rules_config_update_dirty_flag($this, FALSE);
+        // In case the config is not dirty, pre-calculate the dependencies for
+        // later checking. Note that this also triggers processing settings if
+        // necessary.
+        // @see rules_modules_enabled()
+        if (empty($this->dirty)) {
+          $this->dependencies = $this->dependencies();
+        }
       }
+
       $this->plugin = $this->itemName;
       $this->name = isset($name) ? $name : $this->name;
       $this->module = !isset($this->module) || $module != 'rules' ? $module : $this->module;
@@ -1229,11 +1258,11 @@ abstract class RulesPlugin extends RulesExtendable {
     parent::rebuildCache($itemInfo, $cache);
     if (!empty($this->itemInfo['component'])) {
       // Just move each component into the cache.
-      $components = rules_config_load_multiple(FALSE, array('plugin' => $this->itemName, 'dirty' => 0));
+      $components = rules_config_load_multiple(FALSE, array('plugin' => $this->itemName));
 
       foreach ($components as $id => $component) {
-        try {
-          $component->integrityCheck();
+        rules_config_update_dirty_flag($component);
+        if (!$component->dirty) {
           // Clone the component to avoid modules getting the to be cached
           // version from the static loading cache.
           $component = clone $component;
@@ -1241,16 +1270,6 @@ abstract class RulesPlugin extends RulesExtendable {
           // Allow modules to alter the cached component.
           drupal_alter('rules_component', $this->itemName, $component);
           rules_set_cache('comp_' . $component->name, $component);
-        }
-        catch (RulesIntegrityException $e) {
-          // Mark the component as dirty and do not cache it.
-          $component->dirty = TRUE;
-          db_update('rules_config')
-            ->fields(array('dirty' => 1))
-            ->condition('id', $component->id)
-            ->execute();
-          $variables = array('%component' => $component->label(), '%name' => $component->name, '!message' => $e->getMessage());
-          watchdog('rules', 'The component %component (%name) fails the integrity check and cannot be executed. Error: !message', $variables, WATCHDOG_ERROR);
         }
       }
     }
@@ -1329,7 +1348,7 @@ abstract class RulesAbstractPlugin extends RulesPlugin {
    */
   public function label() {
     $info = $this->info();
-    return isset($info['label']) ? $info['label'] : t('Unkown @plugin "@name"', array('@name' => $this->elementName, '@plugin' => $this->plugin()));
+    return isset($info['label']) ? $info['label'] : t('@plugin "@name"', array('@name' => $this->elementName, '@plugin' => $this->plugin()));
   }
 
   public function access() {
@@ -1345,6 +1364,11 @@ abstract class RulesAbstractPlugin extends RulesPlugin {
     // Do the usual integrity check first so the implementation's validation
     // handler can rely on that already.
     parent::integrityCheck();
+    // Make sure the element is known.
+    $this->forceSetUp();
+    if (!isset($this->cache[$this->itemName . '_info'][$this->elementName])) {
+      throw new RulesIntegrityException(t('Unknown @plugin %name.', array('@plugin' => $this->plugin(), '%name' => $this->elementName)));
+    }
     $this->validate();
     return $this;
   }
@@ -1439,9 +1463,7 @@ abstract class RulesAbstractPlugin extends RulesPlugin {
       $return = $this->returnVariables($state, $result);
     }
     else {
-      $state = new RulesState();
-      module_invoke_all('rules_config_execute', $this);
-      $return = $this->executeCallback($args, $state);
+      rules_log('Unable to execute @plugin %label.', $replacements, RulesLog::ERROR, $this);
     }
     $state->cleanUp();
     rules_log('Finished executing of @plugin %label.', $replacements, RulesLog::INFO, $this, FALSE);
@@ -1948,6 +1970,7 @@ abstract class RulesContainerPlugin extends RulesPlugin implements IteratorAggre
    * By default we do a deep clone.
    */
   public function __clone() {
+    parent::__clone();
     foreach ($this->children as $key => $child) {
       $this->children[$key] = clone $child;
       $this->children[$key]->parent = $this;

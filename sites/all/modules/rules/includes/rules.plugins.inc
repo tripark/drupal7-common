@@ -24,12 +24,14 @@ class RulesAction extends RulesAbstractPlugin implements RulesActionInterface {
     if (is_array($return)) {
       foreach ($return as $name => $data) {
         // Add provided variables.
-        if (!$state->varInfo($name) && isset($this->info['provides'][$name])) {
+        if (isset($this->info['provides'][$name])) {
           $var_name = isset($this->settings[$name . ':var']) ? $this->settings[$name . ':var'] : $name;
-          $state->addVariable($var_name, $data, $this->info['provides'][$name]);
-          rules_log('Added the provided variable %name of type %type', array('%name' => $var_name, '%type' => $this->info['provides'][$name]['type']), RulesLog::INFO, $this);
-          if (!empty($this->info['provides'][$name]['save']) && $state->variables[$var_name] instanceof EntityMetadataWrapper) {
-            $state->saveChanges($var_name, $state->variables[$var_name]);
+          if (!$state->varInfo($var_name)) {
+            $state->addVariable($var_name, $data, $this->info['provides'][$name]);
+            rules_log('Added the provided variable %name of type %type', array('%name' => $var_name, '%type' => $this->info['provides'][$name]['type']), RulesLog::INFO, $this);
+            if (!empty($this->info['provides'][$name]['save']) && $state->variables[$var_name] instanceof EntityMetadataWrapper) {
+              $state->saveChanges($var_name, $state->variables[$var_name]);
+            }
           }
         }
         // Support updating variables by returning the values.
@@ -227,8 +229,9 @@ class Rule extends RulesActionContainer {
   }
 
   public function integrityCheck() {
+    parent::integrityCheck();
     $this->conditions->integrityCheck();
-    return parent::integrityCheck();
+    return $this;
   }
 
   public function access() {
@@ -539,7 +542,8 @@ class RulesLoop extends RulesActionContainer {
       'type' => 'list',
       'restriction' => 'selector',
       'label' => t('List'),
-      'description' => t('The list to loop over.'),
+      'description' => t('The list to loop over. The loop will step through each item in the list, allowing further actions on them. See <a href="@url"> the online handbook</a> for more information on how to use loops.',
+        array('@url' => rules_external_help('loops'))),
     );
     return $info;
   }
@@ -693,25 +697,15 @@ class RulesEventSet extends RulesRuleSet {
         'variables' => isset($info['arguments']) ? $info['arguments'] : array(),
       );
       // Add all rules associated with this event to an EventSet for caching.
-      if ($rules = rules_config_load_multiple(FALSE, array('event' => $name, 'active' => TRUE, 'dirty' => 0))) {
+      if ($rules = rules_config_load_multiple(FALSE, array('event' => $name, 'active' => TRUE))) {
         $event = new RulesEventSet($info);
         $event->name = $name;
         foreach ($rules as $rule) {
-          try {
-            $rule->integrityCheck();
+          rules_config_update_dirty_flag($rule);
+          if (!$rule->dirty) {
             // Clone the rule to avoid modules getting the changed version from
             // the static cache.
             $event->rule(clone $rule);
-          }
-          catch (RulesIntegrityException $e) {
-            // Mark the rule as dirty and do not cache it.
-            $rule->dirty = TRUE;
-            db_update('rules_config')
-              ->fields(array('dirty' => 1))
-              ->condition('id', $rule->id)
-              ->execute();
-            $variables = array('%rule' => $rule->label(), '%name' => $rule->name, '!message' => $e->getMessage());
-            watchdog('rules', 'The rule %rule (%name) fails the integrity check and cannot be executed. Error: !message', $variables, WATCHDOG_ERROR);
           }
         }
         if ($event->children) {
