@@ -7,13 +7,30 @@
  * This just adds a wrapper div to the slideshow.
  */
 
-function template_preprocess_views_slideshow(&$vars) {
+function _views_slideshow_preprocess_views_slideshow(&$vars) {
   $options = $vars['options'];
+  $vars['skin'] = 'default';
+  $vars['slideshow'] = '';
   $main_frame_module = $options['slideshow_type'];
 
+  if (empty($main_frame_module)) {
+    // Get all slideshow types.
+    $slideshows = module_invoke_all('views_slideshow_slideshow_info');
+
+    if ($slideshows) {
+      foreach ($slideshows as $slideshow_id => $slideshow_info) {
+        $main_frame_module = $slideshow_id;
+        break;
+      }
+    }
+  }
+  
   // Make sure the main slideshow settings are defined before building the
   // slideshow.
-  if (empty($options[$main_frame_module])) {
+  if (empty($main_frame_module)) {
+    drupal_set_message(t('No main frame module is enabled for views slideshow.'), 'error');
+  }
+  elseif (empty($options[$main_frame_module])) {
     drupal_set_message(t('The options for !module does not exists.', array('!module' => $main_frame_module)), 'error');
   }
   else {
@@ -178,13 +195,13 @@ function theme_views_slideshow_pager_widget_render($vars) {
   // Create some attributes
   $attributes['class'] = 'widget_pager widget_pager_' . $vars['location'];
   $attributes['id'] = 'widget_pager_' . $vars['location'] . '_' . $vars['vss_id'];
-  return theme($vars['settings']['type'] . '_render', array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'attributes' => $attributes));
+  return theme($vars['settings']['type'], array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'attributes' => $attributes));
 }
 
 /**
  * Theme pager fields
  */
-function template_preprocess_views_slideshow_pager_fields_render(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_pager_fields(&$vars) {
   // Build our javascript settings.
   $js_vars = array(
     'viewsSlideshowPagerFields' => array(
@@ -198,22 +215,36 @@ function template_preprocess_views_slideshow_pager_fields_render(&$vars) {
 
   // Add the settings to the page.
   drupal_add_js($js_vars, 'setting');
+  
+  // Add hover intent library
+  if ($vars['settings']['views_slideshow_pager_fields_hover']) {
+    if (module_exists('libraries')) {
+      // Load jQuery hoverIntent
+      $hoverIntent_path = libraries_get_path('jquery.hoverIntent');
+      if (!empty($hoverIntent_path) && file_exists($hoverIntent_path . '/jquery.hoverIntent.js')) {
+        drupal_add_js($hoverIntent_path . '/jquery.hoverIntent.js');
+      }
+    }
+  }
 
   $vars['classes_array'][] = $vars['attributes']['class'];
   $vars['widget_id'] = $vars['attributes']['id'];
   // Add our class to the wrapper.
   $vars['classes_array'][] = 'views_slideshow_pager_field';
 
-  // Render all the fields.
+  // Render all the fields unless there is only 1 slide and the user specified
+  // to hide them when there is only one slide.
   $vars['rendered_field_items'] = '';
-  foreach ($vars['view']->result as $count => $node) {
-    $rendered_fields = '';
-    foreach ($vars['settings']['views_slideshow_pager_fields_fields'] as $field => $use) {
-      if ($use !== 0 && is_object($vars['view']->field[$field])) {
-        $rendered_fields .= theme('views_slideshow_pager_field_field', array('view' => $vars['view'], 'field' => $field, 'count' => $count));
+  if (empty($vars['settings']['hide_on_single_slide']) && count($vars['view']->result) > 1) {
+    foreach ($vars['view']->result as $count => $node) {
+      $rendered_fields = '';
+      foreach ($vars['settings']['views_slideshow_pager_fields_fields'] as $field => $use) {
+        if ($use !== 0 && is_object($vars['view']->field[$field])) {
+          $rendered_fields .= theme('views_slideshow_pager_field_field', array('view' => $vars['view'], 'field' => $field, 'count' => $count));
+        }
       }
+      $vars['rendered_field_items'] .= theme('views_slideshow_pager_field_item', array('vss_id' => $vars['vss_id'], 'item' => $rendered_fields, 'count' => $count, 'location' => $vars['location']));
     }
-    $vars['rendered_field_items'] .= theme('views_slideshow_pager_field_item', array('vss_id' => $vars['vss_id'], 'item' => $rendered_fields, 'count' => $count));
   }
 }
 
@@ -222,7 +253,7 @@ function template_preprocess_views_slideshow_pager_fields_render(&$vars) {
  *
  * @ingroup themeable
  */
-function template_preprocess_views_slideshow_pager_field_item(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_pager_field_item(&$vars) {
   $vars['classes_array'][] = 'views_slideshow_pager_field_item';
   if (!$vars['count']) {
     $vars['classes_array'][] = 'views_slideshow_active_pager_field_item';
@@ -250,8 +281,8 @@ function theme_views_slideshow_controls_widget_render($vars) {
   drupal_add_js($js_vars, 'setting');
 
   $output = '';
-  if (count($vars['rows']) > 1) {
-    $output = theme($vars['settings']['type'] . '_render', array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'rows' => $vars['rows']));
+  if (empty($vars['settings']['hide_on_single_slide']) && count($vars['rows']) > 1) {
+    $output = theme($vars['settings']['type'], array('vss_id' => $vars['vss_id'], 'view' => $vars['view'], 'settings' => $vars['settings'], 'location' => $vars['location'], 'rows' => $vars['rows']));
   }
 
   return $output;
@@ -262,9 +293,9 @@ function theme_views_slideshow_controls_widget_render($vars) {
  *
  * @ingroup themeable
  */
-function template_preprocess_views_slideshow_controls_text_render(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_controls_text(&$vars) {
   $module_path = drupal_get_path('module', 'views_slideshow');
-  drupal_add_css($module_path . '/views_slideshow_controls.css', array('type' => 'file'));
+  drupal_add_css($module_path . '/views_slideshow_controls_text.css', array('type' => 'file'));
 
   $vars['classes_array'][] = 'views_slideshow_controls_text';
 
@@ -280,7 +311,7 @@ function template_preprocess_views_slideshow_controls_text_render(&$vars) {
  *
  * @ingroup themeable
  */
-function template_preprocess_views_slideshow_controls_text_previous(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_controls_text_previous(&$vars) {
   $vars['classes_array'][] = 'views_slideshow_controls_text_previous';
 }
 
@@ -289,7 +320,7 @@ function template_preprocess_views_slideshow_controls_text_previous(&$vars) {
  *
  * @ingroup themeable
  */
-function template_preprocess_views_slideshow_controls_text_pause(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_controls_text_pause(&$vars) {
   $vars['classes_array'][]  = 'views_slideshow_controls_text_pause';
   $vars['start_text'] = t('Pause');
 }
@@ -299,7 +330,7 @@ function template_preprocess_views_slideshow_controls_text_pause(&$vars) {
  *
  * @ingroup themeable
  */
-function template_preprocess_views_slideshow_controls_text_next(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_controls_text_next(&$vars) {
   $vars['classes_array'][] = 'views_slideshow_controls_text_next';
 }
 
@@ -315,6 +346,6 @@ function theme_views_slideshow_slide_counter_widget_render($vars) {
 /**
  * Views Slideshow: slide counter.
  */
-function template_preprocess_views_slideshow_slide_counter(&$vars) {
+function _views_slideshow_preprocess_views_slideshow_slide_counter(&$vars) {
   $vars['classes_array'][] = 'views_slideshow_slide_counter';
 }

@@ -109,7 +109,7 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
     }
     else {
       $form['enable_module'] = array(
-        '#markup' => t('There is no Views Slideshow plugin enabled. Go to the !modules and enable a Views Slideshow plugin module. For example Views Slideshow Singleframe.', array('!modules' => l('Modules Page', 'admin/build/modules'))),
+        '#markup' => t('There is no Views Slideshow plugin enabled. Go to the !modules and enable a Views Slideshow plugin module. For example Views Slideshow Singleframe.', array('!modules' => l('Modules Page', 'admin/modules'))),
       );
     }
 
@@ -187,6 +187,11 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
 
           $form['widgets'][$location_id][$widget_id]['enable']['#dependency']['edit-style-options-slideshow-type'] = !empty($compatible_slideshows) ? $compatible_slideshows : array('none');
 
+          // Need to wrap this so it indents correctly.
+          $form['widgets'][$location_id][$widget_id]['wrapper'] = array(
+            '#markup' => '<div class="vs-dependent">',
+          );
+
           // Widget weight
           // We check to see if the default value is greater than the number of
           // widgets just in case a widget has been removed and the form hasn't
@@ -197,9 +202,11 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
             '#default_value' => ($this->options['widgets'][$location_id][$widget_id]['weight'] > count($widgets)) ? count($widgets) : $this->options['widgets'][$location_id][$widget_id]['weight'],
             '#options' => $weights,
             '#description' => t('Determines in what order the !name appears.  A lower weight will cause the !name to be above higher weight items.', array('!name' => $widget_info['name'])),
+            '#prefix' => '<div class="vs-dependent">',
+            '#suffix' => '</div>',
             '#states' => array(
               'visible' => array(
-                ':input[name="style_options[widgets][' . $location_id . '][' . $widget_id . '][enable]"]' => array('value' => $module),
+                ':input[name="style_options[widgets][' . $location_id . '][' . $widget_id . '][enable]"]' => array('checked' => TRUE),
               ),
             ),
           );
@@ -215,6 +222,10 @@ class views_slideshow_plugin_style_slideshow extends views_plugin_style_list {
             );
             call_user_func_array($widget_id . '_views_slideshow_widget_form_options', $arguments);
           }
+
+          $form['widgets'][$location_id][$widget_id]['wrapper_close'] = array(
+            '#markup' => '</div>',
+          );
         }
       }
     }

@@ -30,7 +30,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
   /**
    * Implement the pause hook for controls.
@@ -56,7 +56,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
 
   /**
@@ -90,10 +90,10 @@
         var uniqueID = $(this).attr('id').replace('views_slideshow_controls_text_pause_', '');
         $(this).click(function() {
           if (Drupal.settings.viewsSlideshow[uniqueID].paused) {
-            Drupal.viewsSlideshow.action({ "action": 'play', "slideshowID": uniqueID });
+            Drupal.viewsSlideshow.action({ "action": 'play', "slideshowID": uniqueID, "force": true });
           }
           else {
-            Drupal.viewsSlideshow.action({ "action": 'pause', "slideshowID": uniqueID });
+            Drupal.viewsSlideshow.action({ "action": 'pause', "slideshowID": uniqueID, "force": true });
           }
           return false;
         });
@@ -108,26 +108,26 @@
    */
   Drupal.viewsSlideshowControlsText.pause = function (options) {
     var pauseText = Drupal.theme.prototype['viewsSlideshowControlsPause'] ? Drupal.theme('viewsSlideshowControlsPause') : '';
-    $('#views_slideshow_controls_text_pause_' + options.slideshowID).text(pauseText);
-  }
+    $('#views_slideshow_controls_text_pause_' + options.slideshowID + ' a').text(pauseText);
+  };
 
   /**
    * Implement the play hook for text controls.
    */
   Drupal.viewsSlideshowControlsText.play = function (options) {
     var playText = Drupal.theme.prototype['viewsSlideshowControlsPlay'] ? Drupal.theme('viewsSlideshowControlsPlay') : '';
-    $('#views_slideshow_controls_text_pause_' + options.slideshowID).text(playText);
-  }
+    $('#views_slideshow_controls_text_pause_' + options.slideshowID + ' a').text(playText);
+  };
 
   // Theme the resume control.
   Drupal.theme.prototype.viewsSlideshowControlsPause = function () {
     return Drupal.t('Resume');
-  }
+  };
 
   // Theme the pause control.
   Drupal.theme.prototype.viewsSlideshowControlsPlay = function () {
     return Drupal.t('Pause');
-  }
+  };
 
   /**
    * Views Slideshow Pager
@@ -158,7 +158,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
   /**
    * Implement the goToSlide hook for pagers.
@@ -184,7 +184,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
   /**
    * Implement the previousSlide hook for pagers.
@@ -210,7 +210,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
   /**
    * Implement the nextSlide hook for pagers.
@@ -236,7 +236,7 @@
     catch(err) {
       // Don't need to do anything on error.
     }
-  }
+  };
 
 
   /**
@@ -257,13 +257,22 @@
         // Add the activate and pause on pager hover event to each pager item.
         if (Drupal.settings.viewsSlideshowPagerFields[uniqueID][location].activatePauseOnHover) {
           $(this).children().each(function(index, pagerItem) {
-            $(pagerItem).hover(function() {
+            var mouseIn = function() {
               Drupal.viewsSlideshow.action({ "action": 'goToSlide', "slideshowID": uniqueID, "slideNum": index });
               Drupal.viewsSlideshow.action({ "action": 'pause', "slideshowID": uniqueID });
-            },
-            function() {
+            }
+            
+            var mouseOut = function() {
               Drupal.viewsSlideshow.action({ "action": 'play', "slideshowID": uniqueID });
-            });
+            }
+          
+            if (jQuery.fn.hoverIntent) {
+              $(pagerItem).hoverIntent(mouseIn, mouseOut);
+            }
+            else {
+              $(pagerItem).hover(mouseIn, mouseOut);
+            }
+            
           });
         }
         else {
@@ -283,68 +292,77 @@
    * Implement the transitionBegin hook for pager fields pager.
    */
   Drupal.viewsSlideshowPagerFields.transitionBegin = function (options) {
-    // Remove active class from pagers
-    $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').removeClass('active');
+    for (pagerLocation in Drupal.settings.viewsSlideshowPager[options.slideshowID]) {
+      // Remove active class from pagers
+      $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').removeClass('active');
 
-    // Add active class to active pager.
-    $('#views_slideshow_pager_field_item_' + options.slideshowID + '_' + options.slideNum).addClass('active');
-  }
+      // Add active class to active pager.
+      $('#views_slideshow_pager_field_item_'+ pagerLocation + '_' + options.slideshowID + '_' + options.slideNum).addClass('active');
+    }
+
+  };
 
   /**
    * Implement the goToSlide hook for pager fields pager.
    */
   Drupal.viewsSlideshowPagerFields.goToSlide = function (options) {
-    // Remove active class from pagers
-    $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').removeClass('active');
+    for (pagerLocation in Drupal.settings.viewsSlideshowPager[options.slideshowID]) {
+      // Remove active class from pagers
+      $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').removeClass('active');
 
-    // Add active class to active pager.
-    $('#views_slideshow_pager_field_item_' + options.slideshowID + '_' + options.slideNum).addClass('active');
-  }
+      // Add active class to active pager.
+      $('#views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '_' + options.slideNum).addClass('active');
+    }
+  };
 
   /**
    * Implement the previousSlide hook for pager fields pager.
    */
   Drupal.viewsSlideshowPagerFields.previousSlide = function (options) {
-    // Get the current active pager.
-    var pagerNum = $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"].active').attr('id').replace('views_slideshow_pager_field_item_' + options.slideshowID + '_', '');
+    for (pagerLocation in Drupal.settings.viewsSlideshowPager[options.slideshowID]) {
+      // Get the current active pager.
+      var pagerNum = $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"].active').attr('id').replace('views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '_', '');
 
-    // If we are on the first pager then activate the last pager.
-    // Otherwise activate the previous pager.
-    if (pagerNum == 0) {
-      pagerNum = $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').length() - 1;
+      // If we are on the first pager then activate the last pager.
+      // Otherwise activate the previous pager.
+      if (pagerNum == 0) {
+        pagerNum = $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').length() - 1;
+      }
+      else {
+        pagerNum--;
+      }
+
+      // Remove active class from pagers
+      $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').removeClass('active');
+
+      // Add active class to active pager.
+      $('#views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '_' + pagerNum).addClass('active');
     }
-    else {
-      pagerNum--;
-    }
-
-    // Remove active class from pagers
-    $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').removeClass('active');
-
-    // Add active class to active pager.
-    $('#views_slideshow_pager_field_item_' + options.slideshowID + '_' + pagerNum).addClass('active');
-  }
+  };
 
   /**
    * Implement the nextSlide hook for pager fields pager.
    */
   Drupal.viewsSlideshowPagerFields.nextSlide = function (options) {
-    // Get the current active pager.
-    var pagerNum = $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"].active').attr('id').replace('views_slideshow_pager_field_item_' + options.slideshowID + '_', '');
-    var totalPagers = $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').length();
+    for (pagerLocation in Drupal.settings.viewsSlideshowPager[options.slideshowID]) {
+      // Get the current active pager.
+      var pagerNum = $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"].active').attr('id').replace('views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '_', '');
+      var totalPagers = $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').length();
 
-    // If we are on the last pager then activate the first pager.
-    // Otherwise activate the next pager.
-    pagerNum++;
-    if (pagerNum == totalPagers) {
-      pagerNum = 0;
+      // If we are on the last pager then activate the first pager.
+      // Otherwise activate the next pager.
+      pagerNum++;
+      if (pagerNum == totalPagers) {
+        pagerNum = 0;
+      }
+
+      // Remove active class from pagers
+      $('[id^="views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '"]').removeClass('active');
+
+      // Add active class to active pager.
+      $('#views_slideshow_pager_field_item_' + pagerLocation + '_' + options.slideshowID + '_' + slideNum).addClass('active');
     }
-
-    // Remove active class from pagers
-    $('[id^="views_slideshow_pager_field_item_' + options.slideshowID + '"]').removeClass('active');
-
-    // Add active class to active pager.
-    $('#views_slideshow_pager_field_item_' + options.slideshowID + '_' + slideNum).addClass('active');
-  }
+  };
 
 
   /**
@@ -358,7 +376,7 @@
    */
   Drupal.viewsSlideshowSlideCounter.transitionBegin = function (options) {
     $('#views_slideshow_slide_counter_' + options.slideshowID + ' .num').text(options.slideNum + 1);
-  }
+  };
 
   /**
    * This is used as a router to process actions for the slideshow.
@@ -380,9 +398,24 @@
     // If we are using pause or play switch paused state accordingly.
     if (options.action == 'pause') {
       Drupal.settings.viewsSlideshow[options.slideshowID].paused = 1;
+      // If the calling method is forcing a pause then mark it as such.
+      if (options.force) {
+        Drupal.settings.viewsSlideshow[options.slideshowID].pausedForce = 1;
+      }
     }
     else if (options.action == 'play') {
-      Drupal.settings.viewsSlideshow[options.slideshowID].paused = 0;
+      // If the slideshow isn't forced pause or we are forcing a play then play
+      // the slideshow.
+      // Otherwise return telling the calling method that it was forced paused.
+      if (!Drupal.settings.viewsSlideshow[options.slideshowID].pausedForce || options.force) {
+        Drupal.settings.viewsSlideshow[options.slideshowID].paused = 0;
+        Drupal.settings.viewsSlideshow[options.slideshowID].pausedForce = 0;
+      }
+      else {
+        status.value = false;
+        status.text += ' ' + Drupal.t('This slideshow is forced paused.');
+        return status;
+      }
     }
 
     // We use a switch statement here mainly just to limit the type of actions
@@ -429,5 +462,5 @@
         status.text = Drupal.t('An invalid action "!action" was specified.', { "!action": options.action });
     }
     return status;
-  }
+  };
 })(jQuery);
