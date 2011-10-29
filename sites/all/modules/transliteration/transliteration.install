@@ -30,4 +30,3 @@ function transliteration_uninstall() {
   variable_del('transliteration_file_uploads');
   variable_del('transliteration_file_lowercase');
 }
-

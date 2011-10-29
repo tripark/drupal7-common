@@ -2,14 +2,9 @@ name = Transliteration
 description = Converts non-latin text to US-ASCII and sanitizes file names.
 core = 7.x
 
-files[] = transliteration.module
-files[] = transliteration.inc
-files[] = transliteration.admin.inc
-files[] = transliteration.install
-
-; Information added by drupal.org packaging script on 2011-02-25
-version = "7.x-3.x-dev"
+; Information added by drupal.org packaging script on 2011-10-14
+version = "7.x-3.0"
 core = "7.x"
 project = "transliteration"
-datestamp = "1298620448"
+datestamp = "1318580199"
 
