@@ -6,6 +6,7 @@
 function tpc_general_init() {
   drupal_add_js(drupal_get_path('module', 'tpc_general') . '/tpc_general.js');
   drupal_add_css(drupal_get_path('module', 'tpc_general') . '/tpc_general.css');
+  include_once('tpc_general.seven_theme.inc');
 }
 
 /**
@@ -233,6 +234,6 @@ function pathauto_node_update_action($node, $context = array()) {
  * Update action wrapper for pathauto_user_update_alias().
  */
 function pathauto_user_update_action($user, $context = array()) {
-  pathauto_user_update_alias($node, 'bulkupdate', array('message' => TRUE));
+  pathauto_user_update_alias($user, 'bulkupdate', array('message' => TRUE));
 }
 
