@@ -7,6 +7,10 @@
 .field /* Wrapper for any field. */ {
 }
 
+.field-label-above {
+  margin: 1em 0;
+}
+
 /*
  * Field types (Core)
  */
