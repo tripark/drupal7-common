@@ -37,7 +37,7 @@ function ds_extras_settings($form) {
     '#title' => t('Default Field Template'),
     '#options' => $theme_functions,
     '#default_value' => variable_get('ft-default', 'theme_field'),
-    '#description' => t('You can override this per field on the "Manage display" screens.<br />Default will output the field as defined in Drupal Core.<br />Reset will strip all HTML.<br />There is also an Expert Field Template, which you can only select per field, to have full control over the HTML.<br /><br /><label>Styles</label>You can add custom styles on the <a href="!url">styles form</a>. These styles can be added to fields using the Default Field Template.<br /><br /><label>Advanced</label>You can create your own custom field templates which need to be defined with hook_ds_field_theme_functions_info(). See ds.api.php for an example.', array('!url' => url('admin/structure/ds/styles'))),
+    '#description' => t('Default will output the field as defined in Drupal Core.<br />Reset will strip all HTML.<br />Minimal adds a simple wrapper around the field.<br/>There is also an Expert Field Template that gives full control over the HTML, but can only be set per field.<br /><br />You can override this setting per field on the "Manage display" screens or when creating fields on the instance level.<br /><br /><strong>Template suggestions</strong><br />You can create .tpl files as well for these field theme functions, e.g. field--reset.tpl.php, field--minimal.tpl.php<br /><br /><label>Styles</label>You can add custom styles on the <a href="!url">styles form</a>. These styles can be added to fields using the Default Field Template.<br /><br /><label>Advanced</label>You can create your own custom field templates which need to be defined with hook_ds_field_theme_functions_info(). See ds.api.php for an example.', array('!url' => url('admin/structure/ds/styles'))),
     '#states' => array(
       'visible' => array(
         'input[name="additional_settings[fs1][ds_extras_field_template]"]' => array('checked' => TRUE),
@@ -53,18 +53,6 @@ function ds_extras_settings($form) {
     '#states' => array(
       'visible' => array(
         'select[name="additional_settings[fs1][ft-default]"]' => array('value' => 'theme_ds_field_reset'),
-        'input[name="additional_settings[fs1][ds_extras_field_template]"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
-
-  $form['additional_settings']['fs1']['ft-kill'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Remove theme suggestions'),
-    '#default_value' => variable_get('ft-kill', FALSE),
-    '#description' => t('Remove all theme suggestions from fields. If unsure, leave disabled.'),
-    '#states' => array(
-      'visible' => array(
         'input[name="additional_settings[fs1][ds_extras_field_template]"]' => array('checked' => TRUE),
       ),
     ),
@@ -101,15 +89,20 @@ function ds_extras_settings($form) {
 
     $form['additional_settings']['fs3']['ds_extras_panel_view_modes'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable Panels editor on view modes'),
-      '#description' => t('With this option, you can use the Panels editor instead of Field UI.'),
+      '#title' => t('Use the Panels editor on the \'Manage Display\' screen'),
+      '#description' => t('Use the Panels editor instead of Field UI to manage your layout.'),
       '#default_value' => variable_get('ds_extras_panel_view_modes', FALSE),
     );
     $form['additional_settings']['fs3']['ds_extras_editor_switch'] = array(
       '#type' => 'checkbox',
       '#title' => t('Switch layout editor'),
-      '#description' => t('By default, the Panels editor will be used always. With this option, any layout configured already with Field UI will be kept, but you are able to switch back and forth.'),
+      '#description' => t('Keep the option to switch between Field UI or Panels. Note: any layout configured already with Field UI will be kept.'),
       '#default_value' => variable_get('ds_extras_editor_switch', FALSE),
+      '#states' => array(
+        'visible' => array(
+          'input[name="additional_settings[fs3][ds_extras_panel_view_modes]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
   }
 
@@ -120,14 +113,14 @@ function ds_extras_settings($form) {
 
   $form['additional_settings']['fs4']['ds_extras_switch_view_mode'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Switch view mode'),
-    '#description' => t('Change view modes for individual nodes. A new tab "Display settings" will appear on the content create form.'),
+    '#title' => t('View mode per node'),
+    '#description' => t('Change view modes for individual nodes. A new tab \'Display settings\' will appear on the content create form.<br />You can also pass the name of a view mode through the URL, eg node/x?v=full.'),
     '#default_value' => variable_get('ds_extras_switch_view_mode', FALSE),
   );
 
   $form['additional_settings']['fs4']['ds_extras_switch_field'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Switch view mode field'),
+    '#title' => t('View mode switcher'),
     '#description' => t('Adds a field with links to switch view modes inline with Ajax. Only works for nodes at this time.'),
     '#default_value' => variable_get('ds_extras_switch_field', FALSE),
   );
@@ -151,7 +144,7 @@ function ds_extras_settings($form) {
   $form['additional_settings']['fs4']['ds_extras_hide_page_title'] = array(
     '#type' => 'checkbox',
     '#title' => t('Page title options'),
-    '#description' => t('An extra option to either, hide or manually set the page title will appear on the "Manage displays" screen of the "Full content" build mode.'),
+    '#description' => t('Hide or manually set the page title of the "Full content" view mode.'),
     '#default_value' => variable_get('ds_extras_hide_page_title', FALSE),
   );
 
@@ -168,16 +161,8 @@ function ds_extras_settings($form) {
     $form['additional_settings']['fs4']['ds_extras_vd'] = array(
       '#type' => 'checkbox',
       '#title' => t('Views displays'),
-      '#description' => t('Manage the layout of your Views templates and field rows with Field UI at !url.', array('!url' => l(url('admin/structure/ds/vd', array('absolute' => TRUE)), 'admin/structure/ds/vd'))),
+      '#description' => t('Manage the layout of your Views layout with Field UI at !url.', array('!url' => l(url('admin/structure/ds/vd', array('absolute' => TRUE)), 'admin/structure/ds/vd'))),
       '#default_value' => variable_get('ds_extras_vd', FALSE),
-    );
-  }
-
-  if (module_exists('fivestar')) {
-    $form['additional_settings']['fs4']['ds_extras_fivestar'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Fivestar field'),
-      '#default_value' => variable_get('ds_extras_fivestar', FALSE),
     );
   }
 
@@ -259,7 +244,7 @@ function ds_extras_settings_submit($form, &$form_state) {
   cache_clear_all('theme_registry:', 'cache', TRUE);
   cache_clear_all('module_implements', 'cache_bootstrap');
   cache_clear_all('field_info_fields', 'cache_field');
-  menu_rebuild();
+  variable_set('menu_rebuild_needed', TRUE);
 }
 
 /**
@@ -285,6 +270,11 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
         if (isset($field_settings[$key]['ft']['lb'])) {
           $form['fields'][$key]['human_name']['#markup'] = t('@label (Original: @original)', array('@label' => $field_settings[$key]['ft']['lb'], '@original' => $form['fields'][$key]['human_name']['#markup']));
         }
+      }
+
+      // Skip those settings for DS views.
+      if ($form['#entity_type'] == 'ds_views') {
+        continue;
       }
 
       // Link to open settings.
@@ -398,14 +388,14 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
   }
 
   // Views displays.
-  if (variable_get('ds_extras_vd', FALSE)) {
+  if ($form['#entity_type'] == 'ds_views') {
     // Add an additional submit callback so we can ditch the extra title
     // which is added by ds_extras_field_extra_fields().
     $form['#submit'] = array_merge(array('ds_extras_vd_field_ui_submit'), $form['#submit']);
   }
 
   // Page title functionality, currently only works on nodes.
-  if (isset($form['#ds_layout']) && $form['#entity_type'] == 'node' && ($form['#view_mode'] == 'full' || variable_get('ds_extras_switch_view_mode', FALSE)) &&  variable_get('ds_extras_hide_page_title', FALSE)) {
+  if (isset($form['#ds_layout']) && $form['#entity_type'] == 'node' && ($form['#view_mode'] == 'full' || $form['#view_mode'] == 'revision' || variable_get('ds_extras_switch_view_mode', FALSE)) && variable_get('ds_extras_hide_page_title', FALSE)) {
     $form['additional_settings']['ds_layouts']['ds_page_title_options'] = _ds_extras_page_title_options($form['#ds_layout']->settings, $form['#entity_type']);
   }
 
@@ -546,6 +536,7 @@ function ds_extras_ds_field_settings_alter(&$field_settings, $form, &$form_state
 
   $fields = $form_state['values']['fields'];
   $default_field_function = variable_get('ft-default', 'theme_field');
+
   $wrappers = array(
     'ow' => t('Wrapper'),
     'fis' => t('Field items'),

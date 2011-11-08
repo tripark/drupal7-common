@@ -21,41 +21,9 @@ function ds_extras_ds_fields_info($entity_type) {
     );
   }
 
-  // Fivestar Support.
-  if ($entity_type == 'node' && variable_get('ds_extras_fivestar', FALSE)) {
-
-    $ui_limit = array();
-    $types = node_type_get_names();
-    foreach ($types as $node_type => $name) {
-      $variable = 'fivestar_' . $node_type;
-      $enabled = variable_get('ds_' . $variable, 0);
-      if ($enabled) {
-        $ui_limit[] = $node_type . '|*';
-      }
-    }
-
-    $fields[$entity_type]['fivestar_widget'] = array(
-      'title' => t('Fivestar'),
-      'field_type' => DS_FIELD_TYPE_FUNCTION,
-      'function' => 'ds_fivestar_render',
-      'ui_limit' => $ui_limit,
-      'properties' => array(
-        'formatters' => array(
-          'ds_fivestar_clickable' => t('Clickable widget'),
-          'ds_fivestar_static' => t('Static display'),
-        ),
-      )
-    );
-  }
-
   // DS Views.
   if ($entity_type == 'ds_views') {
     $fields[$entity_type] = array(
-      'admin_links' => array(
-        'title' => t('Admin links'),
-        'field_type' => DS_FIELD_TYPE_PREPROCESS,
-
-      ),
       'title' => array(
         'title' => t('Views title'),
         'field_type' => DS_FIELD_TYPE_FUNCTION,

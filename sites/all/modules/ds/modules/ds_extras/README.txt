@@ -13,7 +13,6 @@ following functionality:
    adds extra view mode called "Revision".
  - contextual links: add the 'manage display' link to contextual links 
    and on the full page view of nodes, users and terms.
- - fivestar: add fivestar support.
  - Views displays: render views (row fields) into a different layout.
      Important: If you are creating new ds fields for vd,
      check ds_vd_render_title_field() how to return the content.

@@ -5,13 +5,13 @@
  * Display Suite fluid 2 column stacked template.
  */
 ?>
-<?php 
+<?php
   // Add sidebar classes so that we can apply the correct width in css.
   if (($left && !$right) || ($right && !$left)) {
     $classes .= ' group-one-column';
   }
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-2col-stacked-fluid <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>
@@ -22,7 +22,7 @@
       <?php print $header; ?>
     </div>
   <?php endif; ?>
-  
+
   <?php if ($left): ?>
     <div class="group-left<?php print $left_classes; ?>">
       <?php print $left; ?>
@@ -34,7 +34,7 @@
       <?php print $right; ?>
     </div>
   <?php endif; ?>
-	
+
   <?php if ($footer): ?>
     <div class="group-footer<?php print $footer_classes; ?>">
       <?php print $footer; ?>

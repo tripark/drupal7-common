@@ -61,26 +61,33 @@ $.fn.dsCtoolsContentConfiguration = function (configuration) {
 }
 
 /**
+ * Update the select content text.
+ */
+$.fn.dsCtoolsContentUpdate = function () {
+  $(this[0]).html(Drupal.t('Click update to save the configuration'));
+}
+
+/**
  * Field template.
  */
 Drupal.behaviors.settingsToggle = {
   attach: function (context) {
-        
+
     // Bind on click.
     $(context).find('#field-display-overview').find('.ft-link').once('ds-ft').bind('click', function(e) {
-      
+
       e.preventDefault();
-      
+
       var fieldTemplate = $(this).next();
-      
+
       // Bind update button.
       fieldTemplate.find('.ft-update').click(function() {
-  
+
         // Close the settings.
         var settings = $(this).parents('.field-template');
         settings.hide();
         $(this).parents('tr').removeClass('field-formatter-settings-editing');
-  
+
         // Check the label.
         var row = $(this).parents('tr');
         var label = $('.label-change', settings).val();
@@ -94,13 +101,13 @@ Drupal.behaviors.settingsToggle = {
           $('.field-label-row', row).html(new_label);
         }
         return false;
-      });      
+      });
 
       // Bind on field template select button.
       fieldTemplate.find('.ds-extras-field-template').change(function() {
         ds_show_expert_settings(this);
       })
-    
+
       $(this).parents('tr').siblings().removeClass('field-formatter-settings-editing');
       $(this).parents('tr').addClass('field-formatter-settings-editing');
 
@@ -155,9 +162,9 @@ Drupal.behaviors.settingsToggle = {
         $('.colon-checkbox', field).parent().hide();
       }
       else if ($('.lb .form-item:nth-child(1)', field).is(':visible')) {
-        $('.colon-checkbox', field).parent().show();        
+        $('.colon-checkbox', field).parent().show();
       }
-      
+
       // Styles.
       if (ft != 'theme_ds_field_expert' && ft != 'theme_ds_field_reset') {
         $('.field-styles', field).show();
@@ -166,7 +173,7 @@ Drupal.behaviors.settingsToggle = {
         $('.field-styles', field).hide();
       }
     }
-    
+
     $('.label-change').change(function() {
       var field = $(this).parents('tr');
       if ($('.field-template', field).length > 0) {
@@ -218,7 +225,7 @@ Drupal.fieldUIDisplayOverview.ds.prototype = {
    *
    * This function is called when the row is moved to a different region, as a
    * result of either :
-   * - a drag-and-drop action 
+   * - a drag-and-drop action
    * - user input in one of the form elements watched by the
    *   Drupal.fieldUIOverview.onChange change listener.
    *

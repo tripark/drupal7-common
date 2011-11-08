@@ -101,7 +101,7 @@ function ds_schema() {
       'bundle' => array(
         'description' => 'The name of the entity.',
         'type' => 'varchar',
-        'length' => 32,
+        'length' => 64,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -163,7 +163,7 @@ function ds_schema() {
       'bundle' => array(
         'description' => 'The name of the entity.',
         'type' => 'varchar',
-        'length' => 32,
+        'length' => 64,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -322,3 +322,12 @@ function ds_update_7002() {
  * Trigger an update to clear the cache.
  */
 function ds_update_7003() {}
+
+/**
+ * Updates the ds_layout_settings table.
+ */
+function ds_update_7004() {
+  $schema = ds_schema();
+  db_change_field('ds_layout_settings', 'bundle', 'bundle', $schema['ds_layout_settings']['fields']['bundle']);
+  db_change_field('ds_field_settings', 'bundle', 'bundle', $schema['ds_field_settings']['fields']['bundle']);
+}

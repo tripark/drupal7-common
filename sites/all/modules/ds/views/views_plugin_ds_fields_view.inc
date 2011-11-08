@@ -32,7 +32,7 @@ class views_plugin_ds_fields_view extends views_plugin_row {
       'file_managed' => 'fid',
       'micro' => 'mid',
     );
-    return $base_table_fields[$this->base_table];
+    return isset($base_table_fields[$this->base_table]) ? $base_table_fields[$this->base_table] : 'nid';
   }
 
   function option_definition() {
@@ -41,6 +41,8 @@ class views_plugin_ds_fields_view extends views_plugin_row {
   }
 
   function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+
     $url = url('admin/structure/ds/vd', array('absolute' => TRUE));
     $link_url = l($url, $url, array('alias' => TRUE));
     $form['info'] = array(

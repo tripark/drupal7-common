@@ -32,7 +32,7 @@ class views_plugin_ds_entity_view extends views_plugin_row {
       'file_managed' => 'fid',
       'micro' => 'mid',
     );
-    return $base_table_fields[$this->base_table];
+    return isset($base_table_fields[$this->base_table]) ? $base_table_fields[$this->base_table] : 'nid';
   }
 
   function option_definition() {
@@ -42,10 +42,15 @@ class views_plugin_ds_entity_view extends views_plugin_row {
     $options['changing'] = array('default' => FALSE);
     $options['grouping'] = array('default' => FALSE);
     $options['advanced'] = array('default' => FALSE);
+    $options['grouping_fieldset'] = array('default' => FALSE);
+    $options['default_fieldset'] = array('default' => FALSE);
+    $options['alternating_fieldset'] = array('default' => FALSE);
+    $options['advanced_fieldset'] = array('default' => FALSE);
     return $options;
   }
 
   function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
 
     $view_mode_options = array();
     $entity_type = $this->view->base_table;
@@ -137,11 +142,12 @@ class views_plugin_ds_entity_view extends views_plugin_row {
       '#title' => t('Group data on a field. The value of this field will be displayed too.'),
       '#default_value' => $groupable,
     );
+
     if (!empty($sorts)) {
       $sort_options = array();
       foreach ($sorts as $key => $sort) {
-        $sort_name = drupal_ucfirst(str_replace('_', ' ', $sort['table']) . ' ' . $sort['field']);
-        $sort_options[$sort['table'] . '_' . $sort['field']] = $sort_name;
+        $sort_name = drupal_ucfirst($sort['field']);
+        $sort_options[$sort['table'] . '|' . $sort['field']] = $sort_name;
       }
 
       $form['grouping_fieldset']['group_field'] = array(
@@ -180,8 +186,8 @@ class views_plugin_ds_entity_view extends views_plugin_row {
   /**
    * Validate view mode type selector.
    */
-  function options_validate($form, &$form_state) {
-    if (($form_state['values']['row_options']['alternating_fieldset']['alternate'] || $form_state['values']['row_options']['grouping_fieldset']['grouping']) && $form_state['values']['row_options']['advanced_fieldset']['advanced']) {
+  function options_validate(&$form, &$form_state) {
+    if (($form_state['values']['row_options']['alternating_fieldset']['alternating'] || $form_state['values']['row_options']['grouping_fieldset']['grouping']) && $form_state['values']['row_options']['advanced_fieldset']['advanced']) {
       form_set_error('advanced', t('You can not have changing/grouping and advanced enabled at the same time'));
     }
   }
@@ -189,7 +195,7 @@ class views_plugin_ds_entity_view extends views_plugin_row {
   /**
    * Reset all fieldsets except for changing.
    */
-  function options_submit($form, &$form_state) {
+  function options_submit(&$form, &$form_state) {
     $form_state['values']['row_options']['load_comments'] = $form_state['values']['row_options']['default_fieldset']['load_comments'];
     $form_state['values']['row_options']['view_mode'] = $form_state['values']['row_options']['default_fieldset']['view_mode'];
     $form_state['values']['row_options']['alternating'] = $form_state['values']['row_options']['alternating_fieldset']['alternating'];
@@ -239,7 +245,9 @@ class views_plugin_ds_entity_view extends views_plugin_row {
     // ds_views_row_adv_VIEWSNAME. Return the row immediately.
     if ($this->options['advanced']) {
       $row_function = 'ds_views_row_adv_' . $this->view->name;
-      return $row_function($this->entities[$row->{$this->field_alias}], $this->options['view_mode'], $load_comments);
+      if (function_exists($row_function)) {
+        return $row_function($this->entities[$row->{$this->field_alias}], $this->options['view_mode'], $load_comments);
+      }
     }
 
     // Keep a static group array.
@@ -266,11 +274,21 @@ class views_plugin_ds_entity_view extends views_plugin_row {
 
     // Keep a static grouping for this view.
     if ($this->options['grouping']) {
-      // Note, the keys in the $row object are cut of at 60 chars.
+
       $group_field = $this->options['grouping_fieldset']['group_field'];
-      if (strlen($group_field) > 60) {
-        $group_field = substr($group_field, 0, 60);
+
+      // New way of creating the alias.
+      if (strpos($group_field, '|') !== FALSE) {
+        list($ftable, $ffield) = explode('|', $group_field);
+        $group_field = $this->view->sort[$ffield]->table_alias . '_' . $this->view->sort[$ffield]->real_field;
       }
+
+      // Note, the keys in the $row object are cut of at 60 chars.
+      // see views_plugin_query_default.inc.
+      if (drupal_strlen($group_field) > 60) {
+        $group_field = drupal_substr($group_field, 0, 60);
+      }
+
       $raw_group_value = isset($row->{$group_field}) ? $row->{$group_field} : '';
       if (!isset($grouping[$view_name][$raw_group_value])) {
         $group_value = $raw_group_value;
@@ -346,7 +364,8 @@ function ds_views_row_render_users($entity, $view_mode, $load_comments) {
  * Render the taxonomy term through the entity plugin.
  */
 function ds_views_row_render_taxonomy_term_data($entity, $view_mode, $load_comments) {
-  return drupal_render(taxonomy_term_view($entity, $view_mode));
+  $el = taxonomy_term_view($entity, $view_mode);
+  return drupal_render($el);
 }
 
 /**

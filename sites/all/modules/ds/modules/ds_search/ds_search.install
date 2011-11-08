@@ -23,4 +23,9 @@ function ds_search_uninstall() {
   variable_del('ds_search_node_form_alter');
   variable_del('ds_search_apachesolr_form_alter');
   variable_del('ds_search_apachesolr_hide_current_filters');
+  variable_del('ds_search_apachesolr_current_filters_default');
+  variable_del('ds_search_apachesolr_multisite');
+  variable_del('ds_search_apachesolr_multisite_sort');
+  variable_del('ds_search_apachesolr_multisite_group');
+  variable_del('ds_search_apachesolr_multisite_group_config');
 }

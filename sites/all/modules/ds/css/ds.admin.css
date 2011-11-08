@@ -104,12 +104,12 @@ a.section-link {
 /**
  * CTools content selection.
  */
-#ctools-content-selection #left {
+#ctools-content-selection #ds-left {
   float: left;
   width: 30%;
 }
 
-#ctools-content-selection #right {
+#ctools-content-selection #ds-right {
   float: left;
   width: 70%; 
 }

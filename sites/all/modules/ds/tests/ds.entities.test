@@ -235,6 +235,12 @@ class dsNodeTests extends dsBaseTest {
     $this->drupalGet('node/' . $node->nid . '/revisions/1/view');
     $this->assertText('Body:', 'Body label');
 
+    // Change title of revision.
+    $edit = array('additional_settings[ds_page_title_options][page_option_type]' => '2', 'additional_settings[ds_page_title_options][page_option_title]' => 'Custom revision title');
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display/revision');
+    $this->drupalGet('node/' . $node->nid . '/revisions/1/view');
+    $this->assertText('Custom revision title', 'Custom title on revision view mode');
+
     // Assert full view is using stacked template.
     $this->drupalGet('node/' . $node->nid);
     $this->assertNoText('Body:', 'Body label');
@@ -570,5 +576,16 @@ class dsNodeTests extends dsBaseTest {
     $this->assertRaw("<div class=\"group-right\">
       <div class=\"ow-class\"><div class=\"fi-class-2\"><span class=\"even fi-class\"><p>" . $body_field . "</p>
 </span></div></div>    </div>");
+
+    // Use the test field theming function to test that this function is
+    // registered in the theme registry through ds_extras_theme().
+    $edit = array(
+      'fields[body][format][ft][function]' => 'ds_test_theming_function',
+    );
+
+    $this->dsConfigureUI($edit);
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw("<div class=\"group-right\">
+      Testing field output through custom function    </div>");
   }
 }

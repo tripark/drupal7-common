@@ -13,7 +13,9 @@ Drupal.behaviors.DSSearchHighlight = {
     
     words = search.split(' ');
     for (i = 0; i < words.length; i++) {
-      $selector.highlight(words[i]);
+      if (words[i] != '') {
+        $selector.highlight(words[i]);
+      }
     }
   }
 };

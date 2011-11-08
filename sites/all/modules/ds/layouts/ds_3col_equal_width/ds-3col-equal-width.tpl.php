@@ -5,7 +5,7 @@
  * Display Suite 3 column equal width template.
  */
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-3col-equal <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>

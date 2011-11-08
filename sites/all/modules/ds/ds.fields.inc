@@ -134,7 +134,7 @@ function ds_shared_form(&$form, $field) {
     '#title' => t('Label'),
     '#type' => 'textfield',
     '#default_value' => $field->label,
-    '#description' => t('The human-readable label of the field. This name must be unique.'),
+    '#description' => t('The human-readable label of the field.'),
     '#required' => TRUE,
     '#size' => 30,
   );
@@ -311,7 +311,7 @@ function ds_ctools_field_form_validate($form, &$form_state) {
 function ds_edit_preprocess_field_form($form, &$form_state, $ctools_field = '') {
   $custom_field = ds_shared_form($form, $ctools_field);
   $form['info'] = array(
-    '#markup' => t('The machine name of this field must reflect the key in the variables, e.g. "submitted".'),
+    '#markup' => t('The machine name of this field must reflect the key in the variables, e.g. "submitted". So in most cases, it is very likely you will have to manually edit the machine name as well, which can not be changed anymore after saving.'),
     '#weight' => -10,
   );
   $form['#validate'][] = 'ds_preprocess_field_form_validate';
@@ -398,7 +398,7 @@ function ds_remove_fields_form($form, &$form_state, $field = '', $action = 'dele
   $custom_fields = ctools_export_crud_load_all('ds_fields');
   if (isset($custom_fields[$field])) {
     $field = $custom_fields[$field];
-    $form['#field'] = $field;
+    $form['#ds_field'] = $field;
     return confirm_form($form,
       t('Are you sure you want to ' . $action . ' %field?', array('%field' => $field->label)),
       'admin/structure/ds/fields',
@@ -432,7 +432,7 @@ function ds_revert_field_confirm_submit($form, &$form_state) {
  */
 function ds_remove_field_confirm_submit($form, &$form_state, $action = 'deleted') {
 
-  $field = $form['#field'];
+  $field = $form['#ds_field'];
 
   // Remove field.
   db_delete('ds_fields')

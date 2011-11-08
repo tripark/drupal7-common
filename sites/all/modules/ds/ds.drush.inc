@@ -20,6 +20,7 @@ function ds_drush_command() {
       'name'    => 'Name for your layout.',
       'regions' => 'Regions for your layout, comma-separated.',
       'css'     => 'Set this to true if you want to include a CSS file for your layout.',
+      'form'    => 'Set this to true if you want to make this template available for forms.'
     ),
     'examples' => array(
       'drush ds-build "My layout name"' => 'Create a layout with a few example regions.',
@@ -93,6 +94,14 @@ function drush_ds_build($name = NULL) {
 
     // Uncomment the CSS rule in our configuration.
     $find[] = "/\/\/ ('css' => TRUE,)/";
+    $replace[] = '$1';
+  }
+
+  // Check on form option.
+  $form = drush_get_option('form');
+  if (isset($form)) {
+    // Uncomment the Form rule in our configuration.
+    $find[] = "/\/\/ ('form' => TRUE,)/";
     $replace[] = '$1';
   }
 

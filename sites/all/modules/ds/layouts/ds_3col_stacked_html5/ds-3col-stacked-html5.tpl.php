@@ -5,7 +5,7 @@
  * Display Suite 3 column stacked template HTML 5 version.
  */
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-3col-stacked-html5 <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>

@@ -14,5 +14,7 @@ function ds_example_layout() {
     ),
     // Uncomment if you want to include a CSS file for this layout (example_layout.css)
     // 'css' => TRUE,
+    // Uncomment if this is a template for a node form.
+    // 'form' => TRUE,
   );
 }

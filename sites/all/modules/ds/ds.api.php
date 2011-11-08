@@ -172,7 +172,11 @@ function hook_ds_fields_info($entity_type) {
     // properties: can have different keys.
     'properties' => array(
 
-      // formatters: optional if a a function is used.
+      // formatters: optional if a function is used.
+      // In case the field_type is DS_FIELD_TYPE_THEME, you also
+      // need to register these formatters as a theming function
+      // since the key will be called with theme('function').
+      // The value is the caption used in the selection config on Field UI.
       'formatters' => array(
         'node_title_nolink_h1' => t('H1 title'),
         'node_title_link_h1' => t('H1 title, linked to node'),
@@ -232,7 +236,7 @@ function hook_ds_custom_fields_info() {
   $ds_field->entities = array(
     'node' => 'node',
   );
-  $ds_field->properties = (object) array(
+  $ds_field->properties = array(
     'code' => array(
       'value' => '<? print "this is a custom field"; ?>',
       'format' => 'ds_code',
@@ -299,17 +303,19 @@ function hook_ds_fields_ui_alter(&$fields, $context) {
  * Define theme functions for fields.
  *
  * This only is necessary when you're using the field settings
- * plugin which comes with the DS extras module. This function
- * will call the theming functions directly, not through
- * theme('function', $variables); A function gets 2 parameters,
- * the $variables and $config which are the configuration options
- * for the current field: theme_ds_field_custom($variables, $config);
+ * plugin which comes with the DS extras module and you want to
+ * expose a special field theming function to the interface.
+ *
+ * The theme function gets $variables as the only parameter.
+ * The optional configuration through the UI is in $variables['ds-config'].
+ *
+ * Note that 'theme_ds_field_' is always needed, so the suggestions can work.
  *
  * @return $field_theme_functions
  *   A collection of field theming functions.
  */
 function hook_ds_field_theme_functions_info() {
-  return array('theme_field' => t('Theme field'));
+  return array('theme_ds_field_mine' => t('Theme field'));
 }
 
 /**
@@ -395,6 +401,8 @@ function hook_ds_layout_info() {
         'foo_content' => t('Content'),
       ),
       'css' => TRUE,
+      // optional, form only applies to node form at this point.
+      'form' => TRUE,
     ),
   );
 
@@ -475,6 +483,8 @@ function hook_ds_label_options_alter(&$field_label_options) {
       ),
       // Add this if there is a default css file.
       'css' => TRUE,
+      // Add this if this template is for a node form.
+      'form' => TRUE,
     );
   }
 

@@ -5,7 +5,7 @@
  * Display Suite 3 column 25/50/25 stacked template.
  */
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-3col-stacked <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>
@@ -34,7 +34,7 @@
       <?php print $right; ?>
     </div>
   <?php endif; ?>
-  
+
   <?php if ($footer): ?>
     <div class="group-footer<?php print $footer_classes; ?>">
       <?php print $footer; ?>

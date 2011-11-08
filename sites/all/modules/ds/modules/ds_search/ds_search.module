@@ -22,6 +22,7 @@ function ds_search_help($path, $arg) {
  * Implements hook_menu().
  */
 function ds_search_menu() {
+  $items = array();
 
   $items['admin/structure/ds/search'] = array(
     'title' => 'Search',
@@ -69,6 +70,59 @@ function theme_ds_search_page($build) {
 }
 
 /**
+ * Implements hook_ds_fields_info().
+ */
+function ds_search_ds_fields_info($entity_type) {
+  $fields = array();
+
+  if ($entity_type == 'node') {
+    if (variable_get('ds_search_type', 'node') == 'apachesolr_search') {
+      $fields['node']['search_snippet'] = array(
+        'title' => t('Snippet'),
+        'field_type' => DS_FIELD_TYPE_FUNCTION,
+        'function' => 'ds_search_snippet',
+        'ui_limit' => array('*|' . variable_get('ds_search_view_mode', 'search_result')),
+      );
+    }
+
+    $fields['node']['search_info'] = array(
+      'title' => t('Search info'),
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => 'ds_search_extra_info',
+      'ui_limit' => array('*|' . variable_get('ds_search_view_mode', 'search_result')),
+    );
+  }
+
+  if (isset($fields[$entity_type])) {
+    return array($entity_type => $fields[$entity_type]);
+  }
+
+  return;
+}
+
+/**
+ * Returns the snippet field - only works for Apache Solr.
+ */
+function ds_search_snippet($field) {
+  if (isset($field['entity']->search_snippet)) {
+    return $field['entity']->search_snippet;
+  }
+}
+
+/**
+ * Returns the info field, just like default search.
+ */
+function ds_search_extra_info($field) {
+  $info = array();
+  $info['user'] = theme('username', array('account' => $field['entity']));
+  $info['date'] = format_date($field['entity']->changed, 'short');
+  if (isset($field['entity']->search_extra) && is_array($field['entity']->search_extra)) {
+    $info = array_merge($info, $field['entity']->search_extra);
+  }
+  return implode(' - ', $info);
+}
+
+/**
  * Implements hook_search_info().
  */
 function ds_search_search_info() {
@@ -101,8 +155,8 @@ function ds_search_conditions() {
   $conditions = array();
 
   // Needed for Apache Solr.
-  if (isset($_GET['filters']) && trim($_GET['filters'])) {
-    $conditions['filters'] = trim($_GET['filters']);
+  if (!empty($_GET['fq']) && is_array($_GET['fq'])) {
+    $conditions['fq'] = $_GET['fq'];
   }
 
   // We may also have filters added by facet API module. The 'f'
@@ -190,10 +244,15 @@ function ds_search_search_page($results) {
   $build = array('#type' => 'node');
   ds_build_shared_page_variables($build);
 
-  // Build nodes.
-  $render_nodes = node_view_multiple($results, variable_get('ds_search_view_mode', 'search_result'));
-  $build['search_results'] = $render_nodes['nodes'];
-  unset($build['search_results']['#sorted']);
+  // Multi site Apache Solr support.
+  if (variable_get('ds_search_apachesolr_multisite') && variable_get('ds_search_type', 'node') == 'apachesolr_search') {
+    $build['search_results'] = $results;
+  }
+  else {
+    $render_nodes = node_view_multiple($results, variable_get('ds_search_view_mode', 'search_result'));
+    $build['search_results'] = $render_nodes['nodes'];
+    unset($build['search_results']['#sorted']);
+  }
 
   // Group by type.
   if (variable_get('ds_search_group_by_type') && variable_get('ds_search_group_by_type_settings') && !empty($build['search_results'])) {
@@ -251,6 +310,65 @@ function ds_search_search_page($results) {
         // Move result into other wrapper and unset previous.
         $build['search_results']['ds-other'][$id] = $result;
         unset($build['search_results'][$id]);
+      }
+    }
+  }
+
+  // Apache Solr multisearch grouping.
+  if (variable_get('ds_search_apachesolr_multisite') && variable_get('ds_search_apachesolr_multisite_group') && variable_get('ds_search_type', 'node') == 'apachesolr_search') {
+    $site_counter = array();
+    $conf_array = array();
+    $config = explode("\n", variable_get('ds_search_apachesolr_multisite_group_config'));
+    foreach ($config as $weight => $conf) {
+      $conf = trim($conf);
+      if (empty($conf)) {
+        continue;
+      }
+      $site_conf = explode('|', $conf);
+      $conf_array[$site_conf[0]] = array(
+        'label' => $site_conf[1],
+        'wrapper' => $site_conf[2],
+        'weight' => $weight,
+      );
+    }
+
+    // Iterate over results.
+    foreach ($build['search_results'] as $id => $result) {
+      if (!isset($build['search_results'][$result['#site_hash']])) {
+        $class = 'group-result group-result-' . strtr($result['#site_hash'], '_', '-');
+        $build['search_results'][$result['#site_hash']] = array(
+          '#type' => 'fieldset',
+          '#weight' => $conf_array[$result['#site_hash']]['weight'],
+          '#attributes' => array(
+            'class' => array($class),
+          ),
+        );
+
+        // Create site counter.
+        $site_counter[$result['#site_hash']] = array(
+          'counter' => 0,
+          'title' => $conf_array[$result['#site_hash']]['label'],
+          'type' => $conf_array[$result['#site_hash']]['wrapper'],
+          'class' => $class,
+        );
+      }
+
+      // Move result into other wrapper and unset previous. Also count for
+      // every site so we can populate @total_per_site later on.
+      $site_counter[$result['#site_hash']]['counter']++;
+      $build['search_results'][$result['#site_hash']][$id] = $result;
+      unset($build['search_results'][$id]);
+    }
+
+    // Site counter.
+    foreach ($site_counter as $hash => $values) {
+      $title = check_plain(t($values['title'], array('!total_per_site' => format_plural($values['counter'], '1 result', '@count results'))));
+      if ($values['type'] == 'div') {
+        $build['search_results'][$hash]['#prefix'] = '<div class="' . $values['class'] . '">' . ((!empty($title)) ? '<h2>' . $title . '</h2>' : '');
+        $build['search_results'][$hash]['#suffix'] = '</div>';
+      }
+      else {
+        $build['search_results'][$hash]['#title'] = $title;
       }
     }
   }
@@ -397,7 +515,8 @@ function ds_search_form_search_form_alter(&$form, $form_state) {
       $form['module']['#value'] = 'apachesolr_search';
       apachesolr_search_form_search_form_alter($form, $form_state);
       if (variable_get('ds_search_apachesolr_hide_current_filters', FALSE)) {
-        $form['basic']['apachesolr_search']['retain-filters']['#access'] = FALSE;
+        $form['basic']['apachesolr_search']['retain-filters']['#type'] = 'value';
+        $form['basic']['apachesolr_search']['retain-filters']['#value'] = variable_get('ds_search_apachesolr_current_filters_default', FALSE);
       }
     }
   }
@@ -407,6 +526,14 @@ function ds_search_form_search_form_alter(&$form, $form_state) {
  * Implements hook_apachesolr_update_index().
  */
 function ds_search_apachesolr_update_index(&$document, $node) {
+  // Apache Solr multisite support. Render the node already here.
+  if (variable_get('ds_search_apachesolr_multisite')) {
+    ob_start();
+    print drupal_render(node_view($node, variable_get('ds_search_view_mode', 'search_result')));
+    $output = ob_get_contents();
+    ob_end_clean();
+    $document->addField('tm_ds_search_result', $output);
+  }
   // Creme de la creme: Put the full node object in the index,
   // so no node_loads are needed for results in the Apache Solr engine.
   $document->addField('tm_node', urlencode(serialize(node_load($node->nid))));
@@ -420,10 +547,24 @@ function ds_search_apachesolr_query_alter($query) {
   // Get the node from the index.
   $query->addParam('fl', 'tm_node');
 
+  // Apache Solr multisite support.
+  if (variable_get('ds_search_apachesolr_multisite') && variable_get('ds_search_type', 'node') == 'apachesolr_search') {
+    // Site hash.
+    $query->addParam('fl', 'hash');
+    // Rendered search result.
+    $query->addParam('fl', 'tm_ds_search_result');
+
+    // Make sure this site's search results are first.
+    if (variable_get('ds_search_apachesolr_multisite_boost')) {
+      $hash = apachesolr_site_hash();
+      $query->addParam('bq', 'hash:' . $hash .'^' . variable_get('ds_search_apachesolr_multisite_boost_nr', 100));
+    }
+  }
+
   // Search per language.
   if (variable_get('ds_search_language', FALSE)) {
     global $language;
-    $query->add_filter('language', $language->language);
+    $query->addFilter('ss_language', $language->language);
   }
 }
 
@@ -465,7 +606,9 @@ function node_ds_search_execute($keys = NULL, $conditions = NULL) {
     ->execute();
   $results = array();
   foreach ($find as $item) {
-    $results[$item->sid] = node_load($item->sid);
+    $node = node_load($item->sid);
+    $node->search_extra = module_invoke_all('node_search_result', $node);
+    $results[$item->sid] = $node;
   }
   return $results;
 }
@@ -482,12 +625,39 @@ function apachesolr_search_ds_search_execute($keys = NULL, $conditions = NULL) {
     unset($find['apachesolr_search_browse']);
   }
 
+  if (empty($find)) {
+    return array();
+  }
+
   foreach ($find as $item) {
+
+    // Unserialize tm_node field.
     $node = @unserialize(urldecode($item['fields']['tm_node'][0]));
     if (!isset($node->nid)) {
       $node = node_load($item['node']->entity_id);
     }
-    $results[$item['node']->entity_id] = $node;
+
+    // Add the snippet, url and extra info on the object.
+    $node->search_snippet = $item['snippet'];
+    $node->search_extra = $item['extra'];
+    $node->search_as_url = $item['fields']['url'];
+
+    // Apache Solr multisite support.
+    if (variable_get('ds_search_apachesolr_multisite')) {
+      // Pass along the uri path in case some people want to
+      // do cool stuff themselves.
+      $node->uri['path'] = $node->search_as_url;
+      $node->uri['options'] = array();
+      // Prefix with site hash so we don't override same id's.
+      $markup = $item['fields']['tm_ds_search_result'][0];
+      $results[$item['fields']['id'] . '-' . $item['node']->entity_id] = array(
+       '#markup' => $markup,
+        '#site_hash' => $item['fields']['hash'],
+      );
+    }
+    else {
+      $results[$item['node']->entity_id] = $node;
+    }
   }
 
   return $results;

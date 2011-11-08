@@ -6,196 +6,6 @@
  */
 
 /**
- * Implements hook_menu().
- */
-function _ds_menu() {
-  $items = array();
-
-  // Start page of Display Suite.
-  $items['admin/structure/ds'] = array(
-    'title' => 'Display suite',
-    'description' => 'Manage configuration for Display suite like fields, view modes etc.',
-    'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('admin_display_suite'),
-    'file' => 'system.admin.inc',
-    'file path' => drupal_get_path('module', 'system'),
-  );
-
-  // Custom styles.
-  $items['admin/structure/ds/styles'] = array(
-    'title' => 'Styles',
-    'description' => 'Define classes which you can use as classes on regions and fields (if available).',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_styles_form'),
-    'file' => 'ds.styles.inc',
-    'access arguments' => array('admin_display_suite'),
-  );
-
-  // Layout overview.
-  $items['admin/structure/ds/layout'] = array(
-    'title' => 'Layout',
-    'description' => 'Displays a list of items which can be styled.',
-    'page callback' => 'ds_layout_list',
-    'file' => 'ds.layout.inc',
-    'access arguments' => array('admin_display_suite'),
-  );
-
-  // Change layout.
-  $items['admin/structure/ds/change-layout'] = array(
-    'title' => 'Change layout',
-    'description' => 'Act on layout change to move fields elsewhere',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_field_ui_layout_change'),
-    'access arguments' => array('admin_display_suite'),
-    'file' => 'ds.field_ui.inc',
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-
-  // Revert layout.
-  $items['admin/structure/ds/revert-layout'] = array(
-    'title' => 'Revert layout',
-    'description' => 'Revert layout and field settings.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_revert_layout_field_settings_form'),
-    'file' => 'ds.field_ui.inc',
-    'access arguments' => array('admin_display_suite'),
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-
-  // View modes.
-  $items['admin/structure/ds/view_modes'] = array(
-    'title' => 'View modes',
-    'description' => 'Manage view modes for all content.',
-    'page callback' => 'ds_view_modes_list',
-    'file' => 'ds.view_modes.inc',
-    'access arguments' => array('admin_view_modes'),
-  );
-  $items['admin/structure/ds/view_modes/manage'] = array(
-    'title' => 'Add a view mode',
-    'description' => 'Manage a view mode',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_edit_view_mode_form'),
-    'file' => 'ds.view_modes.inc',
-    'access arguments' => array('admin_view_modes'),
-    'type' => MENU_LOCAL_ACTION,
-  );
-  $items['admin/structure/ds/view_modes/delete'] = array(
-    'title' => 'Delete a view mode',
-    'description' => 'Delete a custom view mode.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_delete_view_mode_confirm'),
-    'file' => 'ds.view_modes.inc',
-    'access arguments' => array('admin_view_modes'),
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-  $items['admin/structure/ds/view_modes/revert'] = array(
-    'title' => 'Revert a view mode',
-    'description' => 'Revert a view mode.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_revert_view_mode_confirm'),
-    'file' => 'ds.view_modes.inc',
-    'access arguments' => array('admin_view_modes'),
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-
-  // Fields.
-  $items['admin/structure/ds/fields'] = array(
-    'title' => 'Fields',
-    'description' => 'Manage fields for all content.',
-    'page callback' => 'ds_custom_fields_list',
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-  );
-  $items['admin/structure/ds/fields/manage'] = array(
-    'title' => 'Fields edit',
-    'page callback' => 'ds_custom_manage',
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/structure/ds/fields/manage_custom'] = array(
-    'title' => 'Add a field',
-    'description' => 'Manage a field',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_edit_custom_field_form'),
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_LOCAL_ACTION,
-    'weight' => 0,
-  );
-  $items['admin/structure/ds/fields/manage_ctools'] = array(
-    'title' => 'Add a dynamic field',
-    'description' => 'Manage a dynamic field',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_edit_ctools_field_form'),
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_LOCAL_ACTION,
-    'weight' => 1,
-  );
-  $items['admin/structure/ds/fields/manage_ctools/content'] = array(
-    'title' => 'Ctools field content',
-    'page callback' => 'ds_ctools_content',
-    'file' => 'ds.field_ui.inc',
-    'access arguments' => array('admin_display_suite'),
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/structure/ds/fields/manage_preprocess'] = array(
-    'title' => 'Add a preprocess field',
-    'description' => 'Manage a preprocess field',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_edit_preprocess_field_form'),
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_LOCAL_ACTION,
-    'weight' => 2,
-  );
-  $items['admin/structure/ds/fields/delete'] = array(
-    'title' => 'Delete a field',
-    'description' => 'Delete a field.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_delete_field_confirm'),
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-  $items['admin/structure/ds/fields/revert'] = array(
-    'title' => 'Revert a custom field',
-    'description' => 'Revert a custom field.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_revert_field_confirm'),
-    'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_fields'),
-    'type' => MENU_VISIBLE_IN_BREADCRUMB,
-  );
-  // Block can be disabled.
-  if (module_exists('block')) {
-    $items['admin/structure/ds/fields/manage_block'] = array(
-      'title' => 'Add a block field',
-      'description' => 'Manage a block field',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('ds_edit_block_field_form'),
-      'file' => 'ds.fields.inc',
-      'access arguments' => array('admin_fields'),
-      'type' => MENU_LOCAL_ACTION,
-      'weight' => 3,
-    );
-  }
-
-  // CTools Modal add field.
-  $items['admin/structure/ds/%ctools_js/add_field/%'] = array(
-    'title' => 'Add field',
-    'page callback' => 'ds_ajax_add_field',
-    'page arguments' => array(3, 5),
-    'access arguments' => array('admin_fields'),
-    'file' => 'ds.field_ui.inc',
-    'type' => MENU_CALLBACK,
-  );
-
-  return $items;
-}
-
-/**
  * Implements hook_theme().
  */
 function _ds_theme() {
@@ -251,6 +61,64 @@ function _ds_features_api() {
 }
 
 /**
+ * Remove or rename layout & field settings on entity machine name update.
+ *
+ * @param $entity_type
+ *   The name of the entity type.
+ * @param $info
+ *   The entity info.
+ * @param $action
+ *   The action, either update or delete.
+ */
+function _ds_entity_type_update($entity_type, $info, $action) {
+
+  // Delete settings.
+  if ($action == 'delete') {
+    db_delete('ds_layout_settings')
+      ->condition('entity_type', $entity_type)
+      ->condition('bundle', $info->type)
+      ->execute();
+    db_delete('ds_field_settings')
+      ->condition('entity_type', $entity_type)
+      ->condition('bundle', $info->type)
+      ->execute();
+  }
+
+  // Update settings.
+  if ($action == 'update') {
+    $records = db_query('SELECT * FROM {ds_layout_settings} WHERE entity_type = :entity_type AND bundle = :bundle', array(':entity_type' => $entity_type, ':bundle' => $info->old_type));
+    foreach ($records as $record) {
+      $old_id = $entity_type . '|' . $info->old_type . '|' . $record->view_mode;
+      $new_id = $entity_type . '|' . $info->type . '|' . $record->view_mode;
+      db_update('ds_layout_settings')
+        ->fields(array(
+          'id' => $new_id,
+          'bundle' => $info->type)
+        )
+        ->condition('id', $old_id)
+        ->execute();
+    }
+    $records = db_query('SELECT * FROM {ds_field_settings} WHERE entity_type = :entity_type AND bundle = :bundle', array(':entity_type' => $entity_type, ':bundle' => $info->old_type));
+    foreach ($records as $record) {
+      $old_id = $entity_type . '|' . $info->old_type . '|' . $record->view_mode;
+      $new_id = $entity_type . '|' . $info->type . '|' . $record->view_mode;
+      db_update('ds_field_settings')
+        ->fields(array(
+          'id' => $new_id,
+          'bundle' => $info->type)
+        )
+        ->condition('id', $old_id)
+        ->execute();
+    }
+  }
+
+  // Clear cache.
+  cache_clear_all('ds_fields', 'cache');
+  cache_clear_all('ds_field_settings', 'cache');
+  field_info_cache_clear();
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function _ds_theme_registry_alter(&$theme_registry) {
@@ -259,10 +127,20 @@ function _ds_theme_registry_alter(&$theme_registry) {
   $entity_info = entity_get_info();
   foreach ($entity_info as $entity => $info) {
     if (isset($entity_info[$entity]['fieldable']) && $entity_info[$entity]['fieldable']) {
+
       // User uses user_profile for theming.
       if ($entity == 'user') $entity = 'user_profile';
-      $theme_registry[$entity]['preprocess functions'][] = 'ds_entity_variables';
+
+      // Only add preprocess functions if entity exposes theme function.
+      if (isset($theme_registry[$entity])) {
+        $theme_registry[$entity]['preprocess functions'][] = 'ds_entity_variables';
+      }
     }
+  }
+
+  // Support for File Entity.
+  if (isset($theme_registry['file_entity'])) {
+    $theme_registry['file_entity']['preprocess functions'][] = 'ds_entity_variables';
   }
 
   // Support for Entity API.
@@ -275,6 +153,11 @@ function _ds_theme_registry_alter(&$theme_registry) {
  * Implements hook_entity_info_alter().
  */
 function _ds_entity_info_alter(&$entity_info) {
+
+  // Make sure ds_view_modes table exists.
+  if (!db_table_exists('ds_view_modes')) {
+    return;
+  }
 
   ctools_include('export');
 
@@ -296,6 +179,12 @@ function _ds_entity_info_alter(&$entity_info) {
   $ds_layouts = ds_get_layout_info();
   $ds_layout_settings = ctools_export_crud_load_all('ds_layout_settings');
   foreach ($ds_layout_settings as $row) {
+
+    // Don't store any configurations with layouts that don't exist anymore.
+    if (!isset($ds_layouts[$row->layout]) && !isset($row->settings['ds_panels'])) {
+      continue;
+    }
+
     $layout = array();
     if (!isset($row->settings['ds_panels'])) {
       $layout = $ds_layouts[$row->layout];
@@ -442,6 +331,9 @@ function _ds_ds_layout_info() {
           'label' => $layout['title'],
           'path' => $layout['path'],
           'module' => 'panels',
+          // We need the Panels plugin info array to correctly include the
+          // layout and its CSS files later on.
+          'panels' => $layout,
           'flexible' => FALSE,
           'regions' => $layout['regions'],
         );

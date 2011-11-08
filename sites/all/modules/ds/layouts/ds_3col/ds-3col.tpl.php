@@ -5,7 +5,7 @@
  * Display Suite 3 column 25/50/25 template.
  */
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-3col <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>

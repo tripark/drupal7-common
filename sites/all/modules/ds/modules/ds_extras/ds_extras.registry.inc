@@ -6,99 +6,6 @@
  */
 
 /**
- * Implements hook_menu().
- */
-function _ds_extras_menu() {
-  $items = array();
-
-  $items['admin/structure/ds/extras'] = array(
-    'title' => 'Extras',
-    'description' => 'Configure extra functionality for Display Suite.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ds_extras_settings'),
-    'access arguments' => array('admin_display_suite'),
-    'file' => 'ds_extras.admin.inc',
-  );
-
-  if (variable_get('ds_extras_switch_field')) {
-    $items['ds-switch-view-mode'] = array(
-      'title' => 'Switch view',
-      'description' => 'Switches a view mode inline.',
-      'page callback' => 'ds_switch_view_mode_inline',
-      'access arguments' => array('access content'),
-      'file' => 'ds_extras.pages.inc',
-      'type' => MENU_CALLBACK,
-    );
-  }
-
-  if (variable_get('ds_extras_vd', FALSE) && module_exists('field_ui') && module_exists('views')) {
-    $items['admin/structure/ds/vd'] = array(
-      'title' => 'Views displays',
-      'description' => 'Manage your views templates.',
-      'page callback' => 'ds_extras_vd_overview',
-      'file' => 'ds_extras.vd.inc',
-      'access arguments' => array('admin_display_suite'),
-    );
-    $items['admin/structure/ds/vd/manage'] = array(
-      'title' => 'Manage layout',
-      'description' => 'Manage your views templates.',
-      'page callback' => 'ds_extras_vd_manage',
-      'file' => 'ds_extras.vd.inc',
-      'access arguments' => array('admin_display_suite'),
-    );
-  }
-
-  if (variable_get('ds_extras_contextual', FALSE) && module_exists('contextual') && module_exists('field_ui')) {
-    $items['node/%node/display'] = array(
-      'title' => 'Manage display',
-      'description' => 'Manage display of this content.',
-      'page callback' => 'ds_extras_contextual_page_tab',
-      'page arguments' => array(1, 'node'),
-      'file' => 'ds_extras.pages.inc',
-      'access arguments' => array('administer content types'),
-      'type' => MENU_LOCAL_TASK,
-    );
-
-    $items['user/%user/display'] = array(
-      'title' => 'Manage display',
-      'description' => 'Manage display of this user profile.',
-      'page callback' => 'ds_extras_contextual_page_tab',
-      'page arguments' => array(1, 'user'),
-      'file' => 'ds_extras.pages.inc',
-      'access arguments' => array('administer users'),
-      'type' => MENU_LOCAL_TASK,
-    );
-
-    if (module_exists('taxonomy')) {
-      $items['taxonomy/term/%taxonomy_term/display'] = array(
-        'title' => 'Manage display',
-        'description' => 'Manage display of this term.',
-        'page callback' => 'ds_extras_contextual_page_tab',
-        'page arguments' => array(2, 'taxonomy_term'),
-        'access arguments' => array('administer taxonomy'),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 11,
-        'file' => 'ds_extras.pages.inc',
-      );
-    }
-  }
-
-  // Panel view modes.
-  if (variable_get('ds_extras_panel_view_modes')) {
-    $items['admin/structure/panels/settings/ds-panels'] = array(
-      'title' => 'Panel view modes',
-      'description' => 'Configure which content is available to add to panel view mode displays.',
-      'access arguments' => array('admin_display_suite'),
-      'page callback' => 'ds_panels_view_mode_settings',
-      'file' => 'ds_extras.panels.inc',
-      'type' => MENU_LOCAL_TASK,
-    );
-  }
-
-  return $items;
-}
-
-/**
  * Implements hook_menu_alter().
  */
 function _ds_extras_menu_alter(&$items) {
@@ -112,9 +19,18 @@ function _ds_extras_menu_alter(&$items) {
 
   // Revision view mode.
   if (variable_get('ds_extras_revision_view_mode', FALSE)) {
-    $items['node/%node/revisions/%/view']['page callback'] = 'ds_extras_revision_node_show';
-    $items['node/%node/revisions/%/view']['file'] = 'ds_extras.pages.inc';
-    $items['node/%node/revisions/%/view']['file path'] = drupal_get_path('module', 'ds_extras');
+
+    // Do not conflict with the revisioning module.
+    if (module_exists('revisioning')) {
+      $items['node/%node/revisions/%vid/view']['page callback'] = 'ds_extras_revision_node_show';
+      $items['node/%node/revisions/%vid/view']['file'] = 'ds_extras.pages.inc';
+      $items['node/%node/revisions/%vid/view']['file path'] = drupal_get_path('module', 'ds_extras');
+    }
+    else {
+      $items['node/%node/revisions/%/view']['page callback'] = 'ds_extras_revision_node_show';
+      $items['node/%node/revisions/%/view']['file'] = 'ds_extras.pages.inc';
+      $items['node/%node/revisions/%/view']['file path'] = drupal_get_path('module', 'ds_extras');
+    }
   }
 
   // Panel view modes.
@@ -222,20 +138,10 @@ function _ds_extras_theme_registry_alter(&$theme_registry) {
     $theme_registry['page']['process functions'][] = 'ds_extras_process_page_title';
   }
 
-  // Change the default field theming function.
-  if (variable_get('ds_extras_field_template', FALSE)) {
-
-    // We change the default theme_field function by ours.
-    $theme_registry['field']['function'] = 'theme_ds_field';
-
-    // Kill all theme hook suggestions.
-    if (variable_get('ft-kill', FALSE)) {
-      foreach ($theme_registry as $key => $hook) {
-        if (isset($hook['base hook']) && $hook['base hook'] == 'field') {
-          unset($theme_registry[$key]);
-        }
-      }
-    }
+  // Check on field templates.
+  if (!variable_get('ds_extras_field_template', FALSE)) {
+    $key = array_search('ds_preprocess_field', $theme_registry['field']['preprocess functions']);
+    unset($theme_registry['field']['preprocess functions'][$key]);
   }
 
   // Inject ds_extras_render_panel_layout in all entity theming functions.
@@ -244,9 +150,14 @@ function _ds_extras_theme_registry_alter(&$theme_registry) {
 
     foreach ($entity_info as $entity => $info) {
       if (isset($entity_info[$entity]['fieldable']) && $entity_info[$entity]['fieldable']) {
+
         // User uses user_profile for theming.
         if ($entity == 'user') $entity = 'user_profile';
-        $theme_registry[$entity]['preprocess functions'][] = 'ds_extras_render_panel_layout';
+
+        // Only add preprocess functions if entity exposes theme function.
+        if (isset($theme_registry[$entity])) {
+          $theme_registry[$entity]['preprocess functions'][] = 'ds_extras_render_panel_layout';
+        }
       }
     }
 
@@ -269,6 +180,8 @@ function _ds_extras_module_implements_alter(&$implementations, $hook) {
   $fs_hooks = array(
     'ds_field_settings_alter',
     'form_ds_styles_form_alter',
+    'form_field_ui_field_edit_form_alter',
+    'theme',
   );
   if (!variable_get('ds_extras_field_template', FALSE) && in_array($hook, $fs_hooks)) {
     unset($implementations['ds_extras']);
@@ -307,15 +220,6 @@ function _ds_extras_module_implements_alter(&$implementations, $hook) {
     'entity_info_alter',
   );
   if (!variable_get('ds_extras_revision_view_mode', FALSE) && in_array($hook, $revision_hooks)) {
-    unset($implementations['ds_extras']);
-  }
-
-  // Fivestar
-  $fivestar_hooks = array(
-    'form_fivestar_node_type_tag_form_alter',
-    'fivestar_access',
-  );
-  if (!variable_get('ds_extras_fivestar', FALSE) && in_array($hook, $fivestar_hooks)) {
     unset($implementations['ds_extras']);
   }
 

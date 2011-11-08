@@ -9,8 +9,108 @@
  * Implements hook_menu().
  */
 function ds_extras_menu() {
-  module_load_include('inc', 'ds_extras', 'ds_extras.registry');
-  return _ds_extras_menu();
+  $items = array();
+
+  $items['admin/structure/ds/extras'] = array(
+    'title' => 'Extras',
+    'description' => 'Configure extra functionality for Display suite.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ds_extras_settings'),
+    'access arguments' => array('admin_display_suite'),
+    'file' => 'ds_extras.admin.inc',
+  );
+
+  if (variable_get('ds_extras_switch_field')) {
+    $items['ds-switch-view-mode'] = array(
+      'title' => 'Switch view',
+      'description' => 'Switches a view mode inline.',
+      'page callback' => 'ds_switch_view_mode_inline',
+      'access arguments' => array('access content'),
+      'file' => 'ds_extras.pages.inc',
+      'type' => MENU_CALLBACK,
+    );
+  }
+
+  if (variable_get('ds_extras_vd', FALSE) && module_exists('field_ui') && module_exists('views')) {
+    $items['admin/structure/ds/vd'] = array(
+      'title' => 'Views displays',
+      'description' => 'Manage your views templates.',
+      'page callback' => 'ds_extras_vd_overview',
+      'file' => 'ds_extras.vd.inc',
+      'access arguments' => array('admin_display_suite'),
+    );
+    $items['admin/structure/ds/vd/manage'] = array(
+      'title' => 'Manage layout',
+      'description' => 'Manage your views templates.',
+      'page callback' => 'ds_extras_vd_manage',
+      'file' => 'ds_extras.vd.inc',
+      'access arguments' => array('admin_display_suite'),
+    );
+  }
+
+  if (variable_get('ds_extras_contextual', FALSE) && module_exists('contextual') && module_exists('field_ui')) {
+    $items['node/%node/display'] = array(
+      'title' => 'Manage display',
+      'description' => 'Manage display of this content.',
+      'page callback' => 'ds_extras_contextual_page_tab',
+      'page arguments' => array(1, 'node'),
+      'file' => 'ds_extras.pages.inc',
+      'access arguments' => array('administer content types'),
+      'type' => MENU_LOCAL_TASK,
+    );
+
+    $items['user/%user/display'] = array(
+      'title' => 'Manage display',
+      'description' => 'Manage display of this user profile.',
+      'page callback' => 'ds_extras_contextual_page_tab',
+      'page arguments' => array(1, 'user'),
+      'file' => 'ds_extras.pages.inc',
+      'access arguments' => array('administer users'),
+      'type' => MENU_LOCAL_TASK,
+    );
+
+    if (module_exists('taxonomy')) {
+      $items['taxonomy/term/%taxonomy_term/display'] = array(
+        'title' => 'Manage display',
+        'description' => 'Manage display of this term.',
+        'page callback' => 'ds_extras_contextual_page_tab',
+        'page arguments' => array(2, 'taxonomy_term'),
+        'access arguments' => array('administer taxonomy'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 11,
+        'file' => 'ds_extras.pages.inc',
+      );
+    }
+  }
+
+  // Panel view modes.
+  if (variable_get('ds_extras_panel_view_modes')) {
+    $items['admin/structure/panels/settings/ds-panels'] = array(
+      'title' => 'Panel view modes',
+      'description' => 'Configure which content is available to add to panel view mode displays.',
+      'access arguments' => array('admin_display_suite'),
+      'page callback' => 'ds_panels_view_mode_settings',
+      'file' => 'ds_extras.panels.inc',
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ds_extras_theme() {
+  $theme_functions = array();
+  $field_functions = module_invoke_all('ds_field_theme_functions_info');
+  foreach ($field_functions as $key => $label) {
+    $theme_functions[$key] = array(
+      'render element' => 'element',
+      'function' => $key,
+    );
+  }
+  return $theme_functions;
 }
 
 /**
@@ -99,14 +199,24 @@ function ds_extras_field_attach_view_alter(&$build, $context) {
   $entity_type = $build['#entity_type'];
   $bundle = $build['#bundle'];
   $view_mode = $context['view_mode'];
+
+  $properties = array();
+  foreach (element_properties($build) as $property) {
+    $properties[$property] = $build[$property];
+  }
+  $properties['#view_mode'] = $view_mode;
+
   if ($layout = ds_get_layout($entity_type, $bundle, $view_mode)) {
     foreach ($region_blocks as $block_key => $block) {
       if ($block['info'] == "{$entity_type}_{$bundle}_{$view_mode}" && isset($layout['settings']['regions'][$block_key]) && !empty($layout['settings']['regions'][$block_key])) {
         foreach ($layout['settings']['regions'][$block_key] as $key => $field) {
           if (isset($build[$field])) {
-            $block_data[$block_key][] = $build[$field];
+            $block_data[$block_key][$field] = $build[$field];
             unset($build[$field]);
           }
+        }
+        if (is_array($block_data[$block_key])) {
+          $block_data[$block_key] += $properties;
         }
       }
     }
@@ -119,8 +229,25 @@ function ds_extras_field_attach_view_alter(&$build, $context) {
 function ds_extras_ds_field_theme_functions_info() {
   return array(
     'theme_field' => t('Default'),
-    'theme_ds_field_reset' => t('Reset'),
+    'theme_ds_field_reset' => t('Full Reset'),
+    'theme_ds_field_minimal' => t('Minimal'),
     'theme_ds_field_expert' => t('Expert'),
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ds_extras_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+  $theme_functions = module_invoke_all('ds_field_theme_functions_info');
+  unset($theme_functions['theme_ds_field_expert']);
+  $form['instance']['ds_extras_field_template'] = array(
+    '#type' => 'select',
+    '#title' => t('Field Template'),
+    '#default_value' => isset($form['#instance']['ds_extras_field_template']) ? $form['#instance']['ds_extras_field_template'] : '',
+    '#options' => $theme_functions,
+    '#description' => t('Choose the default HTML for this field.'),
+    '#empty_option' => t('Use sitewide default'),
   );
 }
 
@@ -137,16 +264,13 @@ function ds_extras_form_ds_styles_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Overriden function of theme_field().
- *
- * This function is replaced in ds_extras_theme_registry_alter()
- * for every field. By default theme_field() is called directly.
+ * Implements hook_preprocess_field().
  */
-function theme_ds_field($variables) {
+function ds_preprocess_field(&$variables) {
 
   // We need to be sure this field is in a layout which is rendered by DS.
   if (!ds_get_layout($variables['element']['#entity_type'], $variables['element']['#bundle'], $variables['element']['#view_mode'])) {
-    return theme_field($variables);
+    return;
   }
 
   $config = array();
@@ -155,17 +279,20 @@ function theme_ds_field($variables) {
     $field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']] = ds_get_field_settings($variables['element']['#entity_type'], $variables['element']['#bundle'], $variables['element']['#view_mode']);
   }
 
-  // Get the field name.
+  // Get the field name and field instance info - if available.
   $field_name = $variables['element']['#field_name'];
+  $field_instance_info = field_info_instance($variables['element']['#entity_type'], $field_name, $variables['element']['#bundle']);
 
   // Check if this field has custom output settings.
+  $variables['ds-config'] = array();
   if (isset($field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']][$field_name]['ft'])) {
     $config = $field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']][$field_name]['ft'];
+    $variables['ds-config'] = $config;
   }
 
   // Styles
   if (isset($config['styles'])) {
-    $variables['classes'] .= ' ' . $config['styles'];
+    $variables['classes_array'][] = $config['styles'];
   }
 
   // Alter the label if configured.
@@ -175,21 +302,54 @@ function theme_ds_field($variables) {
     }
   }
 
-  // Call the field output function.
-  // We're not babysitting here, the function must exist.
-  if (isset($config['func'])) {
-    return $config['func']($variables, $config);
+  // Determine the field template. In case it's something different
+  // than theme_field, we'll add that function as a suggestion.
+  if (isset($config['func']) && $config['func'] != 'theme_field') {
+    $variables['ds-config'] = $config;
+    $variables['theme_hook_suggestions'] = array();
+    // Either it uses the function.
+    $variables['theme_hook_suggestions'][] = $config['func'];
+    // Or the template file(s).
+    $suggestion = 'field__' . str_replace('theme_ds_field_', '', $config['func']);
+    $variables['theme_hook_suggestions'][] = $suggestion;
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name;
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $variables['element']['#bundle'];
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name . '__' . $variables['element']['#bundle'];
   }
-
-  // Default field function.
-  $default_field_function = variable_get('ft-default', 'theme_field');
-  return $default_field_function($variables, $config);
+  // Check if we have a default field template on instance level.
+  elseif (isset($field_instance_info['ds_extras_field_template']) && !empty($field_instance_info['ds_extras_field_template']) && $field_instance_info['ds_extras_field_template'] != 'theme_field') {
+    $variables['theme_hook_suggestions'] = array();
+    // Either it uses the function.
+    $variables['theme_hook_suggestions'][] = $field_instance_info['ds_extras_field_template'];
+    // Or the template file(s).
+    $suggestion = 'field__' . str_replace('theme_ds_field_', '', $field_instance_info['ds_extras_field_template']);
+    $variables['theme_hook_suggestions'][] = $suggestion;
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name;
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $variables['element']['#bundle'];
+    $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name . '__' . $variables['element']['#bundle'];
+  }
+  // Default theming function.
+  else {
+    $field_theme_function = variable_get('ft-default', 'theme_field');
+    if ($field_theme_function != 'theme_field') {
+      $variables['theme_hook_suggestions'] = array();
+      $variables['ds-config'] = $config;
+      // Either it uses the function.
+      $variables['theme_hook_suggestions'][] = $field_theme_function;
+      // Or the template file(s).
+      $suggestion = 'field__' . str_replace('theme_ds_field_', '', $field_theme_function);
+      $variables['theme_hook_suggestions'][] = $suggestion;
+      $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name;
+      $variables['theme_hook_suggestions'][] = $suggestion . '__' . $variables['element']['#bundle'];
+      $variables['theme_hook_suggestions'][] = $suggestion . '__' . $field_name . '__' . $variables['element']['#bundle'];
+    }
+  }
 }
 
 /**
  * Reset all HTML for the field.
  */
-function theme_ds_field_reset($variables, $config) {
+function theme_ds_field_reset($variables) {
   $output = '';
 
   // Render the label.
@@ -210,10 +370,41 @@ function theme_ds_field_reset($variables, $config) {
 }
 
 /**
+ * Provide minimal HTML for the field.
+ */
+function theme_ds_field_minimal($variables) {
+  $output = '';
+
+  $config = $variables['ds-config'];
+
+  // Add a simple wrapper.
+  $output .= '<div class="field field-name-' . strtr($variables['element']['#field_name'], '_', '-') . '">';
+
+  // Render the label.
+  if (!$variables['label_hidden']) {
+    $output .= '<div class="label-' . $variables['element']['#label_display'] . '">' . $variables['label'];
+    if (!isset($config['lb-col'])) {
+      $output .= ':&nbsp;';
+    }
+    $output .= '</div>';
+  }
+
+  // Render the items.
+  foreach ($variables['items'] as $delta => $item) {
+    $output .= drupal_render($item);
+  }
+  $output .="</div>";
+
+  return $output;
+}
+
+/**
  * Custom output all HTML for the field.
  */
-function theme_ds_field_expert($variables, $config) {
+function theme_ds_field_expert($variables) {
   $output = '';
+
+  $config = $variables['ds-config'];
 
   // Render the label if it's not hidden
   if (!$variables['label_hidden']) {
@@ -224,7 +415,7 @@ function theme_ds_field_expert($variables, $config) {
       else {
         $class = ' class="label-' . $variables['element']['#label_display'] . '"';
       }
-      $output .= '<' . $config['lb-el'] . $class . '>' . $variables['label'] . '"';
+      $output .= '<' . $config['lb-el'] . $class . '>' . $variables['label'];
       if (!isset($config['lb-col'])) {
         $output .= ':&nbsp;';
       }
@@ -302,7 +493,7 @@ function ds_extras_get_view_mode() {
  * Page title options for a full node page view.
  */
 function ds_extras_process_page_title(&$variables) {
-  if (isset($variables['node']) && node_is_page($variables['node']) && arg(2) == '' && $layout = ds_get_layout('node', $variables['node']->type, ds_extras_get_view_mode())) {
+  if (isset($variables['node']) && ((node_is_page($variables['node']) && arg(2) == '') || arg(2) == 'revisions') && $layout = ds_get_layout('node', $variables['node']->type, ds_extras_get_view_mode())) {
     if (isset($layout['settings']['hide_page_title']) && $layout['settings']['hide_page_title'] == 1) {
       $variables['title'] = '';
     }
@@ -311,7 +502,6 @@ function ds_extras_process_page_title(&$variables) {
       $entity = node_load(arg(1));
       ds_create_entity_context('node', $entity, $contexts);
       $title = $layout['settings']['page_option_title'];
-      ds_create_entity_context('node', entity_load('node', array(arg(1))), $contexts);
       $variables['title'] = filter_xss_admin(ctools_context_keyword_substitute($title, array(), $contexts));
     }
   }
@@ -373,7 +563,7 @@ function ds_extras_contextual_links_view_alter(&$element, $items) {
   if (isset($element['#element']['#entity_type']) && user_access('administer content types')) {
     $entity_type = $element['#element']['#entity_type'];
     $bundle = $element['#element']['#bundle'];
-    $view_mode = $element['#element']['#view_mode'];
+    $view_mode = isset($element['#element']['#view_mode']) ? $element['#element']['#view_mode'] : 'default';
 
     // Check if we have a configured layout. Do not fallback to default.
     $layout = ds_get_layout($entity_type, $bundle, $view_mode, FALSE);
@@ -398,62 +588,6 @@ function ds_extras_contextual_links_view_alter(&$element, $items) {
       'query' => drupal_get_destination(),
     );
   }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-function ds_extras_form_fivestar_node_type_tag_form_alter(&$form, &$form_state, $form_id) {
-  // We need to alter the settings, because clickable or widget type
-  // will be chosen in the field display settings of the content type.
-  $node_type = $form_state['fivestar_node_type'];
-  if (variable_get('ds_fivestar_' . $node_type, 0)) {
-    $form['fivestar']['#default_value'] = TRUE;
-  }
-  $form['direct']['fivestar_position']['#access'] = FALSE;
-  $form['direct']['fivestar_position_teaser']['#access'] = FALSE;
-  $form['#submit'][] = 'ds_extras_fivestar_submit';
-}
-
-/**
- * Submit callback, reset fivestar_nodetype if needed, but save
- * an extra ds_fivestar_nodetype variable. This way, we are
- * sure that the nodeapi of fivestar isn't fired.
- */
-function ds_extras_fivestar_submit($form, $form_state) {
-  $values = $form_state['values'];
-  $node_type = $form_state['fivestar_node_type'];
-  $enabled = isset($values['fivestar']) && $values['fivestar'] == 1;
-  if ($enabled) {
-    variable_set('fivestar_' . $node_type, 0);
-  }
-  variable_set('ds_fivestar_' . $node_type, $enabled);
-}
-
-/**
- * Implements hook_fivestar_access().
- */
-function ds_extras_fivestar_access($type, $id, $tag, $uid) {
-  $node = node_load($id);
-  if ($type == 'node' && variable_get('ds_fivestar_' . $node->type, 0)) {
-    return TRUE;
-  }
-}
-
-/**
- * Clickable fivestar.
- */
-function ds_fivestar_render($field) {
-
-  $format = $field['formatter'];
-  if ($format == 'ds_fivestar_clickable') {
-    if (user_access('rate content') && fivestar_validate_target('node', $field['entity']->nid, 'vote')) {
-      return drupal_render(fivestar_widget_form($field['entity']));
-    }
-  }
-
-  // Fall through static if not allowed to rate or $format is not clickable.
-  return fivestar_static('node', $field['entity']->nid, $field['entity']->type);
 }
 
 /**
@@ -538,7 +672,6 @@ function ds_extras_block_view($delta = '') {
   }
 }
 
-
 /**
  * Implements hook_ds_layout_region_alter().
  */
@@ -618,21 +751,16 @@ function ds_extras_field_extra_fields() {
     }
   }
 
-  // Extra fields.
   if (variable_get('ds_extras_fields_extra')) {
     $fields = explode("\n", variable_get('ds_extras_fields_extra_list', FALSE));
     foreach ($fields as $field) {
       $field = trim($field);
       if (!empty($field)) {
         list($entity, $bundle, $field_name) = explode('|', $field);
-        $extra[check_plain($entity)][check_plain($bundle)] = array(
-          'display' => array(
-            $field_name => array(
-              'label' => drupal_ucfirst(check_plain($field_name)),
-              'description' => drupal_ucfirst(check_plain($field_name)),
-              'weight' => 0,
-            )
-          ),
+        $extra[check_plain($entity)][check_plain($bundle)]['display'][$field_name] = array(
+          'label' => drupal_ucfirst(str_replace('_', ' ', check_plain($field_name))),
+          'description' => drupal_ucfirst(str_replace('_', ' ', check_plain($field_name))),
+          'weight' => 0,
         );
       }
     }
@@ -647,6 +775,7 @@ function ds_extras_field_extra_fields() {
 function ds_extras_preprocess_view_layout(&$variables) {
 
   if ($layout = ds_get_layout('ds_views', $variables['view']->name . '-' . $variables['view']->current_display, 'default')) {
+
     $variables['elements']['#entity_type'] = $variables['#entity_type'] = 'ds_views';
     $variables['elements']['#bundle'] = $variables['#bundle'] = $variables['view']->name . '-' . $variables['view']->current_display;
     $variables['elements']['#view_mode'] = 'default';
@@ -661,6 +790,8 @@ function ds_extras_preprocess_view_layout(&$variables) {
       }
     }
 
+    // Don't remove the variables so we don't trigger notices.
+    $variables['preprocess_keep'] = TRUE;
     ds_entity_variables($variables);
     if (isset($variables['#attached'])) {
       drupal_process_attached($variables);
@@ -759,7 +890,6 @@ function ds_extras_entity_view_alter(&$build, $entity_type) {
  */
 function ds_extras_render_panel_layout(&$vars) {
   static $displays = array();
-  static $renderer = NULL;
 
   if (isset($vars['elements']) && $layout = ds_get_layout($vars['elements']['#entity_type'], $vars['elements']['#bundle'], $vars['elements']['#view_mode'])) {
 
@@ -770,7 +900,8 @@ function ds_extras_render_panel_layout(&$vars) {
     $entity_type = $vars['elements']['#entity_type'];
     $bundle = $vars['elements']['#bundle'];
     $view_mode = $vars['elements']['#view_mode'];
-    $entity = $vars[$vars['elements']['#entity_type']];
+    $element = ($entity_type == 'user') ? '#account' : '#' . $entity_type;
+    $entity = $vars['elements'][$element];
     ctools_include('plugins', 'panels');
 
     $contexts = array();
@@ -820,10 +951,8 @@ function ds_extras_render_panel_layout(&$vars) {
     }
 
     // Load renderer.
-    if (!isset($renderer)) {
-      $pipeline = $layout['settings']['pipeline'];
-      $renderer = panels_get_renderer($pipeline, $display);
-    }
+    $pipeline = $layout['settings']['pipeline'];
+    $renderer = panels_get_renderer($pipeline, $display);
 
     // Attach out-of-band data first.
     $renderer->add_meta();

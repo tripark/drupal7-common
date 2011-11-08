@@ -5,7 +5,7 @@
  * Display Suite 4 column template.
  */
 ?>
-<div class="<?php print $classes;?> clearfix">
+<div class="ds-4col <?php print $classes;?> clearfix">
 
   <?php if (isset($title_suffix['contextual_links'])): ?>
   <?php print render($title_suffix['contextual_links']); ?>
