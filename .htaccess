@@ -83,6 +83,13 @@ DirectoryIndex index.php index.html index.htm
   # downloaded.
   RewriteRule "(^|/)\." - [F]
 
+  # If your site can be accessed from two domains, you can use this rule to
+  # rewrite the host to just one of those domains. This example includes
+  # redirecting multiple hostnames at once. 
+  # RewriteCond %{HTTP_HOST} ^example\.com$ [NC,OR]
+  # RewriteCond %{HTTP_HOST} ^www\.example\.com$ [NC]
+  # RewriteRule ^(.*)$ http://thisismyintendeddomain.com/$1 [L,R=301]
+
   # If your site can be accessed both with and without the 'www.' prefix, you
   # can use one of the following settings to redirect users to your preferred
   # URL, either WITH or WITHOUT the 'www.' prefix. Choose ONLY one option:
