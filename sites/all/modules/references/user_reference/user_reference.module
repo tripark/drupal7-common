@@ -866,7 +866,6 @@ function user_reference_field_views_data($field) {
       $data[$table][$id_column]['relationship'] = array(
         'handler' => 'references_handler_relationship',
         'base' => 'users',
-        'field' => 'uid',
         'base field' => 'uid',
         'label' => $field['field_name'],
         'field_name' => $field['field_name'],
