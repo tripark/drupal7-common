@@ -149,19 +149,6 @@ function tpc_general_field_formatter_view($entity_type, $entity, $field, $instan
 }
   
 /**
- * Implements hook_menu_breadcrumb_alter().
- *
- * If in the admin section, change the breadcrumb root to "Dashboard" instead
- * of "Home".
- */
-function tpc_general_menu_breadcrumb_alter(&$active_trail, $item) {
-  if (in_array('admin', $item['original_map'])) {
-    $active_trail[0]['title'] = t('Dashboard');
-    $active_trail[0]['href'] = 'admin/dashboard';
-  }
-}
-
-/**
  * Display the relative filepath for file fields.
  */
 function tpc_general_preprocess_file_widget_multiple(&$vars) {
