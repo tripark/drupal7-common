@@ -33,6 +33,7 @@ function menu_position_schema() {
       'conditions' => array(
         'description' => 'The serialized conditions for this rule.',
         'type' => 'text',
+        'serialize' => TRUE,
       ),
       'menu_name' => array(
         'description' => 'The menu of the menu link for this rule.',
@@ -77,6 +78,30 @@ function menu_position_update_7100() {
 }
 
 /**
+ * Fix all menu position rules.
+ */
+function menu_position_update_7102() {
+  // Issue #1298832 did not include a proper upgrade path for existing rules'
+  // menu links which broke all the rules. So we first delete all the menu links.
+  db_query('DELETE FROM {menu_links} WHERE module = :module', array(':module' => 'menu_position'));
+  // And then let menu_position_enable_helper() fix all the rules.
+  $rules = db_query('SELECT rid, plid, admin_title FROM {menu_position_rules} WHERE enabled = :enabled', array(':enabled' => 1));
+  foreach ($rules as $rule) {
+    // If we were to attempt menu_position_add_menu_link() here it would fail
+    // because the module's new router item isn't in the system yet. Instead we
+    // flag the rule with a zero-value mlid and fix it in
+    // menu_position_rules_form_callback().
+    db_update('menu_position_rules')
+      ->fields(array('mlid' => 0))
+      ->condition('rid', $rule->rid)
+      ->execute();
+  }
+  if ($rules->rowCount()) {
+    return t('Due to a bug in Menu position 7.x-1.0-beta3, all menu position rules need to be fixed. All rules will be disabled until you visit the <a href="!url">menu position rules admin page</a>.', array('!url' => url('admin/structure/menu-position')));
+  }
+}
+
+/**
  * Implements hook_enable().
  *
  * When the module is disabled, the menu links it owns are deleted. When
@@ -86,15 +111,23 @@ function menu_position_update_7100() {
 function menu_position_enable() {
   $rules = db_query('SELECT rid, plid, admin_title FROM {menu_position_rules} WHERE enabled = :enabled', array(':enabled' => 1));
   if ($rules->rowCount()) {
-    drupal_set_message(t('Existing menu position rules were discovered. To ensure they continue to work, visit the <a href="!url">menu position rules admin page</a>.', array('!url' => url('admin/structure/menu-position'))), 'error');
+    drupal_set_message(t('Existing menu position rules were discovered. They will be disabled until you visit the <a href="!url">menu position rules admin page</a>.', array('!url' => url('admin/structure/menu-position'))), 'error');
   }
   foreach ($rules as $rule) {
     // If we were to attempt menu_position_add_menu_link() here it would fail
     // because the module's router item isn't in the system yet. Instead we flag
-    // the rule with a zero-value mlid and fix it in menu_position_rules_form().
+    // the rule with a zero-value mlid and fix it in
+    // menu_position_rules_form_callback().
     db_update('menu_position_rules')
       ->fields(array('mlid' => 0))
       ->condition('rid', $rule->rid)
       ->execute();
   }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function menu_position_uninstall() {
+  variable_del('menu_position_active_link_display');
 }
