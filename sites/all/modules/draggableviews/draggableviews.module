@@ -144,7 +144,7 @@ function draggableviews_view_draggabletable_form($form, $form_state, $style_plug
         }
         else {
           // Get depth of current field.
-          $depth = $info['nodes'][$nid]['depth'];
+          $depth = isset($info['nodes'][$nid]['depth']) ? $info['nodes'][$nid]['depth'] : 0;
           $value = $info['nodes'][$nid]['order'][$depth];
 
           // Get the field that should be rendered.
@@ -237,7 +237,7 @@ function draggableviews_views_pre_execute(&$view) {
   $info['pager'] = $info['view']->query->pager;
   $info['globals'] = array();
 
-  if (isset($info['pager']->options['items_per_page'])) {
+  if ($info['needs_pager_modifications']) {
     // Paging is beeing used. We modify some paging settings before the view gets executed.
 
 
@@ -320,7 +320,7 @@ function draggableviews_views_pre_render(&$view) {
   $view->draggableviews_info = _draggableviews_info($view, $view->draggableviews_info);
   $info = &$view->draggableviews_info;
 
-  if (isset($info['pager']->options['items_per_page']) && empty($info['hierarchy'])) {
+  if (isset($info['pager']->options['items_per_page']) && empty($info['hierarchy']) && isset($view->total_rows)) {
     // The current page of hierarchies cannot be checked here because $views->total_rows will not be
 
     // calculated when the entire view gets loaded.
@@ -377,7 +377,7 @@ function draggableviews_views_pre_render(&$view) {
     }
   }
 
-  if (isset($info['pager']->options['items_per_page'])) {
+  if ($info['needs_pager_modifications']) {
     global $pager_page_array, $pager_total, $pager_total_items;
     // The global $pager_total variable was calculated with wrong values because we changed the
 
@@ -390,7 +390,6 @@ function draggableviews_views_pre_render(&$view) {
       $pager_total[$info['pager']->options['id']] = 0;
     }
     // Restore the global variable.
-
     $pager_page_array[$info['pager']->options['id']] = $info['pager']->current_page;
     // Restore the _GET variable.
 
@@ -483,6 +482,11 @@ function draggableviews_view_draggabletable_form_submit($form, &$form_state) {
         ->execute();
       }
     }
+  }
+
+  // Trigger the event "A view has been sorted"
+  if (module_exists('rules')) {
+    rules_invoke_event('draggableviews_rules_event_sorted', $view->name);
   }
 
   // Redirect form.

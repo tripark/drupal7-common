@@ -8,7 +8,7 @@
  * - $title : The title of this group of rows.  May be empty.
  * - $header: An array of header labels keyed by field id.
  * - $fields: An array of CSS IDs to use for each field id.
- * - $class: A class or classes to apply to the table, based on settings.
+ * - $classes: Classes to apply to the table, based on settings.
  * - $row_classes: An array of classes to apply to each row, indexed by row
  *   number. This matches the index in $rows.
  * - $rows: An array of row items. Each row is an array of content.
@@ -17,7 +17,7 @@
  * - $tabledrag_tableId: The table id that drupal_add_tabledrag needs
  */
 ?>
-<table class="<?php print $class; ?>" id="<?php print $tabledrag_table_id; ?>">
+<table class="<?php print $classes; ?>" id="<?php print $tabledrag_table_id; ?>">
   <thead>
     <tr>
       <?php foreach ($header as $field => $label): ?>

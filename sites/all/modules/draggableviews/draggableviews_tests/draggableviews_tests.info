@@ -1,5 +1,5 @@
 name = DraggableViews Tests
-description = Autoated testing of draggableviews module
+description = Automated testing of draggableviews module
 dependencies[] = views
 dependencies[] = selenium
 package = Views
@@ -8,9 +8,9 @@ core = 7.x
 files[] = draggableviews_tests.module
 files[] = draggableviews_tests.test
 
-; Information added by drupal.org packaging script on 2011-07-22
+; Information added by drupal.org packaging script on 2011-11-29
 version = "7.x-1.x-dev"
 core = "7.x"
 project = "draggableviews"
-datestamp = "1311293284"
+datestamp = "1322526246"
 
