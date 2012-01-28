@@ -6,7 +6,12 @@
 function tpc_general_init() {
   drupal_add_js(drupal_get_path('module', 'tpc_general') . '/tpc_general.js');
   drupal_add_css(drupal_get_path('module', 'tpc_general') . '/tpc_general.css');
+
+  // Template override functions for Drupal's default administration theme.
   include_once('tpc_general.seven_theme.inc');
+  
+  // Additional display formatters for core-provided fields.
+  include_once('tpc_general.field_formatters.inc');
 }
 
 /**
@@ -122,32 +127,6 @@ function tpc_general_preprocess_node(&$vars) {
   }  
 }
 
-/**
- * Implements hook_field_formatter_info().
- *
- * Add a text formatter similar to plain text, but with HTML line breaks.
- */
-function tpc_general_field_formatter_info() {
-  return array(
-    'text_plain_linebreaks' => array(
-      'label' => t('Plain text with linebreaks'),
-      'field types' => array('text_long', 'text_with_summary'),
-    ),
-  );
-}
-
-function tpc_general_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-  switch ($display['type']) {
-    case 'text_plain_linebreaks':
-      foreach ($items as $delta => $item) {
-        $element[$delta] = array('#markup' => nl2br(strip_tags($item['value'])));
-      }
-      break;
-  }
-  return $element;
-}
-  
 /**
  * Display the relative filepath for file fields.
  */
