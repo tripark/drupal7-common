@@ -110,3 +110,20 @@ img.center {
 	color: #fff;
 	background-color: #ff1d00;
 	}
+
+#tpc_staging {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: #900;
+  color: #fff;
+  text-transform: uppercase;
+  font-family: monospace;
+  font-size: 40px;
+  line-height: 1;
+  width: 24px;
+  padding: 5px;
+  word-wrap: break-word;
+  z-index: 999;
+}
+

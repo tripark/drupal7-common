@@ -203,3 +203,13 @@ function pathauto_user_update_action($user, $context = array()) {
   pathauto_user_update_alias($user, 'bulkupdate', array('message' => TRUE));
 }
 
+/**
+ * Implements hook_page_alter().
+ *
+ * If on the staging server, display a badge indicating so.
+ */
+function tpc_general_page_alter(&$page) {
+  if (file_exists('/home/web/STAGING.txt')) {
+    $page['page_top']['tpc_general']['staging']['#markup'] = '<div id="tpc_staging">Staging</div>';
+  }
+}
