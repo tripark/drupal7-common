@@ -21,6 +21,42 @@ function hook_menu_block_tree_alter(&$tree, &$config) {
 }
 
 /**
+ * Return a list of configurations for menu blocks.
+ *
+ * Modules that want to have menu block configurations exported to code should
+ * provide them using this hook.
+ *
+ * @see menu_tree_build() for a description of the config array.
+ */
+function hook_menu_block_blocks() {
+  return array(
+    // The array key is the block id used by menu block.
+    'custom-nav' => array(
+      // Use the array keys/values described in menu_tree_build().
+      'menu_name'   => 'primary-links',
+      'parent_mlid' => 0,
+      'title_link'  => FALSE,
+      'admin_title' => 'Drop-down navigation',
+      'level'       => 1,
+      'follow'      => 0,
+      'depth'       => 2,
+      'expanded'    => TRUE,
+      'sort'        => FALSE,
+    ),
+    // To prevent clobbering of the block id, it is recommended to prefix it
+    // with the module name.
+    'custom-active' => array(
+      'menu_name'   => MENU_TREE__CURRENT_PAGE_MENU,
+      'title_link'  => TRUE,
+      'admin_title' => 'Secondary navigation',
+      'level'       => 3,
+      'depth'       => 3,
+      // Any config options not specified will get the default value.
+    ),
+  );
+}
+
+/**
  * Return a list of menus to use with the menu_block module.
  *
  * @return
