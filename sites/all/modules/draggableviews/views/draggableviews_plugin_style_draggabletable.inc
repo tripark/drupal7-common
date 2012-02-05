@@ -24,6 +24,7 @@ class draggableviews_plugin_style_draggabletable extends views_plugin_style_tabl
     $options['tabledrag_hierarchy_visible'] = array('default' => array());
     $options['draggableviews_depth_limit'] = array('default' => 0);
     $options['draggableviews_repair'] = array('default' => array('repair' => 'repair'));
+    $options['draggableviews_ajax'] = array('default' => 0);
     $options['tabledrag_types'] = array('default' => array());
     $options['tabledrag_expand'] = array('default' => array());
     $options['draggableviews_extensions'] = array('default' => array('extension_top' => 3, 'extension_bottom' => 3));
@@ -266,6 +267,14 @@ class draggableviews_plugin_style_draggabletable extends views_plugin_style_tabl
       '#description' => t('Uncheck this option if you don\'t want DraggableViews to repair broken structures.'),
       '#title' => t('Structure'),
       '#default_value' => $current['draggableviews_repair'],
+    );
+
+    // Ajax handler:
+    $form['draggableviews_ajax'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Ajax'),
+      '#description' => t('If checked and javascript is enabled, the drupal ajax api is used to submit the form.'),
+      '#default_value' => $current['draggableviews_ajax'],
     );
 
     if (strcmp($this->view->base_table, 'node') == 0) {

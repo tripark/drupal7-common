@@ -65,6 +65,11 @@ function draggableviews_tests_views_default_views() {
     0 => 'repair',
     'repair' => 0,
   );
+
+  $handler->display->display_options['style_options']['draggableviews_ajax'] = array(
+    'use_ajax' => 0,
+  );
+
   $handler->display->display_options['style_options']['tabledrag_expand'] = array(
     'expand_links' => 0,
     'collapsed' => 0,

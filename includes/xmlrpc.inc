@@ -172,6 +172,12 @@ function xmlrpc_message($message) {
  */
 function xmlrpc_message_parse($xmlrpc_message) {
   $xmlrpc_message->_parser = xml_parser_create();
+
+  // libxml2 fix from drupal.org/node/390308
+  $xmlrpc_message->message = str_replace('&lt;','&#60;', $xmlrpc_message->message );
+  $xmlrpc_message->message = str_replace('&gt;','&#62;', $xmlrpc_message->message );
+  $xmlrpc_message->message = str_replace('&amp;','&#38;', $xmlrpc_message->message );
+
   // Set XML parser to take the case of tags into account.
   xml_parser_set_option($xmlrpc_message->_parser, XML_OPTION_CASE_FOLDING, FALSE);
   // Set XML parser callback functions

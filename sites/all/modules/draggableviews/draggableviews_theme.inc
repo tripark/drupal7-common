@@ -406,6 +406,8 @@ function theme_draggableviews_ui_style_plugin_draggabletable($variables) {
 
   $draggableviews_repair = drupal_render($form['draggableviews_repair']);
 
+  $draggableviews_ajax = drupal_render($form['draggableviews_ajax']);
+
   // build types table
   $tabledrag_types_rows = array();
   foreach (element_children($form['tabledrag_types']) as $id) {
@@ -443,6 +445,8 @@ function theme_draggableviews_ui_style_plugin_draggabletable($variables) {
   // inherited from plugin_table from plugin_draggableviews settings.
   $output .= drupal_render_children($form);
 
+  // Append ajax options
+  $output .= $draggableviews_ajax;
   // Append order settings.
   $output .= $tabledrag_header;
   $output .= $description_tabledrag;

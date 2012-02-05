@@ -189,7 +189,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
 
   function pre_query() {
     // Setting the offset to avoid trying to use timezone adjustments for dates that don't need it.
-    $this->offset = in_array($this->date_handler->granularity, array('hour', 'minute', 'sec')) ? NULL : 0;
+    $this->offset = in_array($this->date_handler->granularity, array('hour', 'minute', 'sec')) ? NULL : $this->date_handler->get_offset();
   }
 
   /**

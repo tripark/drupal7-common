@@ -106,7 +106,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
 
   function pre_query() {
     // Setting the offset to avoid trying to use timezone adjustments for dates that don't need it.
-    $this->offset = in_array($this->date_handler->granularity, array('hour', 'minute', 'sec')) ? NULL : 0;
+    $this->offset = in_array($this->date_handler->granularity, array('hour', 'minute', 'sec')) ? NULL : $this->date_handler->get_offset();
   }
 
   function op_between($field) {
