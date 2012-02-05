@@ -631,6 +631,11 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
       $pager_query->condition($column, $value);
     }
 
+    if (isset($filters['u.uid'])) {
+      // Join to the users table for sorting by user name.
+      $pager_query->leftJoin('users', 'u', 'u.uid = ws.uid');
+    }
+
     if (isset($filters['u.uid']) && $filters['u.uid'] === 0) {
       if (!empty($_SESSION['webform_submission'])) {
         $anonymous_sids = array_keys($_SESSION['webform_submission']);
@@ -642,9 +647,6 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
     }
 
     if (is_array($header)) {
-      // Join to the users table for sorting by user name.
-      $pager_query->leftJoin('users', 'u', 'u.uid = ws.uid');
-
       // Extending the query instatiates a new query object.
       $pager_query = $pager_query->extend('TableSort');
       $pager_query->orderByHeader($header);
@@ -698,8 +700,12 @@ function webform_get_submissions($filters = array(), $header = NULL, $pager_coun
       $submissions[$row->sid]->uid = $row->uid;
       $submissions[$row->sid]->name = $row->name;
       $submissions[$row->sid]->is_draft = $row->is_draft;
+      $submissions[$row->sid]->data = array();
     }
-    $submissions[$row->sid]->data[$row->cid]['value'][$row->no] = $row->data;
+    // CID may be NULL if this submission does not actually contain any data.
+    if ($row->cid) {
+      $submissions[$row->sid]->data[$row->cid]['value'][$row->no] = $row->data;
+    }
     $previous = $row->sid;
   }
 
@@ -733,8 +739,15 @@ function webform_get_submission_count($nid, $uid = NULL, $reset = FALSE) {
       $query->condition('uid', $uid);
     }
     if ($uid === 0) {
-      $submissions = isset($_SESSION['webform_submission']) ? $_SESSION['webform_submission'] : array(0);
-      $query->condition('sid', $submissions, 'IN');
+      $submissions = isset($_SESSION['webform_submission']) ? $_SESSION['webform_submission'] : NULL;
+      if ($submissions) {
+        $query->condition('sid', $submissions, 'IN');
+      }
+      else {
+        // Intentionally never match anything if the anonymous user has no
+        // submissions.
+        $query->condition('sid', 0);
+      }
     }
 
     $counts[$nid][$uid] = $query->countQuery()->execute()->fetchField();
@@ -786,7 +799,7 @@ function _webform_submission_spam_check($to, $subject, $from, $headers = array()
  * @return
  *   Boolean TRUE if the user has exceeded their limit. FALSE otherwise.
  */
-function _webform_submission_limit_check($node) {
+function _webform_submission_user_limit_check($node) {
   global $user;
 
   // Check if submission limiting is enabled.
@@ -834,6 +847,42 @@ function _webform_submission_limit_check($node) {
   }
 
   if ($num_submissions_database >= $node->webform['submit_limit'] || $num_submissions_cookie >= $node->webform['submit_limit']) {
+    // Limit exceeded.
+    return TRUE;
+  }
+
+  // Limit not exceeded.
+  return FALSE;
+}
+
+/**
+ * Check if the total number of submissions has exceeded the limit on this form.
+ *
+ * @param $node
+ *   The webform node to be checked.
+ * @return
+ *   Boolean TRUE if the form has exceeded it's limit. FALSE otherwise.
+ */
+function _webform_submission_total_limit_check($node) {
+
+  // Check if submission limiting is enabled.
+  if ($node->webform['total_submit_limit'] == '-1') {
+    return FALSE; // No check enabled.
+  }
+
+  // Retrieve submission data from the database.
+  $query = db_select('webform_submissions')
+    ->condition('nid', $node->nid)
+    ->condition('is_draft', 0);
+
+  if ($node->webform['total_submit_interval'] != -1) {
+    $query->condition('submitted', REQUEST_TIME - $node->webform['total_submit_interval'], '>');
+  }
+
+  // Fetch all the entries from the database within the submit interval.
+  $num_submissions_database = $query->countQuery()->execute()->fetchField();
+
+  if ($num_submissions_database >= $node->webform['total_submit_limit']) {
     // Limit exceeded.
     return TRUE;
   }

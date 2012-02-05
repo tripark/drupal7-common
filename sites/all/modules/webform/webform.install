@@ -97,6 +97,18 @@ function webform_schema() {
         'not null' => TRUE,
         'default' => -1,
       ),
+      'total_submit_limit' => array(
+        'description' => 'The total number of submissions allowed within an interval. -1 is unlimited.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => -1,
+      ),
+      'total_submit_interval' => array(
+        'description' => 'The amount of time in seconds that must pass before another submission can be submitted within the set limit.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => -1,
+      ),
     ),
     'primary key' => array('nid'),
   );
@@ -649,6 +661,11 @@ function webform_update_7313() {
  * Add webform_last_download table to store last downloaded sid per user.
  */
 function webform_update_7314() {
+  // Safety check to prevent recreating the webform_last_download table.
+  if (db_table_exists('webform_last_download')) {
+    return;
+  }
+
   $schema['webform_last_download'] = array(
     'description' => 'Stores last submission number per user download.',
     'fields' => array(
@@ -685,5 +702,18 @@ function webform_update_7314() {
 function webform_update_7315() {
   if (!db_field_exists('webform_last_download', 'requested')) {
     db_add_field('webform_last_download', 'requested', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0,));
+  }
+}
+
+/**
+ * Add additional columns for total submission limit.
+ */
+function webform_update_7316() {
+  if (!db_field_exists('webform', 'total_submit_limit')) {
+    db_add_field('webform', 'total_submit_limit', array('type' => 'int', 'not null' => TRUE, 'default' => -1));
+  }
+
+  if (!db_field_exists('webform', 'total_submit_interval')) {
+    db_add_field('webform', 'total_submit_interval', array('type' => 'int', 'not null' => TRUE, 'default' => -1));
   }
 }

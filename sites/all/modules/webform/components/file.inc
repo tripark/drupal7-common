@@ -172,9 +172,7 @@ function _webform_edit_file_check_directory($element) {
   $destination_dir = file_build_uri('webform/' . $element['#value']);
 
   // Sanity check input to prevent use parent (../) directories.
-  $real_base = drupal_realpath($base_dir);
-  $real_destination = drupal_realpath($destination_dir);
-  if (strpos($real_destination, $real_base) !== 0) {
+  if (preg_match('/\.\.[\/\\\]/', $destination_dir . '/')) {
     form_error($element, t('The save directory %directory is not valid.', array('%directory' => $destination_dir)));
   }
   else {
@@ -503,7 +501,7 @@ function _webform_submit_file($component, $value) {
     file_save($file);
 
     // Delete any previous files.
-    if ($value['_old'] && ($existing = webform_get_file($value['_old']))) {
+    if ($value['_old'] && $value['_old'] != $value['_fid'] && ($existing = webform_get_file($value['_old']))) {
       file_delete($existing);
     }
 
@@ -548,7 +546,7 @@ function theme_webform_display_file($variables) {
  */
 function _webform_delete_file($component, $value) {
   // Delete an individual submission file.
-  if (isset($value[0]) && ($file = webform_get_file($value[0]))) {
+  if (!empty($value[0]) && ($file = webform_get_file($value[0]))) {
     file_delete($file);
   }
 }
@@ -642,9 +640,9 @@ function webform_file_url($uri) {
 
 /**
  * Helper function to load a file from the database.
- *
- * @todo We can remove this entirely now the Drupal 7 has native file loading.
  */
 function webform_get_file($fid) {
-  return file_load($fid);
+  // Simple check to prevent loading of NULL values, which throws an entity
+  // system error.
+  return $fid ? file_load($fid) : FALSE;
 }

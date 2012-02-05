@@ -1,5 +1,5 @@
 <?php
-ini_set('memory_limit', '180M');
+ini_set('memory_limit', '150M');
 
 /**
  * @file

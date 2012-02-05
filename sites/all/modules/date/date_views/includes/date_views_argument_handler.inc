@@ -2,7 +2,7 @@
 /**
  * @file
  * Date API views argument handler.
- * This argument combines multiple date arguments into a single argument 
+ * This argument combines multiple date arguments into a single argument
  * where all fields are controlled by the same date and can be combined with either AND or OR.
  */
 
@@ -43,7 +43,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    */
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    $fields = date_views_fields($this->view->base_table);
+    $fields = date_views_fields($this->base_table);
     $options = array();
     foreach ($fields['name'] as $name => $field) {
       $options[$name] = $field['label'];
@@ -68,10 +68,14 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
       '#type' => 'hidden',
       '#value' => $this->options['date_group'],
     );
-
   }
 
   function options_validate(&$form, &$form_state) {
+
+    // Views will whine if we don't have something for the these values even though we removed the option for summaries.
+    $form_state['values']['options']['summary']['format'] = 'none';
+    $form_state['values']['options']['summary']['options']['none'] = array();
+
     // It is very important to call the parent function here:
     parent::options_validate($form, $form_state);
 
@@ -93,11 +97,13 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
 
   // Update the summary values to show selected granularity.
   function admin_summary() {
-    $fields = date_views_fields($this->view->base_table);
+    $fields = date_views_fields($this->base_table);
     if (!empty($this->options['date_fields'])) {
       $output = array();
       foreach ($this->options['date_fields'] as $field) {
-        $output[] = $fields['name'][$field]['label'];
+        if (array_key_exists($field, $fields['name'])) {
+          $output[] = $fields['name'][$field]['label'];
+        }
       }
       return implode('<br />' . $this->options['date_method'] . ' ', $output);
     }
@@ -114,7 +120,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    */
   function default_actions($which = NULL) {
     $defaults = parent::default_actions();
-  
+
     // There is no easy way to do summary queries on multiple fields, so remove that option.
     unset($defaults['summary']);
 
@@ -134,7 +140,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    * The argument sent may be found at $this->argument.
    */
   function query($group_by = FALSE) {
-   
+
     // @TODO Not doing anything with $group_by yet, need to figure out what has to be done.
 
     if ($this->date_forbid()) {
@@ -145,7 +151,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
     $this->granularity = $this->date_handler->arg_granularity($this->argument);
     $format = $this->date_handler->views_formats($this->granularity, 'sql');
     if (!empty($this->query_fields)) {
-      // Use set_where_group() with the selected date_method 
+      // Use set_where_group() with the selected date_method
       // of 'AND' or 'OR' to create the where clause.
       foreach ($this->query_fields as $count => $query_field) {
         $field = $query_field['field'];
@@ -171,13 +177,15 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    * Collect information about our fields we will need to create the right query.
    */
   function get_query_fields() {
-    $fields = date_views_fields($this->view->base_table);
+    $fields = date_views_fields($this->base_table);
     $fields = $fields['name'];
     $this->query_fields = array();
     foreach ($this->options['date_fields'] as $delta => $name) {
       if (array_key_exists($name, $fields) && $field = $fields[$name]) {
         $date_handler = new date_sql_handler($field['sql_type'], date_default_timezone());
         $date_handler->granularity = $this->options['granularity'];
+        $date_handler->db_timezone = date_get_timezone_db($field['tz_handling']);
+        $date_handler->local_timezone = date_get_timezone($field['tz_handling']);
         date_views_set_timezone($date_handler, $this, $field);
         $this->query_fields[] = array('field' => $field, 'date_handler' => $date_handler);
       }
